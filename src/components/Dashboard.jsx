@@ -8,7 +8,6 @@ import {
   Users,
   Compass,
   FileText,
-  RotateCcw,
   Save,
   Check,
   Eye,
@@ -188,17 +187,6 @@ const Dashboard = () => {
           </button>
 
           <button
-            onClick={handleReset}
-            className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
-              isDark ? 'bg-slate-800 hover:bg-slate-700 text-slate-300' : 'bg-slate-200 hover:bg-slate-300 text-slate-700'
-            }`}
-            title="Reset to original default school values"
-          >
-            <RotateCcw className="w-3.5 h-3.5" />
-            <span className="hidden md:inline">Reset Defaults</span>
-          </button>
-
-          <button
             onClick={handleSave}
             disabled={isSaving}
             className="inline-flex items-center gap-1.5 px-4 sm:px-5 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs sm:text-sm shadow-md shadow-amber-500/20 active:scale-95 transition-all cursor-pointer disabled:opacity-60"
@@ -212,7 +200,12 @@ const Dashboard = () => {
             isDark ? 'bg-slate-900 border-slate-800 text-slate-300' : 'bg-slate-100 border-slate-200 text-slate-700'
           }`}>
             <UserCheck className="w-3.5 h-3.5 text-emerald-500" />
-            <span className="font-medium">{currentUser?.name || 'Administrator'}</span>
+            <span className="font-medium">
+              {(() => {
+                const rawName = currentUser?.name?.replace(/\s*\([^)]*\)/g, '').trim() || 'Academic Director';
+                return /super\s*admin/i.test(rawName) ? 'Academic Director' : rawName;
+              })()}
+            </span>
             <span className="text-[10px] uppercase font-bold text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded">
               {currentUser?.role || 'Superadmin'}
             </span>
@@ -221,12 +214,15 @@ const Dashboard = () => {
           <button
             onClick={() => {
               handleSave();
-              navigateTo('landing');
+              const publicSiteUrl = `${window.location.origin}${window.location.pathname}#/`;
+              window.open(publicSiteUrl, '_blank', 'noopener,noreferrer');
             }}
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs sm:text-sm shadow transition-all cursor-pointer"
+            title="Open Public School Website in New Tab"
           >
             <Eye className="w-4 h-4" />
             <span>View Public Site</span>
+            <ExternalLink className="w-3.5 h-3.5 opacity-70" />
           </button>
 
           <button

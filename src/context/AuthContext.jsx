@@ -51,7 +51,7 @@ export const DEFAULT_ACCOUNTS = [
   {
     id: 1,
     username: 'admin',
-    name: 'Academic Director (Superadmin)',
+    name: 'Academic Director',
     role: 'superadmin',
     password: 'AlchemistAdmin2026',
     department: 'Executive Administration',
@@ -60,7 +60,7 @@ export const DEFAULT_ACCOUNTS = [
   {
     id: 2,
     username: 'editor',
-    name: 'Rohan Shrestha (Editor)',
+    name: 'Rohan Shrestha',
     role: 'editor',
     password: 'EditorPass2026',
     department: 'Media & Publications',
@@ -69,7 +69,7 @@ export const DEFAULT_ACCOUNTS = [
   {
     id: 3,
     username: 'admissions',
-    name: 'Sunita Adhikari (Admissions)',
+    name: 'Sunita Adhikari',
     role: 'admissions',
     password: 'AdmissionsPass2026',
     department: 'Admissions & Enrollment',
@@ -78,7 +78,7 @@ export const DEFAULT_ACCOUNTS = [
   {
     id: 4,
     username: 'coordinator',
-    name: 'Pooja Thapa (Academic Coordinator)',
+    name: 'Pooja Thapa',
     role: 'academic',
     password: 'AcademicPass2026',
     department: 'Curriculum & Faculty',
