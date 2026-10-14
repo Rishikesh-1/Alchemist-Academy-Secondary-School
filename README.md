@@ -112,3 +112,4 @@ Place the repository inside your Apache web root (e.g., `c:\xampp\htdocs\Alchemi
 - Validated `EducationalOrganization` / `School` schema in JSON-LD.
 - OpenGraph and Twitter card meta tags for rich social sharing.
 - Compressed WebP assets for optimal Core Web Vitals.
+
