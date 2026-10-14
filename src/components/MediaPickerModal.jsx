@@ -370,8 +370,12 @@ const MediaPickerModal = ({
                           {item.title}
                         </div>
                         <div className="text-[10px] text-slate-500 flex items-center justify-between mt-1">
-                          <span className="truncate max-w-[90px]">{item.category}</span>
-                          <span className="text-[9px] text-slate-600">{item.dateAdded}</span>
+                          <span className="truncate max-w-[85px]">{item.category}</span>
+                          {item.altText && (
+                            <span className="text-[9px] text-emerald-400 font-medium flex items-center gap-0.5">
+                              <Check className="w-2.5 h-2.5" /> Alt
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -402,6 +406,17 @@ const MediaPickerModal = ({
                   <h5 className="font-bold text-sm text-white">{selectedItem.title}</h5>
                   <p className="text-xs text-slate-400 mt-1 leading-relaxed">
                     {selectedItem.description || 'Alchemist Academy media asset.'}
+                  </p>
+                </div>
+
+                {/* SEO Alt Text Display */}
+                <div className="p-2.5 bg-slate-900 border border-slate-800 rounded-xl space-y-1">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1">
+                    <Tag className="w-3 h-3" />
+                    <span>SEO Image Alt Text</span>
+                  </span>
+                  <p className="text-xs text-slate-200 leading-snug">
+                    {selectedItem.altText || selectedItem.title}
                   </p>
                 </div>
 

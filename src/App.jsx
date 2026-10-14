@@ -20,7 +20,7 @@ import BlogPage from './pages/BlogPage';
 import ContactPage from './pages/ContactPage';
 
 function AppRouter() {
-  const { currentRoute } = useSiteData();
+  const { currentRoute, isDark } = useSiteData();
   const { isAuthenticated } = useAuth();
 
   // 1. Secret/Gated Route: Admin Login Portal
@@ -58,7 +58,7 @@ function AppRouter() {
             <Hero />
             <Stats />
             <About />
-            <HeadmasterQuote />
+            <HeadmasterQuote page="home" />
             <Curriculum />
             <CoCurricular />
             <Blog />
@@ -69,7 +69,9 @@ function AppRouter() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 font-sans selection:bg-amber-600 selection:text-white">
+    <div className={`min-h-screen flex flex-col font-sans selection:bg-amber-600 selection:text-white transition-colors duration-300 ${
+      isDark ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'
+    }`}>
       {/* Semantic Top Navigation */}
       <Navbar />
 

@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @layer base {
   body {
     font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
@@ -13,3 +15,67 @@
     font-family: 'Playfair Display', Georgia, serif;
   }
 }
+
+/* Dashboard Light Theme Adapter (When not in .dark mode) */
+html:not(.dark) .dashboard-root {
+  background-color: #f8fafc;
+  color: #0f172a;
+}
+html:not(.dark) .dashboard-root header {
+  background-color: rgba(255, 255, 255, 0.95);
+  border-color: #e2e8f0;
+}
+html:not(.dark) .dashboard-root aside {
+  background-color: #ffffff;
+  border-color: #e2e8f0;
+}
+html:not(.dark) .dashboard-root main {
+  background-color: #f8fafc;
+}
+html:not(.dark) .dashboard-root .bg-slate-950\/80,
+html:not(.dark) .dashboard-root .bg-slate-950\/90,
+html:not(.dark) .dashboard-root .bg-slate-950 {
+  background-color: #ffffff;
+  border-color: #e2e8f0;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.06);
+}
+html:not(.dark) .dashboard-root .bg-slate-900,
+html:not(.dark) .dashboard-root .bg-slate-900\/80,
+html:not(.dark) .dashboard-root .bg-slate-900\/90 {
+  background-color: #f1f5f9;
+  border-color: #e2e8f0;
+}
+html:not(.dark) .dashboard-root .border-slate-800,
+html:not(.dark) .dashboard-root .border-slate-700 {
+  border-color: #e2e8f0;
+}
+html:not(.dark) .dashboard-root h1.text-white,
+html:not(.dark) .dashboard-root h2.text-white,
+html:not(.dark) .dashboard-root h3.text-white,
+html:not(.dark) .dashboard-root h4.text-white,
+html:not(.dark) .dashboard-root span.text-white {
+  color: #0f172a;
+}
+html:not(.dark) .dashboard-root p.text-slate-400,
+html:not(.dark) .dashboard-root span.text-slate-400,
+html:not(.dark) .dashboard-root div.text-slate-400 {
+  color: #64748b;
+}
+html:not(.dark) .dashboard-root label.text-slate-300,
+html:not(.dark) .dashboard-root label.text-slate-400 {
+  color: #475569;
+}
+html:not(.dark) .dashboard-root input,
+html:not(.dark) .dashboard-root textarea,
+html:not(.dark) .dashboard-root select {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+html:not(.dark) .dashboard-root input:focus,
+html:not(.dark) .dashboard-root textarea:focus,
+html:not(.dark) .dashboard-root select:focus {
+  border-color: #f59e0b !important;
+  outline: none;
+}
+

@@ -1,0 +1,19 @@
+# Protect config files from direct browser access
+<Files "env.php">
+    Order Allow,Deny
+    Deny from all
+</Files>
+
+<Files "db.php">
+    Order Allow,Deny
+    Deny from all
+</Files>
+
+# Ensure PHP execution is enabled
+<IfModule mod_php.c>
+    php_flag display_errors Off
+    php_value max_execution_time 60
+    php_value upload_max_filesize 10M
+    php_value post_max_size 12M
+</IfModule>
+

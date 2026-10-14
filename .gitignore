@@ -30,11 +30,16 @@ config.local.*
 
 # Database dumps, exports & local backups
 *.sql
+!schema.sql
 *.sqlite
 *.sqlite3
 *.dump
 *.bak
 *.orig
+*.zip
+api/config/env.php
+!api/config/env.example.php
+uploads/
 
 # Local OS & IDE directories
 .qodo/
@@ -44,3 +49,4 @@ Thumbs.db
 .idea/
 *.local
 *.swp
+

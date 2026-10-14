@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { defaultSiteData } from '../data/defaultSiteData';
+import { fetchSiteSettings, saveSiteSettings } from '../services/api';
 
 const SiteContext = createContext();
 
@@ -11,6 +12,26 @@ export const SiteProvider = ({ children }) => {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
+        let quotes = parsed.leadershipQuotes;
+        if (!quotes || !Array.isArray(quotes) || quotes.length === 0) {
+          if (parsed.headmaster) {
+            quotes = [
+              {
+                id: 'quote-headmaster',
+                ...parsed.headmaster,
+                targetPage: parsed.headmaster.targetPage || 'home',
+              },
+              ...(defaultSiteData.leadershipQuotes?.slice(1) || []),
+            ];
+          } else {
+            quotes = defaultSiteData.leadershipQuotes;
+          }
+        }
+
+        const validBlogs = Array.isArray(parsed.blogs) && parsed.blogs.length > 0 
+          ? parsed.blogs 
+          : defaultSiteData.blogs;
+
         return {
           ...defaultSiteData,
           ...parsed,
@@ -18,6 +39,8 @@ export const SiteProvider = ({ children }) => {
             ...defaultSiteData.branding,
             ...(parsed.branding || {}),
           },
+          blogs: validBlogs,
+          leadershipQuotes: quotes,
         };
       }
     } catch (err) {
@@ -25,6 +48,61 @@ export const SiteProvider = ({ children }) => {
     }
     return defaultSiteData;
   });
+
+  // On initial mount, fetch latest settings from MySQL server (if live)
+  useEffect(() => {
+    let isMounted = true;
+    fetchSiteSettings().then((remoteSettings) => {
+      if (isMounted && remoteSettings && typeof remoteSettings === 'object') {
+        setSiteData((prev) => ({
+          ...defaultSiteData,
+          ...prev,
+          ...remoteSettings,
+          branding: {
+            ...defaultSiteData.branding,
+            ...(prev.branding || {}),
+            ...(remoteSettings.branding || {}),
+          },
+        }));
+      }
+    });
+    return () => { isMounted = false; };
+  }, []);
+
+  // Global Site Theme Management ('light' | 'dark')
+  const THEME_KEY = 'alchemist_academy_site_theme_v1';
+  const [theme, setTheme] = useState(() => {
+    try {
+      const saved = localStorage.getItem(THEME_KEY) || localStorage.getItem('alchemist_blog_theme');
+      if (saved === 'dark' || saved === 'light') return saved;
+      return 'light';
+    } catch {
+      return 'light';
+    }
+  });
+
+  const isDark = theme === 'dark';
+
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+  };
+
+  useEffect(() => {
+    const root = document.documentElement;
+    if (theme === 'dark') {
+      root.classList.add('dark');
+      root.style.colorScheme = 'dark';
+    } else {
+      root.classList.remove('dark');
+      root.style.colorScheme = 'light';
+    }
+    try {
+      localStorage.setItem(THEME_KEY, theme);
+      localStorage.setItem('alchemist_blog_theme', theme);
+    } catch (e) {
+      console.error('Error saving theme to localStorage:', e);
+    }
+  }, [theme]);
 
   // Route parsing helper
   const parseRouteFromLocation = () => {
@@ -116,6 +194,8 @@ export const SiteProvider = ({ children }) => {
 
   const updateFullSiteData = (newData) => {
     setSiteData(newData);
+    // Persist to MySQL server asynchronously
+    saveSiteSettings(newData).catch((e) => console.warn('MySQL save deferred:', e));
   };
 
   const resetToDefault = () => {
@@ -148,6 +228,10 @@ export const SiteProvider = ({ children }) => {
         currentRoute,
         setCurrentRoute,
         navigateTo,
+        theme,
+        setTheme,
+        toggleTheme,
+        isDark,
       }}
     >
       {children}

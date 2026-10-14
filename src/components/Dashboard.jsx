@@ -26,6 +26,8 @@ import {
   X,
   Key,
   FolderOpen,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import { useSiteData } from '../context/SiteContext';
 import { useAuth } from '../context/AuthContext';
@@ -34,7 +36,7 @@ import ImageFieldWithPicker from './ImageFieldWithPicker';
 import MediaLibraryManager from './MediaLibraryManager';
 
 const Dashboard = () => {
-  const { siteData, setSiteData, resetToDefault, navigateTo } = useSiteData();
+  const { siteData, setSiteData, resetToDefault, navigateTo, isDark, toggleTheme } = useSiteData();
   const { currentUser, logout, canAccessSection, users, addUser, updateUser, deleteUser, ROLES } = useAuth();
   
   // Navigation Items with RBAC permissions
@@ -43,7 +45,7 @@ const Dashboard = () => {
     { id: 'hero', label: 'Hero Banner & BG', icon: ImageIcon },
     { id: 'about', label: 'About School', icon: Compass },
     { id: 'stats', label: 'Stats Grid', icon: Users },
-    { id: 'headmaster', label: "Headmaster's Quote", icon: MessageSquare },
+    { id: 'headmaster', label: "Leadership Messages (Home/About)", icon: MessageSquare },
     { id: 'curriculum', label: 'Curriculum Subjects', icon: BookOpen },
     { id: 'cocurricular', label: 'Co-curricular Activities', icon: Sparkles },
     { id: 'blogs', label: 'Blog & Articles', icon: FileText },
@@ -65,6 +67,7 @@ const Dashboard = () => {
     allowedNavItems[0]?.id || 'blogs'
   );
   const [savedNotice, setSavedNotice] = useState(false);
+  const [blogAddedNotice, setBlogAddedNotice] = useState(false);
 
   // Form local state clone for seamless editing
   const [formData, setFormData] = useState(siteData);
@@ -119,25 +122,29 @@ const Dashboard = () => {
   });
 
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col">
+    <div className={`dashboard-root min-h-screen flex flex-col transition-colors duration-300 ${
+      isDark ? 'bg-slate-900 text-slate-100' : 'bg-slate-100 text-slate-900'
+    }`}>
       {/* Top Bar */}
-      <header className="sticky top-0 z-30 bg-slate-950/90 backdrop-blur-md border-b border-slate-800 px-4 sm:px-8 py-4 flex items-center justify-between">
+      <header className={`sticky top-0 z-30 backdrop-blur-md px-4 sm:px-8 py-4 flex items-center justify-between border-b transition-colors duration-300 ${
+        isDark ? 'bg-slate-950/90 border-slate-800 text-white' : 'bg-white/95 border-slate-200 text-slate-900 shadow-sm'
+      }`}>
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-600 to-amber-400 flex items-center justify-center text-slate-950 font-bold shadow-lg shadow-amber-500/20">
             <LayoutDashboard className="w-5 h-5" />
           </div>
           <div>
-            <h1 className="font-serif-brand font-bold text-lg text-white">
+            <h1 className={`font-serif-brand font-bold text-lg leading-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
               Alchemist Academy CMS
             </h1>
-            <p className="text-xs text-amber-400 font-medium">
+            <p className="text-xs text-amber-500 font-medium">
               Live Customizer & Site Dashboard
             </p>
           </div>
         </div>
 
         {/* Action Controls */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5 sm:gap-3">
           {savedNotice && (
             <span className="hidden sm:inline-flex items-center gap-1.5 text-xs text-emerald-400 font-semibold bg-emerald-950/60 border border-emerald-500/40 px-3 py-1.5 rounded-lg animate-pulse">
               <Check className="w-3.5 h-3.5" />
@@ -145,9 +152,26 @@ const Dashboard = () => {
             </span>
           )}
 
+          {/* Global Theme Toggle Button */}
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
+              isDark
+                ? 'bg-slate-900 text-amber-400 border-slate-700 hover:bg-slate-800'
+                : 'bg-slate-100 text-slate-800 border-slate-300 hover:bg-slate-200 shadow-xs'
+            }`}
+            title={isDark ? "Switch Dashboard to Light Mode" : "Switch Dashboard to Dark Mode"}
+          >
+            {isDark ? <Sun className="w-4 h-4 animate-spin-slow" /> : <Moon className="w-4 h-4" />}
+            <span className="hidden sm:inline">{isDark ? "Light Mode" : "Dark Mode"}</span>
+          </button>
+
           <button
             onClick={handleReset}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition-colors"
+            className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+              isDark ? 'bg-slate-800 hover:bg-slate-700 text-slate-300' : 'bg-slate-200 hover:bg-slate-300 text-slate-700'
+            }`}
             title="Reset to original default school values"
           >
             <RotateCcw className="w-3.5 h-3.5" />
@@ -156,17 +180,19 @@ const Dashboard = () => {
 
           <button
             onClick={handleSave}
-            className="inline-flex items-center gap-1.5 px-5 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs sm:text-sm shadow-md shadow-amber-500/20 active:scale-95 transition-all"
+            className="inline-flex items-center gap-1.5 px-4 sm:px-5 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs sm:text-sm shadow-md shadow-amber-500/20 active:scale-95 transition-all cursor-pointer"
           >
             <Save className="w-4 h-4" />
             <span>Save & Apply</span>
           </button>
 
           {/* Current Admin Session User Indicator */}
-          <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-xs">
-            <UserCheck className="w-3.5 h-3.5 text-emerald-400" />
-            <span className="text-slate-300 font-medium">{currentUser?.name || 'Administrator'}</span>
-            <span className="text-[10px] uppercase font-bold text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded">
+          <div className={`hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs ${
+            isDark ? 'bg-slate-900 border-slate-800 text-slate-300' : 'bg-slate-100 border-slate-200 text-slate-700'
+          }`}>
+            <UserCheck className="w-3.5 h-3.5 text-emerald-500" />
+            <span className="font-medium">{currentUser?.name || 'Administrator'}</span>
+            <span className="text-[10px] uppercase font-bold text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded">
               {currentUser?.role || 'Superadmin'}
             </span>
           </div>
@@ -199,10 +225,16 @@ const Dashboard = () => {
       {/* Main CMS Layout */}
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
         {/* Sidebar Navigation */}
-        <aside className="w-full md:w-64 lg:w-72 bg-slate-950 border-r border-slate-800 p-4 space-y-1.5 shrink-0 overflow-y-auto">
+        <aside className={`w-full md:w-64 lg:w-72 border-r p-4 space-y-1.5 shrink-0 overflow-y-auto transition-colors duration-300 ${
+          isDark ? 'bg-slate-950 border-slate-800' : 'bg-white border-slate-200 shadow-sm'
+        }`}>
           {/* Role badge & access indicator */}
-          <div className="mb-4 p-3 rounded-2xl bg-slate-900 border border-slate-800">
-            <div className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mb-1">
+          <div className={`mb-4 p-3 rounded-2xl border transition-colors ${
+            isDark ? 'bg-slate-900 border-slate-800 text-slate-100' : 'bg-slate-50 border-slate-200 text-slate-800'
+          }`}>
+            <div className={`text-[10px] font-semibold uppercase tracking-wider mb-1 ${
+              isDark ? 'text-slate-400' : 'text-slate-500'
+            }`}>
               Active Access Tier:
             </div>
             <div className="flex items-center gap-2">
@@ -210,12 +242,14 @@ const Dashboard = () => {
                 {ROLES[currentUser?.role]?.title || 'Staff'}
               </span>
             </div>
-            <p className="text-[11px] text-slate-400 mt-2 leading-relaxed">
+            <p className={`text-[11px] mt-2 leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
               {ROLES[currentUser?.role]?.description}
             </p>
           </div>
 
-          <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-3 mb-2">
+          <div className={`text-[11px] font-bold uppercase tracking-wider px-3 mb-2 ${
+            isDark ? 'text-slate-400' : 'text-slate-500'
+          }`}>
             Permitted Modules ({allowedNavItems.length})
           </div>
 
@@ -229,18 +263,22 @@ const Dashboard = () => {
                 className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all text-left cursor-pointer ${
                   isActive
                     ? 'bg-amber-500 text-slate-950 font-bold shadow-md shadow-amber-500/20'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-900'
+                    : isDark
+                    ? 'text-slate-400 hover:text-white hover:bg-slate-900'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                 }`}
               >
-                <Icon className={`w-4 h-4 ${isActive ? 'text-slate-950' : 'text-slate-400'}`} />
+                <Icon className={`w-4 h-4 ${isActive ? 'text-slate-950' : isDark ? 'text-slate-400' : 'text-slate-500'}`} />
                 <span>{item.label}</span>
               </button>
             );
           })}
 
-          <div className="pt-6 border-t border-slate-800 mt-6">
-            <div className="bg-slate-900/80 rounded-2xl p-4 border border-slate-800 text-xs text-slate-400 space-y-2">
-              <span className="font-bold text-amber-400 block uppercase tracking-wider text-[10px]">
+          <div className={`pt-6 border-t mt-6 ${isDark ? 'border-slate-800' : 'border-slate-200'}`}>
+            <div className={`rounded-2xl p-4 border text-xs space-y-2 ${
+              isDark ? 'bg-slate-900/80 border-slate-800 text-slate-400' : 'bg-slate-50 border-slate-200 text-slate-600'
+            }`}>
+              <span className="font-bold text-amber-500 block uppercase tracking-wider text-[10px]">
                 Instant Local Storage
               </span>
               <p>
@@ -251,7 +289,9 @@ const Dashboard = () => {
         </aside>
 
         {/* Form Body */}
-        <main className="flex-1 p-6 sm:p-10 lg:p-12 overflow-y-auto max-w-5xl">
+        <main className={`flex-1 p-6 sm:p-10 lg:p-12 overflow-y-auto max-w-5xl transition-colors duration-300 ${
+          isDark ? 'bg-slate-900 text-slate-100' : 'bg-slate-100/70 text-slate-900'
+        }`}>
           
           {/* 1. BRANDING & LOGO */}
           {activeSection === 'branding' && (
@@ -790,62 +830,337 @@ const Dashboard = () => {
             </div>
           )}
 
-          {/* 5. HEADMASTER'S QUOTE */}
+          {/* 5. LEADERSHIP MESSAGES (HEADMASTER & VICE PRINCIPAL) */}
           {activeSection === 'headmaster' && (
             <div className="space-y-6">
-              <div>
-                <h2 className="text-2xl font-bold font-serif-brand text-white">Headmaster's Quote Section</h2>
-                <p className="text-sm text-slate-400 mt-1">Update leadership quote, headmaster profile picture, and designation.</p>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-2xl font-bold font-serif-brand text-white">Leadership Quotes & Messages</h2>
+                  <p className="text-sm text-slate-400 mt-1">
+                    Manage quotes from the Headmaster, Vice Principal, and Directors. Select which page each quote appears on (Home, About, or Both).
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const currentQuotes = Array.isArray(formData.leadershipQuotes) && formData.leadershipQuotes.length > 0
+                        ? formData.leadershipQuotes
+                        : [
+                            {
+                              id: 'quote-headmaster',
+                              ...(formData.headmaster || {}),
+                              targetPage: 'home',
+                            }
+                          ];
+                      const newQuote = {
+                        id: 'quote-' + Date.now(),
+                        badge: "Vice Principal's Message",
+                        quote: "“True education harmonizes academic rigor with empathetic mentorship. We empower every learner to discover their unique voice, question boldly, and build purposeful lives.”",
+                        name: "Suman Shrestha",
+                        role: "Vice Principal",
+                        location: "Alchemist Academy, Kathmandu",
+                        image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=600&q=80",
+                        targetPage: "about",
+                      };
+                      const updated = [...currentQuotes, newQuote];
+                      const primaryHomeQuote = updated.find(q => q.targetPage === 'home' || q.targetPage === 'both') || updated[0];
+                      setFormData({
+                        ...formData,
+                        leadershipQuotes: updated,
+                        headmaster: primaryHomeQuote ? { ...primaryHomeQuote } : formData.headmaster,
+                      });
+                    }}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow transition-all cursor-pointer"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Add Leadership Message</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleSave}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow transition-all cursor-pointer"
+                  >
+                    <Save className="w-4 h-4" />
+                    <span>Save Changes</span>
+                  </button>
+                </div>
               </div>
 
-              <div className="bg-slate-950/80 border border-slate-800 rounded-3xl p-6 sm:p-8 space-y-6">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
-                    Quote Body
-                  </label>
-                  <textarea
-                    rows={3}
-                    value={formData.headmaster.quote}
-                    onChange={(e) => updateField('headmaster', 'quote', e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-xl p-3.5 text-sm text-white focus:outline-none focus:border-amber-400"
-                  />
-                </div>
+              {/* Quotes Cards List */}
+              <div className="space-y-6">
+                {(() => {
+                  const quotes = Array.isArray(formData.leadershipQuotes) && formData.leadershipQuotes.length > 0
+                    ? formData.leadershipQuotes
+                    : [
+                        {
+                          id: 'quote-headmaster',
+                          ...(formData.headmaster || {}),
+                          targetPage: formData.headmaster?.targetPage || 'home',
+                        }
+                      ];
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
-                      Headmaster Name
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.headmaster.name}
-                      onChange={(e) => updateField('headmaster', 'name', e.target.value)}
-                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-400"
-                    />
-                  </div>
+                  return quotes.map((q, idx) => (
+                    <div key={q.id || idx} className="bg-slate-950/80 border border-slate-800 rounded-3xl p-6 sm:p-8 space-y-6">
+                      <div className="flex items-center justify-between pb-3 border-b border-slate-800/80">
+                        <div className="flex items-center gap-3">
+                          <span className="text-xs font-bold text-amber-400 uppercase tracking-wider">
+                            Leader Message #{idx + 1}: {q.name || q.role}
+                          </span>
+                          <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${
+                            q.targetPage === 'home'
+                              ? 'bg-amber-500/10 text-amber-300 border-amber-500/30'
+                              : q.targetPage === 'about'
+                              ? 'bg-blue-500/10 text-blue-300 border-blue-500/30'
+                              : 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30'
+                          }`}>
+                            {q.targetPage === 'home' ? '🏠 Shows on Home Page' : q.targetPage === 'about' ? 'ℹ️ Shows on About Section' : '🌐 Shows on Both Views'}
+                          </span>
+                        </div>
 
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
-                      Role / Designation
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.headmaster.role}
-                      onChange={(e) => updateField('headmaster', 'role', e.target.value)}
-                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-400"
-                    />
-                  </div>
-                </div>
+                        {quotes.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (window.confirm(`Delete quote for ${q.name || q.role}?`)) {
+                                const updated = quotes.filter((_, i) => i !== idx);
+                                const primaryHomeQuote = updated.find(item => item.targetPage === 'home' || item.targetPage === 'both') || updated[0];
+                                setFormData({
+                                  ...formData,
+                                  leadershipQuotes: updated,
+                                  headmaster: primaryHomeQuote ? { ...primaryHomeQuote } : formData.headmaster,
+                                });
+                              }
+                            }}
+                            className="text-xs text-rose-400 hover:text-rose-300 flex items-center gap-1 cursor-pointer transition-colors"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            <span>Delete Quote</span>
+                          </button>
+                        )}
+                      </div>
 
-                <ImageFieldWithPicker
-                  label="Headmaster Official Portrait"
-                  value={formData.headmaster.image}
-                  onChange={(url) => updateField('headmaster', 'image', url)}
-                  category="Leadership & Staff"
-                  placeholder="e.g. https://images.unsplash.com/... or choose from Media Library"
-                  helpText="Displayed in the circular leadership avatar block beside the vision statement."
-                />
+                      {/* Where should this quote appear */}
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                          Display Location Target
+                        </label>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const updated = quotes.map((item, i) => i === idx ? { ...item, targetPage: 'home' } : item);
+                              const primaryHomeQuote = updated.find(item => item.targetPage === 'home' || item.targetPage === 'both') || updated[0];
+                              setFormData({
+                                ...formData,
+                                leadershipQuotes: updated,
+                                headmaster: primaryHomeQuote ? { ...primaryHomeQuote } : formData.headmaster,
+                              });
+                            }}
+                            className={`p-3 rounded-xl border text-left flex items-center gap-3 transition-all cursor-pointer ${
+                              q.targetPage === 'home'
+                                ? 'bg-amber-500/10 border-amber-500 text-amber-300 font-bold shadow'
+                                : 'bg-slate-900 border-slate-700 text-slate-400 hover:text-white hover:border-slate-600'
+                            }`}
+                          >
+                            <span className="text-xl">🏠</span>
+                            <div>
+                              <div className="text-xs font-bold">Home Page Only</div>
+                              <div className="text-[10px] opacity-70">Main Landing Page message</div>
+                            </div>
+                          </button>
 
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const updated = quotes.map((item, i) => i === idx ? { ...item, targetPage: 'about' } : item);
+                              const primaryHomeQuote = updated.find(item => item.targetPage === 'home' || item.targetPage === 'both') || updated[0];
+                              setFormData({
+                                ...formData,
+                                leadershipQuotes: updated,
+                                headmaster: primaryHomeQuote ? { ...primaryHomeQuote } : formData.headmaster,
+                              });
+                            }}
+                            className={`p-3 rounded-xl border text-left flex items-center gap-3 transition-all cursor-pointer ${
+                              q.targetPage === 'about'
+                                ? 'bg-blue-500/10 border-blue-500 text-blue-300 font-bold shadow'
+                                : 'bg-slate-900 border-slate-700 text-slate-400 hover:text-white hover:border-slate-600'
+                            }`}
+                          >
+                            <span className="text-xl">ℹ️</span>
+                            <div>
+                              <div className="text-xs font-bold">About Section Only</div>
+                              <div className="text-[10px] opacity-70">Appears on About Us page</div>
+                            </div>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const updated = quotes.map((item, i) => i === idx ? { ...item, targetPage: 'both' } : item);
+                              const primaryHomeQuote = updated.find(item => item.targetPage === 'home' || item.targetPage === 'both') || updated[0];
+                              setFormData({
+                                ...formData,
+                                leadershipQuotes: updated,
+                                headmaster: primaryHomeQuote ? { ...primaryHomeQuote } : formData.headmaster,
+                              });
+                            }}
+                            className={`p-3 rounded-xl border text-left flex items-center gap-3 transition-all cursor-pointer ${
+                              q.targetPage === 'both'
+                                ? 'bg-emerald-500/10 border-emerald-500 text-emerald-300 font-bold shadow'
+                                : 'bg-slate-900 border-slate-700 text-slate-400 hover:text-white hover:border-slate-600'
+                            }`}
+                          >
+                            <span className="text-xl">🌐</span>
+                            <div>
+                              <div className="text-xs font-bold">Both Home & About</div>
+                              <div className="text-[10px] opacity-70">Available across both views</div>
+                            </div>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Leader details inputs */}
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">
+                            Leader Name
+                          </label>
+                          <input
+                            type="text"
+                            value={q.name || ''}
+                            onChange={(e) => {
+                              const updated = quotes.map((item, i) => i === idx ? { ...item, name: e.target.value } : item);
+                              const primaryHomeQuote = updated.find(item => item.targetPage === 'home' || item.targetPage === 'both') || updated[0];
+                              setFormData({
+                                ...formData,
+                                leadershipQuotes: updated,
+                                headmaster: primaryHomeQuote ? { ...primaryHomeQuote } : formData.headmaster,
+                              });
+                            }}
+                            className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-400"
+                            placeholder="e.g. Karmendra Vimal / Suman Shrestha"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">
+                            Role / Designation
+                          </label>
+                          <input
+                            type="text"
+                            value={q.role || ''}
+                            onChange={(e) => {
+                              const updated = quotes.map((item, i) => i === idx ? { ...item, role: e.target.value } : item);
+                              const primaryHomeQuote = updated.find(item => item.targetPage === 'home' || item.targetPage === 'both') || updated[0];
+                              setFormData({
+                                ...formData,
+                                leadershipQuotes: updated,
+                                headmaster: primaryHomeQuote ? { ...primaryHomeQuote } : formData.headmaster,
+                              });
+                            }}
+                            className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-400"
+                            placeholder="e.g. Headmaster / Vice Principal"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">
+                            Badge Tag
+                          </label>
+                          <input
+                            type="text"
+                            value={q.badge || ''}
+                            onChange={(e) => {
+                              const updated = quotes.map((item, i) => i === idx ? { ...item, badge: e.target.value } : item);
+                              const primaryHomeQuote = updated.find(item => item.targetPage === 'home' || item.targetPage === 'both') || updated[0];
+                              setFormData({
+                                ...formData,
+                                leadershipQuotes: updated,
+                                headmaster: primaryHomeQuote ? { ...primaryHomeQuote } : formData.headmaster,
+                              });
+                            }}
+                            className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-400"
+                            placeholder="e.g. Headmaster's Desk / Vice Principal's Message"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">
+                          Location / Campus Subtitle
+                        </label>
+                        <input
+                          type="text"
+                          value={q.location || ''}
+                          onChange={(e) => {
+                            const updated = quotes.map((item, i) => i === idx ? { ...item, location: e.target.value } : item);
+                            const primaryHomeQuote = updated.find(item => item.targetPage === 'home' || item.targetPage === 'both') || updated[0];
+                            setFormData({
+                              ...formData,
+                              leadershipQuotes: updated,
+                              headmaster: primaryHomeQuote ? { ...primaryHomeQuote } : formData.headmaster,
+                            });
+                          }}
+                          className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-400"
+                          placeholder="e.g. Alchemist Academy, Kathmandu"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">
+                          Quote Body Text
+                        </label>
+                        <textarea
+                          rows={3}
+                          value={q.quote || ''}
+                          onChange={(e) => {
+                            const updated = quotes.map((item, i) => i === idx ? { ...item, quote: e.target.value } : item);
+                            const primaryHomeQuote = updated.find(item => item.targetPage === 'home' || item.targetPage === 'both') || updated[0];
+                            setFormData({
+                              ...formData,
+                              leadershipQuotes: updated,
+                              headmaster: primaryHomeQuote ? { ...primaryHomeQuote } : formData.headmaster,
+                            });
+                          }}
+                          className="w-full bg-slate-900 border border-slate-700 rounded-xl p-3.5 text-sm text-white focus:outline-none focus:border-amber-400"
+                          placeholder="Enter leadership message or vision statement..."
+                        />
+                      </div>
+
+                      <ImageFieldWithPicker
+                        label={`${q.role || 'Leader'} Official Portrait`}
+                        value={q.image || ''}
+                        onChange={(url) => {
+                          const updated = quotes.map((item, i) => i === idx ? { ...item, image: url } : item);
+                          const primaryHomeQuote = updated.find(item => item.targetPage === 'home' || item.targetPage === 'both') || updated[0];
+                          setFormData({
+                            ...formData,
+                            leadershipQuotes: updated,
+                            headmaster: primaryHomeQuote ? { ...primaryHomeQuote } : formData.headmaster,
+                          });
+                        }}
+                        category="Leadership & Staff"
+                        placeholder="e.g. https://... or choose from Media Library"
+                        helpText="Displayed in the circular avatar block beside the vision statement."
+                      />
+                    </div>
+                  ));
+                })()}
+              </div>
+
+              {/* Bottom save bar */}
+              <div className="pt-4 flex justify-end">
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm shadow-lg transition-all cursor-pointer"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>Save Leadership Messages</span>
+                </button>
               </div>
             </div>
           )}
@@ -994,168 +1309,220 @@ const Dashboard = () => {
           {/* 8. BLOG & ARTICLES */}
           {activeSection === 'blogs' && (
             <div className="space-y-6">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                   <h2 className="text-2xl font-bold font-serif-brand text-white">School Blog & News Articles</h2>
                   <p className="text-sm text-slate-400 mt-1">Publish news, edit campus articles, change images, and authors.</p>
                 </div>
                 
-                <button
-                  onClick={() => {
-                    const newBlog = {
-                      id: Date.now(),
-                      title: "New School Announcement",
-                      category: "Updates",
-                      date: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
-                      author: "Administration",
-                      readTime: "2 min read",
-                      summary: "A fresh update on upcoming events, academic notices, and school activities.",
-                      image: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=800&q=80",
-                      content: "Full announcement content details here. You can add paragraphs explaining the update to parents and students.",
-                    };
-                    setFormData({ ...formData, blogs: [newBlog, ...formData.blogs] });
-                  }}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>Add New Article</span>
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newBlog = {
+                        id: Date.now(),
+                        title: "New School Announcement",
+                        category: "Campus Events",
+                        date: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+                        author: "Administration",
+                        readTime: "3 min read",
+                        summary: "A fresh update on upcoming events, academic notices, and school activities.",
+                        image: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=800&q=80",
+                        content: "Full announcement content details here. You can add paragraphs explaining the update to parents and students.",
+                      };
+                      const currentBlogs = Array.isArray(formData.blogs) ? formData.blogs : [];
+                      setFormData({ ...formData, blogs: [newBlog, ...currentBlogs] });
+                      setBlogAddedNotice(true);
+                      setTimeout(() => setBlogAddedNotice(false), 6000);
+                    }}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow transition-all cursor-pointer"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Add New Article</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleSave}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow transition-all cursor-pointer"
+                  >
+                    <Save className="w-4 h-4" />
+                    <span>Save Changes</span>
+                  </button>
+                </div>
               </div>
 
-              <div className="space-y-6">
-                {formData.blogs.map((post, idx) => (
-                  <div key={post.id || idx} className="bg-slate-950/80 border border-slate-800 rounded-3xl p-6 sm:p-8 space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-amber-400 uppercase tracking-wider">
-                        Article #{idx + 1}
-                      </span>
-                      <button
-                        onClick={() => {
-                          const filtered = formData.blogs.filter((_, i) => i !== idx);
-                          setFormData({ ...formData, blogs: filtered });
-                        }}
-                        className="text-xs text-rose-400 hover:text-rose-300 flex items-center gap-1"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                        <span>Delete</span>
-                      </button>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-xs text-slate-400 mb-1">Title</label>
-                        <input
-                          type="text"
-                          value={post.title}
-                          onChange={(e) => {
-                            const newBlogs = [...formData.blogs];
-                            newBlogs[idx].title = e.target.value;
-                            setFormData({ ...formData, blogs: newBlogs });
-                          }}
-                          className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-xs text-slate-400 mb-1">Category</label>
-                        <input
-                          type="text"
-                          value={post.category}
-                          onChange={(e) => {
-                            const newBlogs = [...formData.blogs];
-                            newBlogs[idx].category = e.target.value;
-                            setFormData({ ...formData, blogs: newBlogs });
-                          }}
-                          className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                      <div>
-                        <label className="block text-xs text-slate-400 mb-1">Date</label>
-                        <input
-                          type="text"
-                          value={post.date}
-                          onChange={(e) => {
-                            const newBlogs = [...formData.blogs];
-                            newBlogs[idx].date = e.target.value;
-                            setFormData({ ...formData, blogs: newBlogs });
-                          }}
-                          className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-xs text-slate-400 mb-1">Author</label>
-                        <input
-                          type="text"
-                          value={post.author}
-                          onChange={(e) => {
-                            const newBlogs = [...formData.blogs];
-                            newBlogs[idx].author = e.target.value;
-                            setFormData({ ...formData, blogs: newBlogs });
-                          }}
-                          className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-xs text-slate-400 mb-1">Read Time</label>
-                        <input
-                          type="text"
-                          value={post.readTime}
-                          onChange={(e) => {
-                            const newBlogs = [...formData.blogs];
-                            newBlogs[idx].readTime = e.target.value;
-                            setFormData({ ...formData, blogs: newBlogs });
-                          }}
-                          className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white"
-                        />
-                      </div>
-                    </div>
-
-                    <ImageFieldWithPicker
-                      label="Featured Article Image"
-                      value={post.image}
-                      onChange={(url) => {
-                        const newBlogs = [...formData.blogs];
-                        newBlogs[idx].image = url;
-                        setFormData({ ...formData, blogs: newBlogs });
-                      }}
-                      category="Campus & Events"
-                      placeholder="e.g. https://... or select from Media Library"
-                    />
-
-                    <div>
-                      <label className="block text-xs text-slate-400 mb-1">Summary (Short Intro)</label>
-                      <textarea
-                        rows={2}
-                        value={post.summary}
-                        onChange={(e) => {
-                          const newBlogs = [...formData.blogs];
-                          newBlogs[idx].summary = e.target.value;
-                          setFormData({ ...formData, blogs: newBlogs });
-                        }}
-                        className="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-xs text-white"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs text-slate-400 mb-1">Full Article Content</label>
-                      <textarea
-                        rows={3}
-                        value={post.content || ''}
-                        onChange={(e) => {
-                          const newBlogs = [...formData.blogs];
-                          newBlogs[idx].content = e.target.value;
-                          setFormData({ ...formData, blogs: newBlogs });
-                        }}
-                        className="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-xs text-white"
-                      />
-                    </div>
+              {blogAddedNotice && (
+                <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs flex items-center justify-between animate-fade-in">
+                  <div className="flex items-center gap-2 font-medium">
+                    <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <span>New draft article added to the top! You can fill in the title, content, and image below, then click "Save Changes" to publish.</span>
                   </div>
-                ))}
+                  <button
+                    type="button"
+                    onClick={() => setBlogAddedNotice(false)}
+                    className="text-slate-400 hover:text-white text-xs cursor-pointer ml-3"
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
+
+              <div className="space-y-6">
+                {(() => {
+                  const blogsList = Array.isArray(formData.blogs) ? formData.blogs : [];
+                  if (blogsList.length === 0) {
+                    return (
+                      <div className="text-center py-12 bg-slate-950/60 border border-slate-800 rounded-3xl p-6">
+                        <FileText className="w-10 h-10 text-slate-600 mx-auto mb-2" />
+                        <h4 className="text-sm font-bold text-slate-300">No blog articles yet</h4>
+                        <p className="text-xs text-slate-500 mt-1">Click "Add New Article" above to create your first article.</p>
+                      </div>
+                    );
+                  }
+
+                  return blogsList.map((post, idx) => (
+                    <div key={post.id || idx} className="bg-slate-950/80 border border-slate-800 rounded-3xl p-6 sm:p-8 space-y-4">
+                      <div className="flex items-center justify-between pb-3 border-b border-slate-800/80">
+                        <span className="text-xs font-bold text-amber-400 uppercase tracking-wider">
+                          Article #{idx + 1}: {post.title || 'Untitled'}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (window.confirm(`Are you sure you want to delete "${post.title || 'this article'}"?`)) {
+                              const filtered = blogsList.filter((_, i) => i !== idx);
+                              setFormData({ ...formData, blogs: filtered });
+                            }
+                          }}
+                          className="text-xs text-rose-400 hover:text-rose-300 flex items-center gap-1 cursor-pointer transition-colors"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>Delete Article</span>
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs text-slate-400 mb-1">Title</label>
+                          <input
+                            type="text"
+                            value={post.title || ''}
+                            onChange={(e) => {
+                              const newBlogs = blogsList.map((b, i) => i === idx ? { ...b, title: e.target.value } : b);
+                              setFormData({ ...formData, blogs: newBlogs });
+                            }}
+                            className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-400"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs text-slate-400 mb-1">Category</label>
+                          <input
+                            type="text"
+                            value={post.category || ''}
+                            onChange={(e) => {
+                              const newBlogs = blogsList.map((b, i) => i === idx ? { ...b, category: e.target.value } : b);
+                              setFormData({ ...formData, blogs: newBlogs });
+                            }}
+                            className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-400"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                          <label className="block text-xs text-slate-400 mb-1">Date</label>
+                          <input
+                            type="text"
+                            value={post.date || ''}
+                            onChange={(e) => {
+                              const newBlogs = blogsList.map((b, i) => i === idx ? { ...b, date: e.target.value } : b);
+                              setFormData({ ...formData, blogs: newBlogs });
+                            }}
+                            className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-400"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs text-slate-400 mb-1">Author</label>
+                          <input
+                            type="text"
+                            value={post.author || ''}
+                            onChange={(e) => {
+                              const newBlogs = blogsList.map((b, i) => i === idx ? { ...b, author: e.target.value } : b);
+                              setFormData({ ...formData, blogs: newBlogs });
+                            }}
+                            className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-400"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs text-slate-400 mb-1">Read Time</label>
+                          <input
+                            type="text"
+                            value={post.readTime || ''}
+                            onChange={(e) => {
+                              const newBlogs = blogsList.map((b, i) => i === idx ? { ...b, readTime: e.target.value } : b);
+                              setFormData({ ...formData, blogs: newBlogs });
+                            }}
+                            className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-400"
+                          />
+                        </div>
+                      </div>
+
+                      <ImageFieldWithPicker
+                        label="Featured Article Image"
+                        value={post.image || ''}
+                        onChange={(url) => {
+                          const newBlogs = blogsList.map((b, i) => i === idx ? { ...b, image: url } : b);
+                          setFormData({ ...formData, blogs: newBlogs });
+                        }}
+                        category="Campus & Events"
+                        placeholder="e.g. https://... or select from Media Library"
+                      />
+
+                      <div>
+                        <label className="block text-xs text-slate-400 mb-1">Summary (Short Intro)</label>
+                        <textarea
+                          rows={2}
+                          value={post.summary || ''}
+                          onChange={(e) => {
+                            const newBlogs = blogsList.map((b, i) => i === idx ? { ...b, summary: e.target.value } : b);
+                            setFormData({ ...formData, blogs: newBlogs });
+                          }}
+                          className="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-amber-400"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs text-slate-400 mb-1">Full Article Content</label>
+                        <textarea
+                          rows={4}
+                          value={post.content || ''}
+                          onChange={(e) => {
+                            const newBlogs = blogsList.map((b, i) => i === idx ? { ...b, content: e.target.value } : b);
+                            setFormData({ ...formData, blogs: newBlogs });
+                          }}
+                          className="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-amber-400"
+                          placeholder="Type full article content and paragraphs here..."
+                        />
+                      </div>
+                    </div>
+                  ));
+                })()}
+              </div>
+
+              {/* Bottom save bar */}
+              <div className="pt-4 flex justify-end">
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm shadow-lg transition-all cursor-pointer"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>Save Blog Changes</span>
+                </button>
               </div>
             </div>
           )}

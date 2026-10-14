@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Menu, X, GraduationCap, Sparkles, BookOpen, Award } from 'lucide-react';
+import { Menu, X, GraduationCap, Sparkles, BookOpen, Award, Sun, Moon } from 'lucide-react';
 import { useSiteData } from '../context/SiteContext';
 
 const TwitterIcon = ({ className = "w-4 h-4" }) => (
@@ -37,7 +37,7 @@ const renderIcon = (name, className = "w-6 h-6") => {
 
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { siteData, currentRoute, navigateTo } = useSiteData();
+  const { siteData, currentRoute, navigateTo, isDark, toggleTheme } = useSiteData();
   const { branding, socials } = siteData;
 
   const navLinks = [
@@ -55,7 +55,11 @@ const Navbar = () => {
   };
 
   return (
-    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md shadow-sm border-b border-slate-100 transition-all">
+    <header className={`sticky top-0 z-40 backdrop-blur-md transition-colors duration-300 border-b ${
+      isDark 
+        ? 'bg-slate-950/95 border-slate-800/90 text-white shadow-lg shadow-black/20' 
+        : 'bg-white/95 border-slate-100 text-slate-900 shadow-sm'
+    }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           
@@ -67,7 +71,9 @@ const Navbar = () => {
               className="flex items-center gap-3 group text-left cursor-pointer"
             >
               {branding.logoType === 'image' && branding.logoImage ? (
-                <div className="w-11 h-11 rounded-xl overflow-hidden shadow-md group-hover:scale-105 transition-transform duration-300 bg-white border border-slate-100 flex items-center justify-center p-1">
+                <div className={`w-11 h-11 rounded-xl overflow-hidden shadow-md group-hover:scale-105 transition-transform duration-300 border flex items-center justify-center p-1 ${
+                  isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100'
+                }`}>
                   <img
                     src={branding.logoImage}
                     alt={branding.name}
@@ -83,7 +89,9 @@ const Navbar = () => {
                 </div>
               )}
               <div className="flex flex-col">
-                <span className="font-serif-brand font-bold text-lg sm:text-xl tracking-wider text-slate-900 group-hover:text-[#e67300] transition-colors leading-tight">
+                <span className={`font-serif-brand font-bold text-lg sm:text-xl tracking-wider group-hover:text-[#e67300] transition-colors leading-tight ${
+                  isDark ? 'text-white' : 'text-slate-900'
+                }`}>
                   {branding.name}
                 </span>
                 <span className="text-[9px] uppercase tracking-[0.2em] text-slate-400 font-semibold mt-0.5">
@@ -107,7 +115,11 @@ const Navbar = () => {
                   onClick={() => handleNavClick(link.route)}
                   className={`font-semibold text-sm tracking-wide transition-all duration-200 cursor-pointer px-4 py-2 rounded-full ${
                     isCurrent
-                      ? 'text-[#e67300] bg-amber-50 font-bold border border-amber-200/80 shadow-xs'
+                      ? isDark
+                        ? 'text-amber-400 bg-amber-500/10 font-bold border border-amber-500/30 shadow-xs'
+                        : 'text-[#e67300] bg-amber-50 font-bold border border-amber-200/80 shadow-xs'
+                      : isDark
+                      ? 'text-slate-300 hover:text-amber-400 hover:bg-slate-900'
                       : 'text-slate-600 hover:text-[#e67300] hover:bg-slate-50'
                   }`}
                 >
@@ -117,15 +129,32 @@ const Navbar = () => {
             })}
           </nav>
 
-          {/* Right: Public Social Links + Apply Now Button */}
-          <div className="hidden sm:flex items-center space-x-3">
+          {/* Right: Theme Toggle + Public Social Links + Apply Now Button */}
+          <div className="hidden sm:flex items-center space-x-2.5">
+            {/* Global Light / Dark Mode Toggle Button */}
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer border ${
+                isDark
+                  ? 'bg-slate-900 hover:bg-slate-800 text-amber-400 border-slate-700 shadow-inner'
+                  : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
+              }`}
+              title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+              aria-label={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+            >
+              {isDark ? <Sun className="w-4 h-4 animate-spin-slow" /> : <Moon className="w-4 h-4" />}
+            </button>
+
             {socials?.twitter && (
               <a
                 href={socials.twitter}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Visit Twitter / X"
-                className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition-colors"
+                className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors ${
+                  isDark ? 'bg-slate-900 hover:bg-slate-800 text-slate-300' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                }`}
               >
                 <TwitterIcon className="w-4 h-4" />
               </a>
@@ -136,7 +165,9 @@ const Navbar = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Visit Facebook"
-                className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition-colors"
+                className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors ${
+                  isDark ? 'bg-slate-900 hover:bg-slate-800 text-slate-300' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                }`}
               >
                 <FacebookIcon className="w-4 h-4" />
               </a>
@@ -147,7 +178,9 @@ const Navbar = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Visit Instagram"
-                className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition-colors"
+                className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors ${
+                  isDark ? 'bg-slate-900 hover:bg-slate-800 text-slate-300' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                }`}
               >
                 <InstagramIcon className="w-4 h-4" />
               </a>
@@ -157,19 +190,32 @@ const Navbar = () => {
             <button
               type="button"
               onClick={() => handleNavClick('contact')}
-              className="inline-flex items-center justify-center px-5 py-2 text-xs uppercase tracking-wider font-bold rounded-full text-white shadow-sm hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 transition-all cursor-pointer"
+              className="inline-flex items-center justify-center px-5 py-2 text-xs uppercase tracking-wider font-bold rounded-full text-white shadow-sm hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 transition-all cursor-pointer ml-1"
               style={{ backgroundColor: branding.logoColor || '#d96500' }}
             >
               {branding.headerApplyButtonText || "Apply Now"}
             </button>
           </div>
 
-          {/* Mobile menu button */}
-          <div className="flex lg:hidden items-center">
+          {/* Mobile menu and mobile theme toggle */}
+          <div className="flex lg:hidden items-center gap-2">
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className={`p-2 rounded-lg border transition-colors ${
+                isDark ? 'bg-slate-900 border-slate-700 text-amber-400' : 'bg-slate-100 border-slate-200 text-slate-700'
+              }`}
+              title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+            >
+              {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </button>
+
             <button
               type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-lg text-slate-600 hover:text-amber-600 hover:bg-slate-100 focus:outline-none"
+              className={`p-2 rounded-lg focus:outline-none transition-colors ${
+                isDark ? 'text-slate-300 hover:text-white hover:bg-slate-900' : 'text-slate-600 hover:text-amber-600 hover:bg-slate-100'
+              }`}
               aria-label="Toggle navigation menu"
             >
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -180,7 +226,9 @@ const Navbar = () => {
 
       {/* Mobile menu dropdown */}
       {mobileMenuOpen && (
-        <div className="lg:hidden border-t border-slate-100 bg-white px-4 pt-3 pb-6 shadow-xl transition-all">
+        <div className={`lg:hidden border-t px-4 pt-3 pb-6 shadow-xl transition-all ${
+          isDark ? 'border-slate-800 bg-slate-950 text-white' : 'border-slate-100 bg-white text-slate-900'
+        }`}>
           <div className="flex flex-col space-y-2">
             {navLinks.map((link) => {
               const isCurrent =
@@ -194,7 +242,11 @@ const Navbar = () => {
                   onClick={() => handleNavClick(link.route)}
                   className={`text-left font-medium py-2 px-3 rounded-xl transition-colors cursor-pointer ${
                     isCurrent
-                      ? 'bg-amber-50 text-amber-700 font-bold border border-amber-200'
+                      ? isDark
+                        ? 'bg-amber-500/10 text-amber-400 font-bold border border-amber-500/30'
+                        : 'bg-amber-50 text-amber-700 font-bold border border-amber-200'
+                      : isDark
+                      ? 'text-slate-300 hover:text-amber-400 hover:bg-slate-900'
                       : 'text-slate-700 hover:text-amber-600 hover:bg-slate-50'
                   }`}
                 >
@@ -202,6 +254,19 @@ const Navbar = () => {
                 </button>
               );
             })}
+            
+            <div className="pt-2 flex items-center justify-between border-t border-slate-200 dark:border-slate-800">
+              <span className="text-xs text-slate-500 dark:text-slate-400">Theme</span>
+              <button
+                type="button"
+                onClick={toggleTheme}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-amber-400 border border-slate-200 dark:border-slate-700"
+              >
+                {isDark ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
+                <span>{isDark ? "Light Mode" : "Dark Mode"}</span>
+              </button>
+            </div>
+
             <button
               type="button"
               onClick={() => handleNavClick('contact')}

@@ -66,7 +66,7 @@ export const defaultSiteData = {
     { id: 4, value: "20+", label: "Teachers", description: "Qualified, empathetic academic mentors" },
   ],
 
-  // Headmaster's Quote
+  // Headmaster's Quote (Kept for backwards compatibility)
   headmaster: {
     badge: "Leadership Message",
     quote: "“We aim at inspiring our students to dream more, learn more, do more, and become more in their respective journeys of life.”",
@@ -74,7 +74,32 @@ export const defaultSiteData = {
     role: "Headmaster",
     location: "Alchemist Academy, Kathmandu",
     image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80",
+    targetPage: "home",
   },
+
+  // Multi-Leadership Quotes (Headmaster, Vice Principal, Directors, etc.)
+  leadershipQuotes: [
+    {
+      id: "quote-headmaster",
+      badge: "Headmaster's Desk",
+      quote: "“We aim at inspiring our students to dream more, learn more, do more, and become more in their respective journeys of life.”",
+      name: "Karmendra Vimal",
+      role: "Headmaster",
+      location: "Alchemist Academy, Kathmandu",
+      image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80",
+      targetPage: "home", // 'home' | 'about' | 'both'
+    },
+    {
+      id: "quote-vice-principal",
+      badge: "Vice Principal's Message",
+      quote: "“True education harmonizes academic rigor with empathetic mentorship. Here at Alchemist Academy, we empower every learner to discover their unique voice, question boldly, and build purposeful lives.”",
+      name: "Suman Shrestha",
+      role: "Vice Principal",
+      location: "Alchemist Academy, Kathmandu",
+      image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=600&q=80",
+      targetPage: "about", // 'home' | 'about' | 'both'
+    },
+  ],
 
   // Curriculum Overview Grid
   curriculum: [

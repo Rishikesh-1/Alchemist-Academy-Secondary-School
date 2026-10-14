@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { CheckCircle, Sparkles, Phone, Mail, ArrowRight, ShieldCheck, AlertCircle } from 'lucide-react';
 import { useSiteData } from '../context/SiteContext';
 import { sanitizeText, sanitizePhone, getCsrfToken, checkRateLimit } from '../utils/security';
+import { submitAdmissionInquiry } from '../services/api';
 
 const AdmissionsCTA = () => {
   const { siteData } = useSiteData();
@@ -39,6 +40,14 @@ const AdmissionsCTA = () => {
       setFormError('Please enter a valid telephone or mobile number.');
       return;
     }
+
+    // 3. Persist lead directly to MySQL backend
+    submitAdmissionInquiry({
+      parentName: cleanName,
+      phone: cleanPhone,
+      childGrade: formData.grade,
+      message: 'Submitted via Home Admissions CTA',
+    }).catch((err) => console.warn('Inquiry background submit:', err));
 
     // Input is safe & validated
     setSubmitted(true);
