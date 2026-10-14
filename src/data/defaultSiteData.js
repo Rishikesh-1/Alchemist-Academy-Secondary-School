@@ -4,6 +4,8 @@ export const defaultSiteData = {
     name: "ALCHEMIST ACADEMY",
     tagline: "Excellence in Education",
     logoIcon: "GraduationCap", // GraduationCap, Sparkles, BookOpen, Award
+    logoImage: "", // Custom Brand Logo image URL or base64 upload
+    logoType: "icon", // 'icon' or 'image'
     logoColor: "#e67300",
     headerApplyButtonText: "Apply Now",
     headerApplyButtonLink: "#admissions",

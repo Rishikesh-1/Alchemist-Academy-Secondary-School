@@ -10,7 +10,7 @@ export const ROLES = {
   superadmin: {
     title: 'Super Administrator',
     badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
-    description: 'Full unconstrained access to all branding, hero, admissions, curriculum, blogs, footer, and user management.',
+    description: 'Full unconstrained access to all branding, hero, admissions, curriculum, blogs, footer, media library, and user management.',
     allowedSections: [
       'branding',
       'hero',
@@ -22,26 +22,27 @@ export const ROLES = {
       'blogs',
       'admissions',
       'footer',
+      'media',
       'users',
     ],
   },
   editor: {
     title: 'Content Editor',
     badgeColor: 'bg-blue-500/20 text-blue-300 border-blue-500/40',
-    description: 'Can draft, update, and publish school blog articles, update curriculum subjects, and co-curricular news.',
-    allowedSections: ['blogs', 'curriculum', 'cocurricular'],
+    description: 'Can draft, update, and publish school blog articles, update curriculum subjects, co-curricular news, and manage media.',
+    allowedSections: ['blogs', 'curriculum', 'cocurricular', 'media'],
   },
   admissions: {
     title: 'Admissions Officer',
     badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
     description: 'Dedicated access to admissions hotline numbers, enrollment CTAs, and student statistics counters.',
-    allowedSections: ['admissions', 'stats'],
+    allowedSections: ['admissions', 'stats', 'media'],
   },
   academic: {
     title: 'Academic Coordinator',
     badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
     description: 'Manages school curriculum pathways, about details, and co-curricular programs.',
-    allowedSections: ['about', 'curriculum', 'cocurricular', 'headmaster'],
+    allowedSections: ['about', 'curriculum', 'cocurricular', 'headmaster', 'media'],
   },
 };
 

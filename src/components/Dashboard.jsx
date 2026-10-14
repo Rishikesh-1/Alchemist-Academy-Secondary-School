@@ -25,10 +25,13 @@ import {
   Lock,
   X,
   Key,
+  FolderOpen,
 } from 'lucide-react';
 import { useSiteData } from '../context/SiteContext';
 import { useAuth } from '../context/AuthContext';
 import { LogOut, UserCheck } from 'lucide-react';
+import ImageFieldWithPicker from './ImageFieldWithPicker';
+import MediaLibraryManager from './MediaLibraryManager';
 
 const Dashboard = () => {
   const { siteData, setSiteData, resetToDefault, navigateTo } = useSiteData();
@@ -46,6 +49,7 @@ const Dashboard = () => {
     { id: 'blogs', label: 'Blog & Articles', icon: FileText },
     { id: 'admissions', label: 'Admissions CTA', icon: Phone },
     { id: 'footer', label: 'Footer & Address', icon: LayoutDashboard },
+    { id: 'media', label: 'Media Library', icon: FolderOpen },
     { id: 'users', label: 'Staff & Team Access', icon: ShieldCheck, superadminOnly: true },
   ];
 
@@ -284,42 +288,97 @@ const Dashboard = () => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
-                      Logo Icon Style
-                    </label>
-                    <select
-                      value={formData.branding.logoIcon}
-                      onChange={(e) => updateField('branding', 'logoIcon', e.target.value)}
-                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-400"
-                    >
-                      <option value="GraduationCap">Graduation Cap</option>
-                      <option value="Sparkles">Sparkles Star</option>
-                      <option value="BookOpen">Open Book</option>
-                      <option value="Award">Award Shield</option>
-                    </select>
-                  </div>
+                {/* Brand Logo Presentation Mode */}
+                <div className="pt-4 border-t border-slate-800 space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
+                        Brand Logo Display Mode
+                      </label>
+                      <p className="text-xs text-slate-400 mt-0.5">
+                        Choose whether to display a curated vector icon badge or upload an official school crest / logo image.
+                      </p>
+                    </div>
 
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
-                      Logo Accent Color
-                    </label>
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="color"
-                        value={formData.branding.logoColor}
-                        onChange={(e) => updateField('branding', 'logoColor', e.target.value)}
-                        className="w-12 h-10 rounded-xl bg-slate-900 border border-slate-700 cursor-pointer p-1"
-                      />
-                      <input
-                        type="text"
-                        value={formData.branding.logoColor}
-                        onChange={(e) => updateField('branding', 'logoColor', e.target.value)}
-                        className="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white font-mono focus:outline-none focus:border-amber-400"
-                      />
+                    <div className="flex items-center gap-2 bg-slate-900 border border-slate-700 p-1 rounded-xl">
+                      <button
+                        type="button"
+                        onClick={() => updateField('branding', 'logoType', 'icon')}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+                          formData.branding.logoType !== 'image'
+                            ? 'bg-amber-500 text-slate-950 font-bold'
+                            : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        Vector Icon
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => updateField('branding', 'logoType', 'image')}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+                          formData.branding.logoType === 'image'
+                            ? 'bg-amber-500 text-slate-950 font-bold'
+                            : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        Custom Logo Image
+                      </button>
                     </div>
                   </div>
+
+                  {formData.branding.logoType === 'image' ? (
+                    <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-4">
+                      <ImageFieldWithPicker
+                        label="Official Brand Logo / School Crest Image"
+                        value={formData.branding.logoImage || ''}
+                        onChange={(url) => {
+                          updateField('branding', 'logoImage', url);
+                          updateField('branding', 'logoType', 'image');
+                        }}
+                        category="Logos & Badges"
+                        placeholder="e.g. ./logo.png, data:image/png..., or pick from library"
+                        helpText="Recommended: Transparent background PNG, SVG, or WebP logo file (square or crest proportion)."
+                      />
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 bg-slate-900/40 border border-slate-800/80 rounded-2xl p-4 sm:p-5">
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                          Logo Icon Style
+                        </label>
+                        <select
+                          value={formData.branding.logoIcon}
+                          onChange={(e) => updateField('branding', 'logoIcon', e.target.value)}
+                          className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-400"
+                        >
+                          <option value="GraduationCap">Graduation Cap</option>
+                          <option value="Sparkles">Sparkles Star</option>
+                          <option value="BookOpen">Open Book</option>
+                          <option value="Award">Award Shield</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                          Logo Accent Color
+                        </label>
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="color"
+                            value={formData.branding.logoColor}
+                            onChange={(e) => updateField('branding', 'logoColor', e.target.value)}
+                            className="w-12 h-10 rounded-xl bg-slate-900 border border-slate-700 cursor-pointer p-1"
+                          />
+                          <input
+                            type="text"
+                            value={formData.branding.logoColor}
+                            onChange={(e) => updateField('branding', 'logoColor', e.target.value)}
+                            className="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white font-mono focus:outline-none focus:border-amber-400"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4 border-t border-slate-800">
@@ -396,18 +455,15 @@ const Dashboard = () => {
               </div>
 
               <div className="bg-slate-950/80 border border-slate-800 rounded-3xl p-6 sm:p-8 space-y-6">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
-                    Hero Background Image (URL or Web Path)
-                  </label>
-                  <div className="flex gap-3">
-                    <input
-                      type="text"
-                      value={formData.hero.bgImage}
-                      onChange={(e) => updateField('hero', 'bgImage', e.target.value)}
-                      className="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-400 font-mono"
-                    />
-                  </div>
+                <div className="space-y-3">
+                  <ImageFieldWithPicker
+                    label="Hero Background Image"
+                    value={formData.hero.bgImage}
+                    onChange={(url) => updateField('hero', 'bgImage', url)}
+                    category="Campus & Events"
+                    placeholder="e.g. ./hero-cultural.webp or choose from Media Library"
+                    helpText="Appears full-width across the header viewport with radial gradient overlay."
+                  />
                   <div className="flex flex-wrap gap-2 mt-2">
                     <span className="text-xs text-slate-400 py-1">Quick Presets:</span>
                     <button
@@ -576,17 +632,14 @@ const Dashboard = () => {
                   />
                 </div>
 
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
-                    Feature Image URL
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.about.image}
-                    onChange={(e) => updateField('about', 'image', e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-400 font-mono text-xs"
-                  />
-                </div>
+                <ImageFieldWithPicker
+                  label="Campus Feature Image"
+                  value={formData.about.image}
+                  onChange={(url) => updateField('about', 'image', url)}
+                  category="Campus & Events"
+                  placeholder="e.g. https://images.unsplash.com/... or choose from Media Library"
+                  helpText="Hero photo showcased alongside the institution's values and background narrative."
+                />
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
@@ -751,17 +804,14 @@ const Dashboard = () => {
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
-                    Headmaster Photo URL
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.headmaster.image}
-                    onChange={(e) => updateField('headmaster', 'image', e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-400 font-mono text-xs"
-                  />
-                </div>
+                <ImageFieldWithPicker
+                  label="Headmaster Official Portrait"
+                  value={formData.headmaster.image}
+                  onChange={(url) => updateField('headmaster', 'image', url)}
+                  category="Leadership & Staff"
+                  placeholder="e.g. https://images.unsplash.com/... or choose from Media Library"
+                  helpText="Displayed in the circular leadership avatar block beside the vision statement."
+                />
 
               </div>
             </div>
@@ -815,19 +865,17 @@ const Dashboard = () => {
                       />
                     </div>
 
-                    <div>
-                      <label className="block text-xs text-slate-400 mb-1">Cover Image URL</label>
-                      <input
-                        type="text"
-                        value={subj.image}
-                        onChange={(e) => {
-                          const newCurriculum = [...formData.curriculum];
-                          newCurriculum[idx].image = e.target.value;
-                          setFormData({ ...formData, curriculum: newCurriculum });
-                        }}
-                        className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white font-mono"
-                      />
-                    </div>
+                    <ImageFieldWithPicker
+                      label="Subject Cover Image"
+                      value={subj.image}
+                      onChange={(url) => {
+                        const newCurriculum = [...formData.curriculum];
+                        newCurriculum[idx].image = url;
+                        setFormData({ ...formData, curriculum: newCurriculum });
+                      }}
+                      category="Academics & STEM"
+                      placeholder="e.g. https://... or select from Media Library"
+                    />
 
                     <div>
                       <label className="block text-xs text-slate-400 mb-1">Description</label>
@@ -893,19 +941,17 @@ const Dashboard = () => {
                       </div>
                     </div>
 
-                    <div>
-                      <label className="block text-xs text-slate-400 mb-1">Banner Image URL</label>
-                      <input
-                        type="text"
-                        value={act.image}
-                        onChange={(e) => {
-                          const newAct = [...formData.coCurricular];
-                          newAct[idx].image = e.target.value;
-                          setFormData({ ...formData, coCurricular: newAct });
-                        }}
-                        className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white font-mono"
-                      />
-                    </div>
+                    <ImageFieldWithPicker
+                      label="Activity Banner Image"
+                      value={act.image}
+                      onChange={(url) => {
+                        const newAct = [...formData.coCurricular];
+                        newAct[idx].image = url;
+                        setFormData({ ...formData, coCurricular: newAct });
+                      }}
+                      category="Campus & Events"
+                      placeholder="e.g. https://... or select from Media Library"
+                    />
                   </div>
                 ))}
               </div>
@@ -1036,19 +1082,17 @@ const Dashboard = () => {
                       </div>
                     </div>
 
-                    <div>
-                      <label className="block text-xs text-slate-400 mb-1">Featured Image URL</label>
-                      <input
-                        type="text"
-                        value={post.image}
-                        onChange={(e) => {
-                          const newBlogs = [...formData.blogs];
-                          newBlogs[idx].image = e.target.value;
-                          setFormData({ ...formData, blogs: newBlogs });
-                        }}
-                        className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white font-mono"
-                      />
-                    </div>
+                    <ImageFieldWithPicker
+                      label="Featured Article Image"
+                      value={post.image}
+                      onChange={(url) => {
+                        const newBlogs = [...formData.blogs];
+                        newBlogs[idx].image = url;
+                        setFormData({ ...formData, blogs: newBlogs });
+                      }}
+                      category="Campus & Events"
+                      placeholder="e.g. https://... or select from Media Library"
+                    />
 
                     <div>
                       <label className="block text-xs text-slate-400 mb-1">Summary (Short Intro)</label>
@@ -1233,7 +1277,12 @@ const Dashboard = () => {
             </div>
           )}
 
-          {/* 11. STAFF & TEAM ACCESS (Role-Based Team Management - Superadmin Only) */}
+          {/* 11. CENTRAL MEDIA LIBRARY & ASSETS */}
+          {activeSection === 'media' && (
+            <MediaLibraryManager />
+          )}
+
+          {/* 12. STAFF & TEAM ACCESS (Role-Based Team Management - Superadmin Only) */}
           {activeSection === 'users' && currentUser?.role === 'superadmin' && (
             <div className="space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">

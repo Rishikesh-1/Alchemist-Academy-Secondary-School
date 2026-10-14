@@ -57,12 +57,22 @@ const Navbar = () => {
           {/* Left: Brand Identity */}
           <div className="flex items-center space-x-3">
             <a href="#home" className="flex items-center gap-3 group">
-              <div 
-                className="w-11 h-11 rounded-xl flex items-center justify-center text-white shadow-md group-hover:scale-105 transition-transform duration-300"
-                style={{ backgroundColor: branding.logoColor || '#e67300' }}
-              >
-                {renderIcon(branding.logoIcon, "w-6 h-6 stroke-[2.2]")}
-              </div>
+              {branding.logoType === 'image' && branding.logoImage ? (
+                <div className="w-11 h-11 rounded-xl overflow-hidden shadow-md group-hover:scale-105 transition-transform duration-300 bg-white border border-slate-100 flex items-center justify-center p-1">
+                  <img
+                    src={branding.logoImage}
+                    alt={branding.name}
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+              ) : (
+                <div 
+                  className="w-11 h-11 rounded-xl flex items-center justify-center text-white shadow-md group-hover:scale-105 transition-transform duration-300"
+                  style={{ backgroundColor: branding.logoColor || '#e67300' }}
+                >
+                  {renderIcon(branding.logoIcon, "w-6 h-6 stroke-[2.2]")}
+                </div>
+              )}
               <div className="flex flex-col">
                 <span className="font-serif-brand font-bold text-lg sm:text-xl tracking-wider text-slate-900 group-hover:text-[#e67300] transition-colors leading-tight">
                   {branding.name}

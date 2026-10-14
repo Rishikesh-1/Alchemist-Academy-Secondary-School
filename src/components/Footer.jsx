@@ -16,12 +16,22 @@ const Footer = () => {
           {/* Column 1: School Identity */}
           <div className="lg:col-span-5 space-y-4">
             <div className="flex items-center gap-3">
-              <div 
-                className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold shadow-md"
-                style={{ backgroundColor: branding.logoColor || '#e67300' }}
-              >
-                <GraduationCap className="w-6 h-6" />
-              </div>
+              {branding.logoType === 'image' && branding.logoImage ? (
+                <div className="w-10 h-10 rounded-xl overflow-hidden shadow-md bg-white border border-slate-800 flex items-center justify-center p-1">
+                  <img
+                    src={branding.logoImage}
+                    alt={branding.name}
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+              ) : (
+                <div 
+                  className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold shadow-md"
+                  style={{ backgroundColor: branding.logoColor || '#e67300' }}
+                >
+                  <GraduationCap className="w-6 h-6" />
+                </div>
+              )}
               <span className="font-serif-brand font-bold text-2xl tracking-wider text-white">
                 {branding.name}
               </span>

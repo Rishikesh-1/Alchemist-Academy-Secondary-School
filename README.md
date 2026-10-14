@@ -36,14 +36,20 @@ The Super Administrator has full control to:
 - **Account Status Control**: Temporarily suspend or reactivate staff accounts without deleting them.
 - **Revoke / Delete Accounts**: Safely delete staff accounts (with root account protection).
 
-### 4. Role Hierarchy
+### 4. Central Media Library & Brand Logo Upload
+- **Centralized Asset Management**: Browse, search, filter, and organize all school photos, banners, and logos.
+- **Universal Media Picker**: Every image upload input in the CMS (Hero background, About image, Headmaster portrait, Curriculum covers, Co-curricular banners, and Blog post images) includes a **"Media Library"** picker and **"Upload"** button.
+- **Brand Logo & Crest Upload**: Upload custom school crests/logos (PNG, SVG, WebP) or switch between curated vector badge icons.
+- **Asset Reuse**: Upload once, reuse across any section seamlessly.
+
+### 5. Role Hierarchy
 
 | Role Tier | Display Title | Permitted Modules |
 | :--- | :--- | :--- |
-| `superadmin` | **Super Administrator** | All 11 CMS sections + User Management & Staff Provisioning |
-| `editor` | **Content Editor** | Blog Articles, Curriculum Pathways, Co-Curricular Programs |
-| `admissions` | **Admissions Officer** | Admissions Hotlines, CTAs, Student Statistics Counters |
-| `academic` | **Academic Coordinator** | Curriculum Pathways, About Details, Co-Curricular, Headmaster's Note |
+| `superadmin` | **Super Administrator** | All 12 CMS sections + Media Library + Staff User Management |
+| `editor` | **Content Editor** | Blog Articles, Curriculum Pathways, Co-Curricular Programs, Media Library |
+| `admissions` | **Admissions Officer** | Admissions Hotlines, CTAs, Student Statistics Counters, Media Library |
+| `academic` | **Academic Coordinator** | Curriculum Pathways, About Details, Co-Curricular, Headmaster's Note, Media Library |
 
 ---
 

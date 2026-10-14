@@ -10,7 +10,15 @@ export const SiteProvider = ({ children }) => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        return {
+          ...defaultSiteData,
+          ...parsed,
+          branding: {
+            ...defaultSiteData.branding,
+            ...(parsed.branding || {}),
+          },
+        };
       }
     } catch (err) {
       console.error('Error loading site data from localStorage:', err);
