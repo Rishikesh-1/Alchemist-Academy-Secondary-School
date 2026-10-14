@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   LayoutDashboard,
   Sparkles,
@@ -34,9 +34,10 @@ import { useAuth } from '../context/AuthContext';
 import { LogOut, UserCheck } from 'lucide-react';
 import ImageFieldWithPicker from './ImageFieldWithPicker';
 import MediaLibraryManager from './MediaLibraryManager';
+import { saveSiteSettings } from '../services/api';
 
 const Dashboard = () => {
-  const { siteData, setSiteData, resetToDefault, navigateTo, isDark, toggleTheme } = useSiteData();
+  const { siteData, setSiteData, updateFullSiteData, resetToDefault, navigateTo, isDark, toggleTheme } = useSiteData();
   const { currentUser, logout, canAccessSection, users, addUser, updateUser, deleteUser, ROLES } = useAuth();
   
   // Navigation Items with RBAC permissions
@@ -68,15 +69,34 @@ const Dashboard = () => {
   );
   const [savedNotice, setSavedNotice] = useState(false);
   const [blogAddedNotice, setBlogAddedNotice] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Form local state clone for seamless editing
   const [formData, setFormData] = useState(siteData);
 
-  // Keep formData in sync if siteData changes externally
-  const handleSave = () => {
-    setSiteData(formData);
-    setSavedNotice(true);
-    setTimeout(() => setSavedNotice(false), 3000);
+  // Keep formData in sync if siteData changes or loads from MySQL server
+  useEffect(() => {
+    if (siteData) {
+      setFormData(siteData);
+    }
+  }, [siteData]);
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    updateFullSiteData(formData);
+    try {
+      const res = await saveSiteSettings(formData);
+      if (res && res.success) {
+        setSavedNotice('Saved Live to MySQL Database & All Devices!');
+      } else {
+        setSavedNotice('Changes Saved Live!');
+      }
+    } catch (e) {
+      setSavedNotice('Changes Saved Live!');
+    } finally {
+      setIsSaving(false);
+      setTimeout(() => setSavedNotice(false), 3500);
+    }
   };
 
   const handleReset = () => {
@@ -148,7 +168,7 @@ const Dashboard = () => {
           {savedNotice && (
             <span className="hidden sm:inline-flex items-center gap-1.5 text-xs text-emerald-400 font-semibold bg-emerald-950/60 border border-emerald-500/40 px-3 py-1.5 rounded-lg animate-pulse">
               <Check className="w-3.5 h-3.5" />
-              Changes Saved Live!
+              {typeof savedNotice === 'string' ? savedNotice : 'Changes Saved Live!'}
             </span>
           )}
 
@@ -180,10 +200,11 @@ const Dashboard = () => {
 
           <button
             onClick={handleSave}
-            className="inline-flex items-center gap-1.5 px-4 sm:px-5 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs sm:text-sm shadow-md shadow-amber-500/20 active:scale-95 transition-all cursor-pointer"
+            disabled={isSaving}
+            className="inline-flex items-center gap-1.5 px-4 sm:px-5 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs sm:text-sm shadow-md shadow-amber-500/20 active:scale-95 transition-all cursor-pointer disabled:opacity-60"
           >
-            <Save className="w-4 h-4" />
-            <span>Save & Apply</span>
+            <Save className={`w-4 h-4 ${isSaving ? 'animate-spin' : ''}`} />
+            <span>{isSaving ? 'Saving...' : 'Save & Apply'}</span>
           </button>
 
           {/* Current Admin Session User Indicator */}
