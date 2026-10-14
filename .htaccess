@@ -1,0 +1,36 @@
+# Apache Web Security Configuration for Alchemist Academy
+
+<IfModule mod_headers.c>
+    # Protect against clickjacking
+    Header always set X-Frame-Options "SAMEORIGIN"
+
+    # Block MIME-sniffing
+    Header always set X-Content-Type-Options "nosniff"
+
+    # Enforce cross-site scripting filter
+    Header always set X-XSS-Protection "1; mode=block"
+
+    # Control Referrer Information
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+
+    # Restrict device APIs
+    Header always set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+
+    # Content Security Policy (CSP)
+    Header always set Content-Security-Policy "default-src 'self' 'unsafe-inline' 'unsafe-eval' https: http: data: blob:;"
+</IfModule>
+
+# Disable Directory Browsing
+Options -Indexes
+
+# Cache Static Assets for optimal Core Web Vitals
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType image/webp "access plus 1 month"
+    ExpiresByType image/svg+xml "access plus 1 month"
+    ExpiresByType image/jpeg "access plus 1 month"
+    ExpiresByType image/png "access plus 1 month"
+    ExpiresByType text/css "access plus 1 week"
+    ExpiresByType application/javascript "access plus 1 week"
+</IfModule>
+

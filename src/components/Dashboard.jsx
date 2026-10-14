@@ -1,0 +1,1712 @@
+import React, { useState } from 'react';
+import {
+  LayoutDashboard,
+  Sparkles,
+  BookOpen,
+  Image as ImageIcon,
+  MessageSquare,
+  Users,
+  Compass,
+  FileText,
+  RotateCcw,
+  Save,
+  Check,
+  Eye,
+  Plus,
+  Trash2,
+  Edit2,
+  ExternalLink,
+  ShieldCheck,
+  Phone,
+  Mail,
+  Palette,
+  Sliders,
+  UserX,
+  Lock,
+  X,
+  Key,
+} from 'lucide-react';
+import { useSiteData } from '../context/SiteContext';
+import { useAuth } from '../context/AuthContext';
+import { LogOut, UserCheck } from 'lucide-react';
+
+const Dashboard = () => {
+  const { siteData, setSiteData, resetToDefault, navigateTo } = useSiteData();
+  const { currentUser, logout, canAccessSection, users, addUser, updateUser, deleteUser, ROLES } = useAuth();
+  
+  // Navigation Items with RBAC permissions
+  const allNavItems = [
+    { id: 'branding', label: 'Branding & Logo', icon: Palette },
+    { id: 'hero', label: 'Hero Banner & BG', icon: ImageIcon },
+    { id: 'about', label: 'About School', icon: Compass },
+    { id: 'stats', label: 'Stats Grid', icon: Users },
+    { id: 'headmaster', label: "Headmaster's Quote", icon: MessageSquare },
+    { id: 'curriculum', label: 'Curriculum Subjects', icon: BookOpen },
+    { id: 'cocurricular', label: 'Co-curricular Activities', icon: Sparkles },
+    { id: 'blogs', label: 'Blog & Articles', icon: FileText },
+    { id: 'admissions', label: 'Admissions CTA', icon: Phone },
+    { id: 'footer', label: 'Footer & Address', icon: LayoutDashboard },
+    { id: 'users', label: 'Staff & Team Access', icon: ShieldCheck, superadminOnly: true },
+  ];
+
+  // Filter based on currently logged-in user permissions
+  const allowedNavItems = allNavItems.filter((item) => {
+    if (item.superadminOnly) {
+      return currentUser?.role === 'superadmin';
+    }
+    return canAccessSection(item.id);
+  });
+
+  const [activeSection, setActiveSection] = useState(
+    allowedNavItems[0]?.id || 'blogs'
+  );
+  const [savedNotice, setSavedNotice] = useState(false);
+
+  // Form local state clone for seamless editing
+  const [formData, setFormData] = useState(siteData);
+
+  // Keep formData in sync if siteData changes externally
+  const handleSave = () => {
+    setSiteData(formData);
+    setSavedNotice(true);
+    setTimeout(() => setSavedNotice(false), 3000);
+  };
+
+  const handleReset = () => {
+    if (window.confirm('Are you sure you want to restore default template settings? Any customizations will be overwritten.')) {
+      resetToDefault();
+      setSavedNotice(true);
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
+    }
+  };
+
+  // Helper for 1-level deep updates
+  const updateField = (section, key, value) => {
+    setFormData((prev) => ({
+      ...prev,
+      [section]: {
+        ...prev[section],
+        [key]: value,
+      },
+    }));
+  };
+
+  // New staff form state (for Superadmin)
+  const [newStaffUser, setNewStaffUser] = useState({
+    username: '',
+    name: '',
+    role: 'editor',
+    password: '',
+    department: 'Academics',
+    status: 'active',
+  });
+
+  // Editing state for maintaining existing staff members
+  const [editingUser, setEditingUser] = useState(null);
+  const [editFormData, setEditFormData] = useState({
+    username: '',
+    name: '',
+    role: 'editor',
+    password: '',
+    department: '',
+    status: 'active',
+  });
+
+  return (
+    <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col">
+      {/* Top Bar */}
+      <header className="sticky top-0 z-30 bg-slate-950/90 backdrop-blur-md border-b border-slate-800 px-4 sm:px-8 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-600 to-amber-400 flex items-center justify-center text-slate-950 font-bold shadow-lg shadow-amber-500/20">
+            <LayoutDashboard className="w-5 h-5" />
+          </div>
+          <div>
+            <h1 className="font-serif-brand font-bold text-lg text-white">
+              Alchemist Academy CMS
+            </h1>
+            <p className="text-xs text-amber-400 font-medium">
+              Live Customizer & Site Dashboard
+            </p>
+          </div>
+        </div>
+
+        {/* Action Controls */}
+        <div className="flex items-center gap-3">
+          {savedNotice && (
+            <span className="hidden sm:inline-flex items-center gap-1.5 text-xs text-emerald-400 font-semibold bg-emerald-950/60 border border-emerald-500/40 px-3 py-1.5 rounded-lg animate-pulse">
+              <Check className="w-3.5 h-3.5" />
+              Changes Saved Live!
+            </span>
+          )}
+
+          <button
+            onClick={handleReset}
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition-colors"
+            title="Reset to original default school values"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span className="hidden md:inline">Reset Defaults</span>
+          </button>
+
+          <button
+            onClick={handleSave}
+            className="inline-flex items-center gap-1.5 px-5 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs sm:text-sm shadow-md shadow-amber-500/20 active:scale-95 transition-all"
+          >
+            <Save className="w-4 h-4" />
+            <span>Save & Apply</span>
+          </button>
+
+          {/* Current Admin Session User Indicator */}
+          <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-xs">
+            <UserCheck className="w-3.5 h-3.5 text-emerald-400" />
+            <span className="text-slate-300 font-medium">{currentUser?.name || 'Administrator'}</span>
+            <span className="text-[10px] uppercase font-bold text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded">
+              {currentUser?.role || 'Superadmin'}
+            </span>
+          </div>
+
+          <button
+            onClick={() => {
+              handleSave();
+              navigateTo('landing');
+            }}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs sm:text-sm shadow transition-all cursor-pointer"
+          >
+            <Eye className="w-4 h-4" />
+            <span>View Public Site</span>
+          </button>
+
+          <button
+            onClick={() => {
+              logout();
+              navigateTo('landing');
+            }}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-rose-950/60 hover:bg-rose-900 border border-rose-500/30 text-rose-300 font-semibold text-xs sm:text-sm transition-all cursor-pointer"
+            title="Terminate Session"
+          >
+            <LogOut className="w-3.5 h-3.5 text-rose-400" />
+            <span className="hidden sm:inline">Logout</span>
+          </button>
+        </div>
+      </header>
+
+      {/* Main CMS Layout */}
+      <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+        {/* Sidebar Navigation */}
+        <aside className="w-full md:w-64 lg:w-72 bg-slate-950 border-r border-slate-800 p-4 space-y-1.5 shrink-0 overflow-y-auto">
+          {/* Role badge & access indicator */}
+          <div className="mb-4 p-3 rounded-2xl bg-slate-900 border border-slate-800">
+            <div className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mb-1">
+              Active Access Tier:
+            </div>
+            <div className="flex items-center gap-2">
+              <span className={`text-xs font-bold px-2.5 py-0.5 rounded-lg border ${ROLES[currentUser?.role]?.badgeColor || 'bg-amber-500/20 text-amber-300 border-amber-500/40'}`}>
+                {ROLES[currentUser?.role]?.title || 'Staff'}
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-400 mt-2 leading-relaxed">
+              {ROLES[currentUser?.role]?.description}
+            </p>
+          </div>
+
+          <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-3 mb-2">
+            Permitted Modules ({allowedNavItems.length})
+          </div>
+
+          {allowedNavItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = activeSection === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => setActiveSection(item.id)}
+                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all text-left cursor-pointer ${
+                  isActive
+                    ? 'bg-amber-500 text-slate-950 font-bold shadow-md shadow-amber-500/20'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-900'
+                }`}
+              >
+                <Icon className={`w-4 h-4 ${isActive ? 'text-slate-950' : 'text-slate-400'}`} />
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
+
+          <div className="pt-6 border-t border-slate-800 mt-6">
+            <div className="bg-slate-900/80 rounded-2xl p-4 border border-slate-800 text-xs text-slate-400 space-y-2">
+              <span className="font-bold text-amber-400 block uppercase tracking-wider text-[10px]">
+                Instant Local Storage
+              </span>
+              <p>
+                Every change you make updates the React app and persists in your browser storage automatically.
+              </p>
+            </div>
+          </div>
+        </aside>
+
+        {/* Form Body */}
+        <main className="flex-1 p-6 sm:p-10 lg:p-12 overflow-y-auto max-w-5xl">
+          
+          {/* 1. BRANDING & LOGO */}
+          {activeSection === 'branding' && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-2xl font-bold font-serif-brand text-white">Branding & Navigation Settings</h2>
+                <p className="text-sm text-slate-400 mt-1">Configure your institution's name, tagline, logo icon, and color theme.</p>
+              </div>
+
+              <div className="bg-slate-950/80 border border-slate-800 rounded-3xl p-6 sm:p-8 space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                      Academy Brand Name
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.branding.name}
+                      onChange={(e) => updateField('branding', 'name', e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                      Tagline / Motto
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.branding.tagline}
+                      onChange={(e) => updateField('branding', 'tagline', e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-400"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                      Logo Icon Style
+                    </label>
+                    <select
+                      value={formData.branding.logoIcon}
+                      onChange={(e) => updateField('branding', 'logoIcon', e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-400"
+                    >
+                      <option value="GraduationCap">Graduation Cap</option>
+                      <option value="Sparkles">Sparkles Star</option>
+                      <option value="BookOpen">Open Book</option>
+                      <option value="Award">Award Shield</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                      Logo Accent Color
+                    </label>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="color"
+                        value={formData.branding.logoColor}
+                        onChange={(e) => updateField('branding', 'logoColor', e.target.value)}
+                        className="w-12 h-10 rounded-xl bg-slate-900 border border-slate-700 cursor-pointer p-1"
+                      />
+                      <input
+                        type="text"
+                        value={formData.branding.logoColor}
+                        onChange={(e) => updateField('branding', 'logoColor', e.target.value)}
+                        className="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white font-mono focus:outline-none focus:border-amber-400"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4 border-t border-slate-800">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                      Header Button Text
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.branding.headerApplyButtonText}
+                      onChange={(e) => updateField('branding', 'headerApplyButtonText', e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                      Header Button Target Link
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.branding.headerApplyButtonLink}
+                      onChange={(e) => updateField('branding', 'headerApplyButtonLink', e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-400"
+                    />
+                  </div>
+                </div>
+
+                {/* Social Media Links */}
+                <div className="pt-4 border-t border-slate-800 space-y-4">
+                  <h3 className="text-sm font-bold text-white uppercase tracking-wider">Social Media Placeholders</h3>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-xs font-medium text-slate-400 mb-1">Twitter / X</label>
+                      <input
+                        type="url"
+                        value={formData.socials?.twitter || ''}
+                        onChange={(e) => updateField('socials', 'twitter', e.target.value)}
+                        className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-slate-400 mb-1">Facebook</label>
+                      <input
+                        type="url"
+                        value={formData.socials?.facebook || ''}
+                        onChange={(e) => updateField('socials', 'facebook', e.target.value)}
+                        className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-slate-400 mb-1">Instagram</label>
+                      <input
+                        type="url"
+                        value={formData.socials?.instagram || ''}
+                        onChange={(e) => updateField('socials', 'instagram', e.target.value)}
+                        className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          )}
+
+          {/* 2. HERO BANNER & BACKGROUND IMAGE */}
+          {activeSection === 'hero' && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-2xl font-bold font-serif-brand text-white">Hero Section & Background</h2>
+                <p className="text-sm text-slate-400 mt-1">Change background image URL, overlay dark tint, headings, and CTA buttons.</p>
+              </div>
+
+              <div className="bg-slate-950/80 border border-slate-800 rounded-3xl p-6 sm:p-8 space-y-6">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                    Hero Background Image (URL or Web Path)
+                  </label>
+                  <div className="flex gap-3">
+                    <input
+                      type="text"
+                      value={formData.hero.bgImage}
+                      onChange={(e) => updateField('hero', 'bgImage', e.target.value)}
+                      className="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-400 font-mono"
+                    />
+                  </div>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    <span className="text-xs text-slate-400 py-1">Quick Presets:</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        updateField('hero', 'bgImage', './hero-cultural.webp');
+                        updateField('hero', 'bgOverlayOpacity', 50);
+                      }}
+                      className="text-xs px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30 font-medium transition-colors"
+                    >
+                      🌟 School Event Photo (Cultural Incense)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        updateField('hero', 'bgImage', 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?auto=format&fit=crop&w=2000&q=80');
+                        updateField('hero', 'bgOverlayOpacity', 85);
+                      }}
+                      className="text-xs px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 font-medium transition-colors"
+                    >
+                      🏫 Campus Classrooms
+                    </button>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-1.5">
+                    Tip: You can use any external image link, file link, or local path like <code className="text-amber-400 font-mono">./hero-cultural.webp</code>.
+                  </p>
+                </div>
+
+                {/* Background Image Preview */}
+                <div className="relative h-44 rounded-2xl overflow-hidden border border-slate-800 bg-slate-900">
+                  <img
+                    src={formData.hero.bgImage}
+                    alt="Hero Preview"
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.target.src = 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?auto=format&fit=crop&w=2000&q=80';
+                    }}
+                  />
+                  <div className="absolute inset-0 bg-slate-950/50 flex items-center justify-center">
+                    <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-slate-900/90 text-amber-300 border border-amber-400/30">
+                      Live Background Image Preview
+                    </span>
+                  </div>
+                </div>
+
+                {/* Dark Overlay Opacity Slider */}
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider">
+                      Dark Tint Overlay Opacity
+                    </label>
+                    <span className="text-xs font-bold text-amber-400">
+                      {formData.hero.bgOverlayOpacity || 85}%
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="10"
+                    max="95"
+                    value={formData.hero.bgOverlayOpacity || 85}
+                    onChange={(e) => updateField('hero', 'bgOverlayOpacity', Number(e.target.value))}
+                    className="w-full accent-amber-500 cursor-pointer"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4 border-t border-slate-800">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                      Top Badge Text
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.hero.badge}
+                      onChange={(e) => updateField('hero', 'badge', e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                      Subheading / Quote
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.hero.subheading}
+                      onChange={(e) => updateField('hero', 'subheading', e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-400"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                      Main Heading Part 1
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.hero.titlePart1}
+                      onChange={(e) => updateField('hero', 'titlePart1', e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                      Heading Amber Highlight
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.hero.titleHighlight}
+                      onChange={(e) => updateField('hero', 'titleHighlight', e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-400"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4 border-t border-slate-800">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                      Primary Button Label
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.hero.primaryBtnText}
+                      onChange={(e) => updateField('hero', 'primaryBtnText', e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                      Secondary Button Label
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.hero.secondaryBtnText}
+                      onChange={(e) => updateField('hero', 'secondaryBtnText', e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-400"
+                    />
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          )}
+
+          {/* 3. ABOUT SCHOOL */}
+          {activeSection === 'about' && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-2xl font-bold font-serif-brand text-white">About Section Details</h2>
+                <p className="text-sm text-slate-400 mt-1">Edit school introduction, campus photos, and core educational pillars.</p>
+              </div>
+
+              <div className="bg-slate-950/80 border border-slate-800 rounded-3xl p-6 sm:p-8 space-y-6">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                    About Section Heading
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.about.title}
+                    onChange={(e) => updateField('about', 'title', e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-400"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                    Feature Image URL
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.about.image}
+                    onChange={(e) => updateField('about', 'image', e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-400 font-mono text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                    First Paragraph (Primary Description)
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={formData.about.description1}
+                    onChange={(e) => updateField('about', 'description1', e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl p-3.5 text-sm text-white focus:outline-none focus:border-amber-400"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                    Second Paragraph (Holistic Approach)
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={formData.about.description2}
+                    onChange={(e) => updateField('about', 'description2', e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl p-3.5 text-sm text-white focus:outline-none focus:border-amber-400"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4 border-t border-slate-800">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                      Location Badge Title
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.about.locationBadgeTitle}
+                      onChange={(e) => updateField('about', 'locationBadgeTitle', e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                      Grade Pill Tag
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.about.gradePill}
+                      onChange={(e) => updateField('about', 'gradePill', e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-400"
+                    />
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          )}
+
+          {/* 4. STATS GRID */}
+          {activeSection === 'stats' && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-2xl font-bold font-serif-brand text-white">School at a Glance (Stats)</h2>
+                <p className="text-sm text-slate-400 mt-1">Configure the 4-column key metrics and counters.</p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                {formData.stats.map((stat, idx) => (
+                  <div key={stat.id || idx} className="bg-slate-950/80 border border-slate-800 rounded-3xl p-6 space-y-4">
+                    <span className="text-xs font-bold text-amber-400 uppercase tracking-wider">
+                      Metric #{idx + 1}
+                    </span>
+
+                    <div>
+                      <label className="block text-xs text-slate-400 mb-1">Value (e.g. 400+, 10+)</label>
+                      <input
+                        type="text"
+                        value={stat.value}
+                        onChange={(e) => {
+                          const newStats = [...formData.stats];
+                          newStats[idx].value = e.target.value;
+                          setFormData({ ...formData, stats: newStats });
+                        }}
+                        className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white font-bold"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs text-slate-400 mb-1">Label</label>
+                      <input
+                        type="text"
+                        value={stat.label}
+                        onChange={(e) => {
+                          const newStats = [...formData.stats];
+                          newStats[idx].label = e.target.value;
+                          setFormData({ ...formData, stats: newStats });
+                        }}
+                        className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs text-slate-400 mb-1">Short Description</label>
+                      <input
+                        type="text"
+                        value={stat.description}
+                        onChange={(e) => {
+                          const newStats = [...formData.stats];
+                          newStats[idx].description = e.target.value;
+                          setFormData({ ...formData, stats: newStats });
+                        }}
+                        className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-300"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 5. HEADMASTER'S QUOTE */}
+          {activeSection === 'headmaster' && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-2xl font-bold font-serif-brand text-white">Headmaster's Quote Section</h2>
+                <p className="text-sm text-slate-400 mt-1">Update leadership quote, headmaster profile picture, and designation.</p>
+              </div>
+
+              <div className="bg-slate-950/80 border border-slate-800 rounded-3xl p-6 sm:p-8 space-y-6">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                    Quote Body
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={formData.headmaster.quote}
+                    onChange={(e) => updateField('headmaster', 'quote', e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl p-3.5 text-sm text-white focus:outline-none focus:border-amber-400"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                      Headmaster Name
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.headmaster.name}
+                      onChange={(e) => updateField('headmaster', 'name', e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                      Role / Designation
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.headmaster.role}
+                      onChange={(e) => updateField('headmaster', 'role', e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-400"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                    Headmaster Photo URL
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.headmaster.image}
+                    onChange={(e) => updateField('headmaster', 'image', e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-400 font-mono text-xs"
+                  />
+                </div>
+
+              </div>
+            </div>
+          )}
+
+          {/* 6. CURRICULUM OVERVIEW */}
+          {activeSection === 'curriculum' && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-2xl font-bold font-serif-brand text-white">Curriculum Overview Subjects</h2>
+                <p className="text-sm text-slate-400 mt-1">Manage interactive subject cards (Fine Arts, Music, Computer Science, etc.).</p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                {formData.curriculum.map((subj, idx) => (
+                  <div key={subj.id || idx} className="bg-slate-950/80 border border-slate-800 rounded-3xl p-6 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-amber-400 uppercase tracking-wider">
+                        {subj.title}
+                      </span>
+                      <span className="text-xs px-2 py-0.5 rounded bg-slate-800 text-slate-300">
+                        {subj.badge}
+                      </span>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs text-slate-400 mb-1">Subject Title</label>
+                      <input
+                        type="text"
+                        value={subj.title}
+                        onChange={(e) => {
+                          const newCurriculum = [...formData.curriculum];
+                          newCurriculum[idx].title = e.target.value;
+                          setFormData({ ...formData, curriculum: newCurriculum });
+                        }}
+                        className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs text-slate-400 mb-1">Badge Tag</label>
+                      <input
+                        type="text"
+                        value={subj.badge}
+                        onChange={(e) => {
+                          const newCurriculum = [...formData.curriculum];
+                          newCurriculum[idx].badge = e.target.value;
+                          setFormData({ ...formData, curriculum: newCurriculum });
+                        }}
+                        className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs text-slate-400 mb-1">Cover Image URL</label>
+                      <input
+                        type="text"
+                        value={subj.image}
+                        onChange={(e) => {
+                          const newCurriculum = [...formData.curriculum];
+                          newCurriculum[idx].image = e.target.value;
+                          setFormData({ ...formData, curriculum: newCurriculum });
+                        }}
+                        className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white font-mono"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs text-slate-400 mb-1">Description</label>
+                      <textarea
+                        rows={2}
+                        value={subj.description}
+                        onChange={(e) => {
+                          const newCurriculum = [...formData.curriculum];
+                          newCurriculum[idx].description = e.target.value;
+                          setFormData({ ...formData, curriculum: newCurriculum });
+                        }}
+                        className="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-xs text-white"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 7. CO-CURRICULAR */}
+          {activeSection === 'cocurricular' && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-2xl font-bold font-serif-brand text-white">Co-curricular Activities</h2>
+                <p className="text-sm text-slate-400 mt-1">Customize feature cards for athletics, publications, and performing arts.</p>
+              </div>
+
+              <div className="space-y-6">
+                {formData.coCurricular.map((act, idx) => (
+                  <div key={act.id || idx} className="bg-slate-950/80 border border-slate-800 rounded-3xl p-6 sm:p-8 space-y-4">
+                    <span className="text-xs font-bold text-amber-400 uppercase tracking-wider">
+                      Activity #{idx + 1}: {act.title}
+                    </span>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs text-slate-400 mb-1">Title</label>
+                        <input
+                          type="text"
+                          value={act.title}
+                          onChange={(e) => {
+                            const newAct = [...formData.coCurricular];
+                            newAct[idx].title = e.target.value;
+                            setFormData({ ...formData, coCurricular: newAct });
+                          }}
+                          className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs text-slate-400 mb-1">Subtitle</label>
+                        <input
+                          type="text"
+                          value={act.subtitle}
+                          onChange={(e) => {
+                            const newAct = [...formData.coCurricular];
+                            newAct[idx].subtitle = e.target.value;
+                            setFormData({ ...formData, coCurricular: newAct });
+                          }}
+                          className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs text-slate-400 mb-1">Banner Image URL</label>
+                      <input
+                        type="text"
+                        value={act.image}
+                        onChange={(e) => {
+                          const newAct = [...formData.coCurricular];
+                          newAct[idx].image = e.target.value;
+                          setFormData({ ...formData, coCurricular: newAct });
+                        }}
+                        className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white font-mono"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 8. BLOG & ARTICLES */}
+          {activeSection === 'blogs' && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold font-serif-brand text-white">School Blog & News Articles</h2>
+                  <p className="text-sm text-slate-400 mt-1">Publish news, edit campus articles, change images, and authors.</p>
+                </div>
+                
+                <button
+                  onClick={() => {
+                    const newBlog = {
+                      id: Date.now(),
+                      title: "New School Announcement",
+                      category: "Updates",
+                      date: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+                      author: "Administration",
+                      readTime: "2 min read",
+                      summary: "A fresh update on upcoming events, academic notices, and school activities.",
+                      image: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=800&q=80",
+                      content: "Full announcement content details here. You can add paragraphs explaining the update to parents and students.",
+                    };
+                    setFormData({ ...formData, blogs: [newBlog, ...formData.blogs] });
+                  }}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Add New Article</span>
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                {formData.blogs.map((post, idx) => (
+                  <div key={post.id || idx} className="bg-slate-950/80 border border-slate-800 rounded-3xl p-6 sm:p-8 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-amber-400 uppercase tracking-wider">
+                        Article #{idx + 1}
+                      </span>
+                      <button
+                        onClick={() => {
+                          const filtered = formData.blogs.filter((_, i) => i !== idx);
+                          setFormData({ ...formData, blogs: filtered });
+                        }}
+                        className="text-xs text-rose-400 hover:text-rose-300 flex items-center gap-1"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Delete</span>
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs text-slate-400 mb-1">Title</label>
+                        <input
+                          type="text"
+                          value={post.title}
+                          onChange={(e) => {
+                            const newBlogs = [...formData.blogs];
+                            newBlogs[idx].title = e.target.value;
+                            setFormData({ ...formData, blogs: newBlogs });
+                          }}
+                          className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs text-slate-400 mb-1">Category</label>
+                        <input
+                          type="text"
+                          value={post.category}
+                          onChange={(e) => {
+                            const newBlogs = [...formData.blogs];
+                            newBlogs[idx].category = e.target.value;
+                            setFormData({ ...formData, blogs: newBlogs });
+                          }}
+                          className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-xs text-slate-400 mb-1">Date</label>
+                        <input
+                          type="text"
+                          value={post.date}
+                          onChange={(e) => {
+                            const newBlogs = [...formData.blogs];
+                            newBlogs[idx].date = e.target.value;
+                            setFormData({ ...formData, blogs: newBlogs });
+                          }}
+                          className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs text-slate-400 mb-1">Author</label>
+                        <input
+                          type="text"
+                          value={post.author}
+                          onChange={(e) => {
+                            const newBlogs = [...formData.blogs];
+                            newBlogs[idx].author = e.target.value;
+                            setFormData({ ...formData, blogs: newBlogs });
+                          }}
+                          className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs text-slate-400 mb-1">Read Time</label>
+                        <input
+                          type="text"
+                          value={post.readTime}
+                          onChange={(e) => {
+                            const newBlogs = [...formData.blogs];
+                            newBlogs[idx].readTime = e.target.value;
+                            setFormData({ ...formData, blogs: newBlogs });
+                          }}
+                          className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs text-slate-400 mb-1">Featured Image URL</label>
+                      <input
+                        type="text"
+                        value={post.image}
+                        onChange={(e) => {
+                          const newBlogs = [...formData.blogs];
+                          newBlogs[idx].image = e.target.value;
+                          setFormData({ ...formData, blogs: newBlogs });
+                        }}
+                        className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white font-mono"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs text-slate-400 mb-1">Summary (Short Intro)</label>
+                      <textarea
+                        rows={2}
+                        value={post.summary}
+                        onChange={(e) => {
+                          const newBlogs = [...formData.blogs];
+                          newBlogs[idx].summary = e.target.value;
+                          setFormData({ ...formData, blogs: newBlogs });
+                        }}
+                        className="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-xs text-white"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs text-slate-400 mb-1">Full Article Content</label>
+                      <textarea
+                        rows={3}
+                        value={post.content || ''}
+                        onChange={(e) => {
+                          const newBlogs = [...formData.blogs];
+                          newBlogs[idx].content = e.target.value;
+                          setFormData({ ...formData, blogs: newBlogs });
+                        }}
+                        className="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-xs text-white"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 9. ADMISSIONS CTA */}
+          {activeSection === 'admissions' && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-2xl font-bold font-serif-brand text-white">Admissions Call-to-Action</h2>
+                <p className="text-sm text-slate-400 mt-1">Configure the enrollment prompt, hotlines, and callout banner.</p>
+              </div>
+
+              <div className="bg-slate-950/80 border border-slate-800 rounded-3xl p-6 sm:p-8 space-y-6">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                    Banner Title Question
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.admissions.title}
+                    onChange={(e) => updateField('admissions', 'title', e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-400"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                    Description Prompt
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={formData.admissions.description}
+                    onChange={(e) => updateField('admissions', 'description', e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-amber-400"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                      Admissions Phone
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.admissions.phone}
+                      onChange={(e) => updateField('admissions', 'phone', e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                      Admissions Email
+                    </label>
+                    <input
+                      type="email"
+                      value={formData.admissions.email}
+                      onChange={(e) => updateField('admissions', 'email', e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-400"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                    Button Label
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.admissions.btnText}
+                    onChange={(e) => updateField('admissions', 'btnText', e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-400"
+                  />
+                </div>
+
+              </div>
+            </div>
+          )}
+
+          {/* 10. FOOTER & ADDRESS */}
+          {activeSection === 'footer' && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-2xl font-bold font-serif-brand text-white">Footer & Contact Information</h2>
+                <p className="text-sm text-slate-400 mt-1">Update physical school address, operational hours, and contact details.</p>
+              </div>
+
+              <div className="bg-slate-950/80 border border-slate-800 rounded-3xl p-6 sm:p-8 space-y-6">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                    Official Physical Address
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.footer.address}
+                    onChange={(e) => updateField('footer', 'address', e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-400"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                      Office Telephone
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.footer.phone}
+                      onChange={(e) => updateField('footer', 'phone', e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                      School Email
+                    </label>
+                    <input
+                      type="email"
+                      value={formData.footer.email}
+                      onChange={(e) => updateField('footer', 'email', e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-400"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                    Office Hours
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.footer.hours}
+                    onChange={(e) => updateField('footer', 'hours', e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-400"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                    Footer Statement / Tagline
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={formData.footer.tagline}
+                    onChange={(e) => updateField('footer', 'tagline', e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-amber-400"
+                  />
+                </div>
+
+              </div>
+            </div>
+          )}
+
+          {/* 11. STAFF & TEAM ACCESS (Role-Based Team Management - Superadmin Only) */}
+          {activeSection === 'users' && currentUser?.role === 'superadmin' && (
+            <div className="space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-2xl font-bold font-serif-brand text-white">Staff Team & Role-Based Access</h2>
+                  <p className="text-sm text-slate-400 mt-1">Manage team members, assign granular access tiers, or issue new credentials.</p>
+                </div>
+              </div>
+
+              {/* Roles Overview Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {Object.entries(ROLES).map(([roleKey, roleInfo]) => (
+                  <div key={roleKey} className="bg-slate-950/80 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between">
+                    <div>
+                      <span className={`text-[11px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider ${roleInfo.badgeColor}`}>
+                        {roleInfo.title}
+                      </span>
+                      <p className="text-xs text-slate-400 mt-2 leading-relaxed">
+                        {roleInfo.description}
+                      </p>
+                    </div>
+                    <div className="mt-3 pt-3 border-t border-slate-900 text-[10px] text-amber-400 font-semibold">
+                      Allowed Modules: {roleInfo.allowedSections.length}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Add New Staff Member Form */}
+              <div className="bg-slate-950/80 border border-slate-800 rounded-3xl p-6 sm:p-8 space-y-4">
+                <h3 className="text-base font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-amber-400" />
+                  <span>Provision New Staff Account</span>
+                </h3>
+
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const cleanUsername = (newStaffUser.username || '').toLowerCase().trim();
+                    if (!cleanUsername || !newStaffUser.password || !newStaffUser.name) {
+                      alert('Please provide staff name, username, and password.');
+                      return;
+                    }
+                    if (users.some((u) => u.username.toLowerCase() === cleanUsername)) {
+                      alert(`Username "${cleanUsername}" is already in use. Please choose another username.`);
+                      return;
+                    }
+
+                    addUser({
+                      ...newStaffUser,
+                      username: cleanUsername,
+                      status: 'active',
+                    });
+
+                    setNewStaffUser({
+                      username: '',
+                      name: '',
+                      role: 'editor',
+                      password: '',
+                      department: 'Academics',
+                      status: 'active',
+                    });
+                    alert(`New staff member "${newStaffUser.name}" created successfully with ${ROLES[newStaffUser.role]?.title} permissions.`);
+                  }}
+                  className="space-y-4 pt-2"
+                >
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-xs text-slate-400 mb-1">Staff Full Name</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. Ramesh Shrestha"
+                        value={newStaffUser.name}
+                        onChange={(e) => setNewStaffUser({ ...newStaffUser, name: e.target.value })}
+                        className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs text-slate-400 mb-1">Username (Login ID)</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. ramesh"
+                        value={newStaffUser.username}
+                        onChange={(e) => setNewStaffUser({ ...newStaffUser, username: e.target.value.toLowerCase().trim() })}
+                        className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white font-mono"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs text-slate-400 mb-1">Assigned Role Tier</label>
+                      <select
+                        value={newStaffUser.role}
+                        onChange={(e) => setNewStaffUser({ ...newStaffUser, role: e.target.value })}
+                        className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white"
+                      >
+                        <option value="editor">Content Editor (Blogs, Activities)</option>
+                        <option value="admissions">Admissions Officer (Inquiries, Stats)</option>
+                        <option value="academic">Academic Coordinator (Curriculum, About)</option>
+                        <option value="superadmin">Super Administrator (Full Access)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs text-slate-400 mb-1">Department</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Science & Technology"
+                        value={newStaffUser.department}
+                        onChange={(e) => setNewStaffUser({ ...newStaffUser, department: e.target.value })}
+                        className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs text-slate-400 mb-1">Security Key / Password</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. StaffPass2026"
+                        value={newStaffUser.password}
+                        onChange={(e) => setNewStaffUser({ ...newStaffUser, password: e.target.value })}
+                        className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white font-mono"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end pt-2">
+                    <button
+                      type="submit"
+                      className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>Create Staff Account</span>
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              {/* Existing Accounts Maintenance Table */}
+              <div className="bg-slate-950/80 border border-slate-800 rounded-3xl p-6 sm:p-8 space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div>
+                    <h3 className="text-base font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                      <Users className="w-4 h-4 text-amber-400" />
+                      <span>Manage & Maintain Accounts ({users.length})</span>
+                    </h3>
+                    <p className="text-xs text-slate-400 mt-1">
+                      As Superadmin, you can modify roles, reset passwords, change departments, suspend access, or revoke accounts.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead>
+                      <tr className="border-b border-slate-800 text-slate-400 uppercase tracking-wider">
+                        <th className="pb-3 px-3">Name & Department</th>
+                        <th className="pb-3 px-3">Username</th>
+                        <th className="pb-3 px-3">Role Tier</th>
+                        <th className="pb-3 px-3">Status</th>
+                        <th className="pb-3 px-3">Password / Key</th>
+                        <th className="pb-3 px-3 text-right">Maintain & Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800/60">
+                      {users.map((u) => {
+                        const isRoot = u.username === 'admin';
+                        const isSelf = currentUser?.id === u.id;
+                        const isSuspended = u.status === 'suspended';
+
+                        return (
+                          <tr key={u.id} className="hover:bg-slate-900/50 transition-colors">
+                            <td className="py-3 px-3 font-semibold text-white">
+                              <div className="flex items-center gap-2">
+                                <span>{u.name}</span>
+                                {isSelf && (
+                                  <span className="text-[9px] bg-amber-500/20 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded font-bold uppercase">
+                                    You
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-[10px] text-slate-400 font-normal">{u.department}</div>
+                            </td>
+                            <td className="py-3 px-3 font-mono text-amber-300">
+                              {u.username}
+                            </td>
+                            <td className="py-3 px-3">
+                              <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase border ${ROLES[u.role]?.badgeColor || 'bg-slate-800 text-slate-300'}`}>
+                                {ROLES[u.role]?.title || u.role}
+                              </span>
+                            </td>
+                            <td className="py-3 px-3">
+                              {isSuspended ? (
+                                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-rose-400 bg-rose-950/60 border border-rose-800/60 px-2 py-0.5 rounded-full">
+                                  <UserX className="w-3 h-3" /> Suspended
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-800/60 px-2 py-0.5 rounded-full">
+                                  <Check className="w-3 h-3" /> Active
+                                </span>
+                              )}
+                            </td>
+                            <td className="py-3 px-3 font-mono text-slate-400">
+                              {u.password}
+                            </td>
+                            <td className="py-3 px-3 text-right">
+                              <div className="flex items-center justify-end gap-2">
+                                {/* Edit / Maintain button */}
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setEditingUser(u);
+                                    setEditFormData({
+                                      name: u.name,
+                                      username: u.username,
+                                      role: u.role,
+                                      password: u.password,
+                                      department: u.department || '',
+                                      status: u.status || 'active',
+                                    });
+                                  }}
+                                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-amber-300 hover:text-amber-200 text-[11px] font-medium border border-slate-700 transition-colors cursor-pointer"
+                                  title="Edit role, details, or password"
+                                >
+                                  <Edit2 className="w-3 h-3" />
+                                  <span>Edit</span>
+                                </button>
+
+                                {/* Suspend / Activate toggle */}
+                                {!isRoot && !isSelf && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const nextStatus = isSuspended ? 'active' : 'suspended';
+                                      updateUser(u.id, { status: nextStatus });
+                                    }}
+                                    className={`inline-flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium border transition-colors cursor-pointer ${
+                                      isSuspended
+                                        ? 'bg-emerald-950/40 hover:bg-emerald-900/60 text-emerald-300 border-emerald-800'
+                                        : 'bg-amber-950/40 hover:bg-amber-900/60 text-amber-300 border-amber-800'
+                                    }`}
+                                    title={isSuspended ? 'Reactivate account' : 'Temporarily suspend account'}
+                                  >
+                                    {isSuspended ? <Unlock className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
+                                    <span>{isSuspended ? 'Activate' : 'Suspend'}</span>
+                                  </button>
+                                )}
+
+                                {/* Revoke / Delete button */}
+                                {isRoot ? (
+                                  <span className="text-[10px] text-slate-500 italic px-2">Protected Root</span>
+                                ) : isSelf ? (
+                                  <span className="text-[10px] text-slate-500 italic px-2">Current Session</span>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      if (window.confirm(`Are you sure you want to completely delete account "${u.name}" (@${u.username})? This action cannot be undone.`)) {
+                                        deleteUser(u.id);
+                                      }
+                                    }}
+                                    className="text-rose-400 hover:text-rose-300 text-[11px] font-semibold flex items-center gap-1 p-1 hover:bg-rose-950/40 rounded transition-colors cursor-pointer"
+                                    title="Revoke and delete account permanently"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                    <span>Delete</span>
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Superadmin User Maintenance Modal */}
+              {editingUser && (
+                <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+                  <div className="bg-slate-900 border border-slate-700 rounded-3xl w-full max-w-xl shadow-2xl p-6 sm:p-8 space-y-6 animate-in fade-in zoom-in-95 duration-150">
+                    <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+                      <div className="flex items-center gap-2">
+                        <div className="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-300">
+                          <Edit2 className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <h4 className="text-base font-bold text-white">Maintain Staff Account</h4>
+                          <p className="text-xs text-slate-400">Editing @{editingUser.username} ({editingUser.name})</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setEditingUser(null)}
+                        className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+
+                    <form
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        const cleanUsername = editFormData.username.toLowerCase().trim();
+                        if (!cleanUsername || !editFormData.name || !editFormData.password) {
+                          alert('Please fill out all required fields.');
+                          return;
+                        }
+
+                        // Check username clash
+                        const clash = users.some(
+                          (u) => u.id !== editingUser.id && u.username.toLowerCase() === cleanUsername
+                        );
+                        if (clash) {
+                          alert(`Username "${cleanUsername}" is already taken by another account.`);
+                          return;
+                        }
+
+                        // Prevent locking out superadmins
+                        if (
+                          editingUser.role === 'superadmin' &&
+                          editFormData.role !== 'superadmin' &&
+                          users.filter((u) => u.role === 'superadmin').length <= 1
+                        ) {
+                          alert('You cannot demote the only remaining Super Administrator account.');
+                          return;
+                        }
+
+                        updateUser(editingUser.id, {
+                          ...editFormData,
+                          username: cleanUsername,
+                        });
+
+                        setEditingUser(null);
+                        alert(`Account details for ${editFormData.name} successfully updated.`);
+                      }}
+                      className="space-y-4"
+                    >
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-300 mb-1">
+                            Staff Full Name
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={editFormData.name}
+                            onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                            className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:border-amber-400 focus:outline-none"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-300 mb-1">
+                            Username (Login ID)
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            disabled={editingUser.username === 'admin'}
+                            value={editFormData.username}
+                            onChange={(e) => setEditFormData({ ...editFormData, username: e.target.value.toLowerCase().trim() })}
+                            className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white font-mono focus:border-amber-400 focus:outline-none disabled:opacity-50"
+                          />
+                          {editingUser.username === 'admin' && (
+                            <span className="text-[10px] text-slate-500">Root username cannot be renamed.</span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-300 mb-1">
+                            Assigned Role Tier
+                          </label>
+                          <select
+                            value={editFormData.role}
+                            disabled={editingUser.username === 'admin'}
+                            onChange={(e) => setEditFormData({ ...editFormData, role: e.target.value })}
+                            className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:border-amber-400 focus:outline-none disabled:opacity-50"
+                          >
+                            <option value="superadmin">Super Administrator (Full Unconstrained Access)</option>
+                            <option value="editor">Content Editor (Blogs, Activities, Curriculum)</option>
+                            <option value="admissions">Admissions Officer (Inquiries, Enrollment, Stats)</option>
+                            <option value="academic">Academic Coordinator (Curriculum, Faculty, About)</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-300 mb-1">
+                            Account Status
+                          </label>
+                          <select
+                            value={editFormData.status}
+                            disabled={editingUser.username === 'admin' || currentUser?.id === editingUser.id}
+                            onChange={(e) => setEditFormData({ ...editFormData, status: e.target.value })}
+                            className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:border-amber-400 focus:outline-none disabled:opacity-50"
+                          >
+                            <option value="active">Active (Can Log In)</option>
+                            <option value="suspended">Suspended (Access Blocked)</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-300 mb-1">
+                            Department
+                          </label>
+                          <input
+                            type="text"
+                            value={editFormData.department}
+                            onChange={(e) => setEditFormData({ ...editFormData, department: e.target.value })}
+                            className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:border-amber-400 focus:outline-none"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-300 mb-1">
+                            Password / Security Key
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={editFormData.password}
+                            onChange={(e) => setEditFormData({ ...editFormData, password: e.target.value })}
+                            className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white font-mono focus:border-amber-400 focus:outline-none"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="p-3 bg-slate-950/60 border border-slate-800 rounded-xl text-xs text-slate-400 flex items-start gap-2">
+                        <Key className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
+                        <div>
+                          <span className="font-semibold text-slate-200">Role Preview: </span>
+                          {ROLES[editFormData.role]?.description}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+                        <button
+                          type="button"
+                          onClick={() => setEditingUser(null)}
+                          className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold cursor-pointer"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          className="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow cursor-pointer"
+                        >
+                          <Save className="w-4 h-4" />
+                          <span>Save Changes</span>
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              )}
+
+            </div>
+          )}
+
+        </main>
+      </div>
+    </div>
+  );
+};
+
+export default Dashboard;
+
