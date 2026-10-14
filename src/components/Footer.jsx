@@ -1,5 +1,5 @@
 import React from 'react';
-import { MapPin, Phone, Mail, Clock, GraduationCap, ChevronRight, Lock } from 'lucide-react';
+import { MapPin, Phone, Mail, Clock, GraduationCap, ChevronRight } from 'lucide-react';
 import { useSiteData } from '../context/SiteContext';
 
 const Footer = () => {
@@ -56,40 +56,64 @@ const Footer = () => {
             </h4>
             <ul className="space-y-2.5 text-sm">
               <li>
-                <a href="#home" className="hover:text-amber-400 transition-colors flex items-center gap-2 group">
+                <button
+                  type="button"
+                  onClick={() => navigateTo('home')}
+                  className="hover:text-amber-400 transition-colors flex items-center gap-2 group cursor-pointer text-left text-slate-400 hover:text-white"
+                >
                   <ChevronRight className="w-3.5 h-3.5 text-slate-600 group-hover:text-amber-400 group-hover:translate-x-1 transition-all" />
                   Home
-                </a>
+                </button>
               </li>
               <li>
-                <a href="#about" className="hover:text-amber-400 transition-colors flex items-center gap-2 group">
+                <button
+                  type="button"
+                  onClick={() => navigateTo('about')}
+                  className="hover:text-amber-400 transition-colors flex items-center gap-2 group cursor-pointer text-left text-slate-400 hover:text-white"
+                >
                   <ChevronRight className="w-3.5 h-3.5 text-slate-600 group-hover:text-amber-400 group-hover:translate-x-1 transition-all" />
                   About Our School
-                </a>
+                </button>
               </li>
               <li>
-                <a href="#academics" className="hover:text-amber-400 transition-colors flex items-center gap-2 group">
+                <button
+                  type="button"
+                  onClick={() => navigateTo('academics')}
+                  className="hover:text-amber-400 transition-colors flex items-center gap-2 group cursor-pointer text-left text-slate-400 hover:text-white"
+                >
                   <ChevronRight className="w-3.5 h-3.5 text-slate-600 group-hover:text-amber-400 group-hover:translate-x-1 transition-all" />
                   Curriculum & Academics
-                </a>
+                </button>
               </li>
               <li>
-                <a href="#activities" className="hover:text-amber-400 transition-colors flex items-center gap-2 group">
+                <button
+                  type="button"
+                  onClick={() => navigateTo('activities')}
+                  className="hover:text-amber-400 transition-colors flex items-center gap-2 group cursor-pointer text-left text-slate-400 hover:text-white"
+                >
                   <ChevronRight className="w-3.5 h-3.5 text-slate-600 group-hover:text-amber-400 group-hover:translate-x-1 transition-all" />
                   Co-curricular Activities
-                </a>
+                </button>
               </li>
               <li>
-                <a href="#blog" className="hover:text-amber-400 transition-colors flex items-center gap-2 group">
+                <button
+                  type="button"
+                  onClick={() => navigateTo('blog')}
+                  className="hover:text-amber-400 transition-colors flex items-center gap-2 group cursor-pointer text-left text-slate-400 hover:text-white"
+                >
                   <ChevronRight className="w-3.5 h-3.5 text-slate-600 group-hover:text-amber-400 group-hover:translate-x-1 transition-all" />
                   School Blog & News
-                </a>
+                </button>
               </li>
               <li>
-                <a href="#admissions" className="hover:text-amber-400 transition-colors flex items-center gap-2 group">
+                <button
+                  type="button"
+                  onClick={() => navigateTo('contact')}
+                  className="hover:text-amber-400 transition-colors flex items-center gap-2 group cursor-pointer text-left text-slate-400 hover:text-white"
+                >
                   <ChevronRight className="w-3.5 h-3.5 text-slate-600 group-hover:text-amber-400 group-hover:translate-x-1 transition-all" />
-                  Enrollment & Admissions
-                </a>
+                  Contact & Admissions
+                </button>
               </li>
             </ul>
           </div>
@@ -130,22 +154,10 @@ const Footer = () => {
 
         </div>
 
-        {/* Bottom Bar: Copyright notice & discrete Staff Access button */}
+        {/* Bottom Bar: Clean institutional copyright notice */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4">
           <p>© {footer.copyrightYear || new Date().getFullYear()} {branding.name}. All rights reserved.</p>
-          <div className="flex items-center gap-4">
-            <span>Crafted for Young Learners in Nepal</span>
-            <span>•</span>
-            {/* Discrete, lock-gated staff link routing strictly to the authentication portal */}
-            <button
-              onClick={() => navigateTo('admin-login')}
-              className="text-slate-600 hover:text-slate-400 transition-colors flex items-center gap-1 opacity-70 hover:opacity-100"
-              title="Staff Portal (Authentication Required)"
-            >
-              <Lock className="w-3 h-3" />
-              <span>Staff Access</span>
-            </button>
-          </div>
+          <p className="text-slate-600 text-[11px] tracking-wide">{branding.tagline || 'Excellence in Education'}</p>
         </div>
 
       </div>

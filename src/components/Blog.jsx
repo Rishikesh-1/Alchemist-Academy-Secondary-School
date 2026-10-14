@@ -3,8 +3,9 @@ import { Calendar, User, Clock, ArrowRight, Tag, BookOpen, ChevronRight, X } fro
 import { useSiteData } from '../context/SiteContext';
 
 const Blog = () => {
-  const { siteData } = useSiteData();
+  const { siteData, navigateTo } = useSiteData();
   const blogs = siteData.blogs || [];
+  const displayBlogs = blogs.slice(0, 3);
   const [selectedBlog, setSelectedBlog] = useState(null);
 
   return (
@@ -30,7 +31,7 @@ const Blog = () => {
 
         {/* 3-Column Blog Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {blogs.map((post) => (
+          {displayBlogs.map((post) => (
             <article
               key={post.id}
               className="bg-white rounded-3xl overflow-hidden border border-slate-200/90 hover:border-amber-400/50 shadow-sm hover:shadow-2xl hover:-translate-y-1.5 transition-all duration-300 flex flex-col group cursor-pointer"
@@ -84,13 +85,33 @@ const Blog = () => {
                 </div>
 
                 {/* Card Action Link */}
-                <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-[#d96500] group-hover:translate-x-1 transition-transform">
-                  <span>Read Full Article</span>
-                  <ArrowRight className="w-4 h-4" />
+                <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-slate-500 group-hover:text-amber-600 transition-colors">
+                  <span>Read Full Story</span>
+                  <span className="w-6 h-6 rounded-full bg-slate-100 group-hover:bg-amber-100 group-hover:text-amber-700 flex items-center justify-center transition-colors">
+                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                  </span>
                 </div>
               </div>
             </article>
           ))}
+        </div>
+
+        {/* View All Articles Action Button */}
+        <div className="mt-16 text-center">
+          <button
+            type="button"
+            onClick={() => navigateTo('blog')}
+            className="group inline-flex items-center gap-3 px-8 py-4 rounded-full bg-white text-slate-900 font-semibold text-sm border border-slate-200/90 shadow-sm hover:shadow-xl hover:border-amber-400 hover:text-amber-700 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer"
+          >
+            <BookOpen className="w-4 h-4 text-amber-500 group-hover:scale-110 transition-transform" />
+            <span>Browse All News & Articles</span>
+            <span className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-800 border border-amber-500/20">
+              {blogs.length} Stories
+            </span>
+            <span className="w-6 h-6 rounded-full bg-slate-100 group-hover:bg-amber-500 group-hover:text-white flex items-center justify-center text-slate-500 transition-colors ml-1">
+              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+            </span>
+          </button>
         </div>
 
       </div>

@@ -37,17 +37,22 @@ const renderIcon = (name, className = "w-6 h-6") => {
 
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { siteData } = useSiteData();
+  const { siteData, currentRoute, navigateTo } = useSiteData();
   const { branding, socials } = siteData;
 
   const navLinks = [
-    { name: 'Home', href: '#home' },
-    { name: 'About', href: '#about' },
-    { name: 'Academics', href: '#academics' },
-    { name: 'Activities', href: '#activities' },
-    { name: 'Blog', href: '#blog' },
-    { name: 'Contact', href: '#contact' },
+    { name: 'Home', route: 'home' },
+    { name: 'About', route: 'about' },
+    { name: 'Academics', route: 'academics' },
+    { name: 'Activities', route: 'activities' },
+    { name: 'Blog', route: 'blog' },
+    { name: 'Contact', route: 'contact' },
   ];
+
+  const handleNavClick = (route) => {
+    navigateTo(route);
+    setMobileMenuOpen(false);
+  };
 
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md shadow-sm border-b border-slate-100 transition-all">
@@ -56,7 +61,11 @@ const Navbar = () => {
           
           {/* Left: Brand Identity */}
           <div className="flex items-center space-x-3">
-            <a href="#home" className="flex items-center gap-3 group">
+            <button
+              type="button"
+              onClick={() => handleNavClick('home')}
+              className="flex items-center gap-3 group text-left cursor-pointer"
+            >
               {branding.logoType === 'image' && branding.logoImage ? (
                 <div className="w-11 h-11 rounded-xl overflow-hidden shadow-md group-hover:scale-105 transition-transform duration-300 bg-white border border-slate-100 flex items-center justify-center p-1">
                   <img
@@ -81,20 +90,31 @@ const Navbar = () => {
                   {branding.tagline}
                 </span>
               </div>
-            </a>
+            </button>
           </div>
 
-          {/* Center: Public Navigation Links */}
-          <nav className="hidden lg:flex items-center space-x-8" aria-label="Main Navigation">
-            {navLinks.map((link) => (
-              <a
-                key={link.name}
-                href={link.href}
-                className="text-slate-600 hover:text-[#e67300] font-semibold text-sm tracking-wide transition-colors duration-200"
-              >
-                {link.name}
-              </a>
-            ))}
+          {/* Center: Public Dedicated Page Links */}
+          <nav className="hidden lg:flex items-center space-x-2" aria-label="Main Navigation">
+            {navLinks.map((link) => {
+              const isCurrent =
+                currentRoute === link.route ||
+                (link.route === 'home' && (currentRoute === 'landing' || currentRoute === 'home'));
+
+              return (
+                <button
+                  key={link.name}
+                  type="button"
+                  onClick={() => handleNavClick(link.route)}
+                  className={`font-semibold text-sm tracking-wide transition-all duration-200 cursor-pointer px-4 py-2 rounded-full ${
+                    isCurrent
+                      ? 'text-[#e67300] bg-amber-50 font-bold border border-amber-200/80 shadow-xs'
+                      : 'text-slate-600 hover:text-[#e67300] hover:bg-slate-50'
+                  }`}
+                >
+                  {link.name}
+                </button>
+              );
+            })}
           </nav>
 
           {/* Right: Public Social Links + Apply Now Button */}
@@ -133,14 +153,15 @@ const Navbar = () => {
               </a>
             )}
 
-            {/* Public Action Button */}
-            <a
-              href={branding.headerApplyButtonLink || "#admissions"}
-              className="inline-flex items-center justify-center px-5 py-2.5 text-xs uppercase tracking-wider font-bold rounded-lg text-white shadow-sm hover:opacity-90 active:scale-95 transition-all"
+            {/* Apply Now Action Button */}
+            <button
+              type="button"
+              onClick={() => handleNavClick('contact')}
+              className="inline-flex items-center justify-center px-5 py-2 text-xs uppercase tracking-wider font-bold rounded-full text-white shadow-sm hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 transition-all cursor-pointer"
               style={{ backgroundColor: branding.logoColor || '#d96500' }}
             >
               {branding.headerApplyButtonText || "Apply Now"}
-            </a>
+            </button>
           </div>
 
           {/* Mobile menu button */}
@@ -160,25 +181,35 @@ const Navbar = () => {
       {/* Mobile menu dropdown */}
       {mobileMenuOpen && (
         <div className="lg:hidden border-t border-slate-100 bg-white px-4 pt-3 pb-6 shadow-xl transition-all">
-          <div className="flex flex-col space-y-3">
-            {navLinks.map((link) => (
-              <a
-                key={link.name}
-                href={link.href}
-                onClick={() => setMobileMenuOpen(false)}
-                className="text-slate-700 hover:text-amber-600 font-medium py-2 px-3 rounded-md hover:bg-amber-50/50 transition-colors"
-              >
-                {link.name}
-              </a>
-            ))}
-            <a
-              href={branding.headerApplyButtonLink || "#admissions"}
-              onClick={() => setMobileMenuOpen(false)}
-              className="mt-2 w-full text-center py-2.5 px-4 rounded-lg text-white font-medium text-sm shadow"
+          <div className="flex flex-col space-y-2">
+            {navLinks.map((link) => {
+              const isCurrent =
+                currentRoute === link.route ||
+                (link.route === 'home' && (currentRoute === 'landing' || currentRoute === 'home'));
+
+              return (
+                <button
+                  key={link.name}
+                  type="button"
+                  onClick={() => handleNavClick(link.route)}
+                  className={`text-left font-medium py-2 px-3 rounded-xl transition-colors cursor-pointer ${
+                    isCurrent
+                      ? 'bg-amber-50 text-amber-700 font-bold border border-amber-200'
+                      : 'text-slate-700 hover:text-amber-600 hover:bg-slate-50'
+                  }`}
+                >
+                  {link.name}
+                </button>
+              );
+            })}
+            <button
+              type="button"
+              onClick={() => handleNavClick('contact')}
+              className="mt-3 w-full text-center py-3 px-4 rounded-full text-white font-bold text-xs uppercase tracking-wider shadow hover:opacity-95 transition-opacity cursor-pointer"
               style={{ backgroundColor: branding.logoColor || '#d96500' }}
             >
               {branding.headerApplyButtonText || "Apply Now"}
-            </a>
+            </button>
           </div>
         </div>
       )}

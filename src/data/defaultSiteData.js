@@ -7,8 +7,9 @@ export const defaultSiteData = {
     logoImage: "", // Custom Brand Logo image URL or base64 upload
     logoType: "icon", // 'icon' or 'image'
     logoColor: "#e67300",
+    favicon: "", // Custom browser tab favicon URL or upload
     headerApplyButtonText: "Apply Now",
-    headerApplyButtonLink: "#admissions",
+    headerApplyButtonLink: "#contact",
   },
 
   // Social Links
@@ -223,6 +224,8 @@ export const defaultSiteData = {
     phone: "01-4912267",
     email: "alchemistacademy2052@gmail.com",
     hours: "Sun – Fri, 9:00 AM – 4:30 PM",
+    googleMapsUrl: "https://maps.google.com/?q=Alchemist+Academy+Jorpati+Kathmandu",
+    mapEmbedUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3531.621946894589!2d85.3735!3d27.7285!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39eb1bbf4391b9b1%3A0x6b1d491f86bb3ff4!2sAlchemist%20Academy!5e0!3m2!1sen!2snp!4v1700000000000!5m2!1sen!2snp",
     tagline: "Empowering minds and shaping bright futures from Nursery to Grade 10. Committed to building academic excellence and moral leadership in Jorpati, Kathmandu.",
     copyrightYear: "2026",
   },

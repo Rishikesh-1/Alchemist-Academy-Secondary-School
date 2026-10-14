@@ -3,7 +3,7 @@ import { ArrowRight, CheckCircle2, MapPin, ShieldCheck } from 'lucide-react';
 import { useSiteData } from '../context/SiteContext';
 
 const About = () => {
-  const { siteData } = useSiteData();
+  const { siteData, navigateTo } = useSiteData();
   const { about } = siteData;
 
   return (
@@ -90,13 +90,14 @@ const About = () => {
 
             {/* Secondary Action Button */}
             <div className="pt-4">
-              <a
-                href="#quote"
-                className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl border-2 border-slate-900 text-slate-900 font-semibold text-sm hover:bg-slate-900 hover:text-white transition-all duration-300 shadow-sm group"
+              <button
+                type="button"
+                onClick={() => navigateTo('about')}
+                className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl border-2 border-slate-900 text-slate-900 font-semibold text-sm hover:bg-slate-900 hover:text-white transition-all duration-300 shadow-sm group cursor-pointer"
               >
                 <span>{about.buttonText || "Know More About Us"}</span>
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </a>
+              </button>
             </div>
           </div>
 

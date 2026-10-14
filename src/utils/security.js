@@ -50,3 +50,8 @@ export function checkRateLimit(maxAttempts = 3, windowMs = 60000) {
   return true;
 }
 
+// Convenient aliases
+export const sanitizeInput = sanitizeText;
+export const validateRateLimit = checkRateLimit;
+
+

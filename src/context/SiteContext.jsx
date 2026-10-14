@@ -26,28 +26,74 @@ export const SiteProvider = ({ children }) => {
     return defaultSiteData;
   });
 
-  // Client view state: 'landing' | 'admin-login' | 'dashboard'
-  const [currentRoute, setCurrentRoute] = useState(() => {
-    // Check URL query parameter (e.g. ?admin=true or hash #/admin/login)
+  // Route parsing helper
+  const parseRouteFromLocation = () => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('portal') === 'admin' || window.location.hash === '#/admin/login') {
       return 'admin-login';
     }
-    return 'landing';
-  });
+    if (window.location.hash === '#/admin/dashboard') {
+      return 'dashboard';
+    }
+    const cleanHash = window.location.hash.replace(/^#\/?/, '').toLowerCase();
+    if (cleanHash === 'about') return 'about';
+    if (cleanHash === 'academics' || cleanHash === 'curriculum') return 'academics';
+    if (cleanHash === 'activities' || cleanHash === 'co-curricular') return 'activities';
+    if (cleanHash === 'blog' || cleanHash === 'blogs' || cleanHash === 'news') return 'blog';
+    if (cleanHash === 'contact' || cleanHash === 'admissions') return 'contact';
+    return 'home';
+  };
 
-  // Listen to hash changes for deep linking to /admin/login
+  // Client view state: 'home' | 'about' | 'academics' | 'activities' | 'blog' | 'contact' | 'admin-login' | 'dashboard'
+  const [currentRoute, setCurrentRoute] = useState(parseRouteFromLocation);
+
+  // Listen to hash changes for deep linking to each dedicated page & admin portal
   useEffect(() => {
     const handleHash = () => {
-      if (window.location.hash === '#/admin/login') {
-        setCurrentRoute('admin-login');
-      } else if (window.location.hash === '#/admin/dashboard') {
-        setCurrentRoute('dashboard');
-      }
+      const target = parseRouteFromLocation();
+      setCurrentRoute(target);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     };
     window.addEventListener('hashchange', handleHash);
     return () => window.removeEventListener('hashchange', handleHash);
   }, []);
+
+  // Live dynamic browser tab Favicon and Title sync
+  useEffect(() => {
+    const faviconUrl =
+      siteData.branding?.favicon ||
+      (siteData.branding?.logoType === 'image' && siteData.branding?.logoImage
+        ? siteData.branding.logoImage
+        : './favicon.svg');
+
+    let link = document.querySelector("link[rel*='icon']");
+    if (!link) {
+      link = document.createElement('link');
+      link.rel = 'icon';
+      document.head.appendChild(link);
+    }
+    link.href = faviconUrl;
+
+    if (siteData.branding?.name) {
+      const pageSuffix =
+        currentRoute === 'about'
+          ? ' | About Our School'
+          : currentRoute === 'academics'
+          ? ' | Academic Curriculum'
+          : currentRoute === 'activities'
+          ? ' | Co-Curricular & Athletics'
+          : currentRoute === 'blog'
+          ? ' | School Blog & News'
+          : currentRoute === 'contact'
+          ? ' | Admissions & Contact'
+          : currentRoute === 'admin-login'
+          ? ' | Staff Portal'
+          : currentRoute === 'dashboard'
+          ? ' | CMS Dashboard'
+          : ` | ${siteData.branding.tagline || 'Excellence in Education'}`;
+      document.title = `${siteData.branding.name}${pageSuffix}`;
+    }
+  }, [siteData.branding, currentRoute]);
 
   // Persist to localStorage
   useEffect(() => {
@@ -79,13 +125,16 @@ export const SiteProvider = ({ children }) => {
 
   const navigateTo = (route) => {
     setCurrentRoute(route);
-    if (route === 'landing') {
-      window.history.pushState(null, '', window.location.pathname);
+    if (route === 'home' || route === 'landing') {
+      window.location.hash = '#/';
     } else if (route === 'admin-login') {
       window.location.hash = '#/admin/login';
     } else if (route === 'dashboard') {
       window.location.hash = '#/admin/dashboard';
+    } else {
+      window.location.hash = `#/${route}`;
     }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (

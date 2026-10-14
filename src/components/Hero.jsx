@@ -16,7 +16,7 @@ const renderIcon = (name, className = "w-4 h-4") => {
 };
 
 const Hero = () => {
-  const { siteData } = useSiteData();
+  const { siteData, navigateTo } = useSiteData();
   const { hero } = siteData;
 
   const overlayOpacity = typeof hero.bgOverlayOpacity === 'number' ? hero.bgOverlayOpacity / 100 : 0.85;
@@ -69,24 +69,27 @@ const Hero = () => {
 
         {/* Action Button */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <a
-            href={hero.primaryBtnLink || "#academics"}
-            className="group relative inline-flex items-center justify-center px-8 py-4 text-base font-semibold text-slate-950 bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 rounded-xl shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 hover:scale-105 active:scale-95 transition-all duration-300 overflow-hidden"
+          <button
+            type="button"
+            onClick={() => navigateTo('academics')}
+            className="group relative inline-flex items-center justify-center px-8 py-4 text-sm sm:text-base font-bold text-slate-950 bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 rounded-full shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 cursor-pointer"
           >
-            <span className="relative z-10 flex items-center gap-2">
-              <BookOpen className="w-5 h-5 text-slate-900 group-hover:rotate-6 transition-transform" />
-              {hero.primaryBtnText || "Our Academics"}
+            <span className="flex items-center gap-2.5">
+              <BookOpen className="w-4 h-4 text-slate-900 group-hover:scale-110 transition-transform" />
+              <span>{hero.primaryBtnText || "Our Academics"}</span>
               <ArrowRight className="w-4 h-4 text-slate-900 group-hover:translate-x-1 transition-transform" />
             </span>
-          </a>
+          </button>
 
           {hero.secondaryBtnText && (
-            <a
-              href={hero.secondaryBtnLink || "#about"}
-              className="inline-flex items-center justify-center px-8 py-4 text-base font-medium text-white border border-slate-600/70 hover:border-slate-300 hover:bg-white/10 rounded-xl backdrop-blur-sm transition-all duration-300"
+            <button
+              type="button"
+              onClick={() => navigateTo('about')}
+              className="group inline-flex items-center justify-center gap-2 px-8 py-4 text-sm sm:text-base font-semibold text-white border border-white/20 hover:border-amber-400 hover:text-amber-300 hover:bg-white/5 rounded-full backdrop-blur-md transition-all duration-300 cursor-pointer"
             >
-              {hero.secondaryBtnText}
-            </a>
+              <span>{hero.secondaryBtnText}</span>
+              <ArrowRight className="w-4 h-4 text-white/60 group-hover:text-amber-300 group-hover:translate-x-1 transition-all" />
+            </button>
           )}
         </div>
 

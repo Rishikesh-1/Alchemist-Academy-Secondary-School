@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f2b48" />
+      <stop offset="100%" stop-color="#071526" />
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f59e0b" />
+      <stop offset="50%" stop-color="#fbbf24" />
+      <stop offset="100%" stop-color="#d97706" />
+    </linearGradient>
+  </defs>
+
+  <!-- Crest Shield Background -->
+  <path d="M32 4 C48 4 58 12 58 26 C58 44 32 60 32 60 C32 60 6 44 6 26 C6 12 16 4 32 4 Z" fill="url(#shieldGrad)" stroke="url(#goldGrad)" stroke-width="2.5" />
+
+  <!-- Inner Gold Trim -->
+  <path d="M32 8 C44 8 53 15 53 26 C53 40 32 54 32 54 C32 54 11 40 11 26 C11 15 20 8 32 8 Z" fill="none" stroke="url(#goldGrad)" stroke-width="1" opacity="0.6" stroke-dasharray="2,2" />
+
+  <!-- Academic Cap / Mortarboard Icon in Center -->
+  <polygon points="32,18 50,26 32,34 14,26" fill="url(#goldGrad)" />
+  <path d="M22,30.5 L22,39 C22,43 42,43 42,39 L42,30.5" fill="none" stroke="url(#goldGrad)" stroke-width="2.5" stroke-linecap="round" />
+  <path d="M48,27 L48,37 L45,39" fill="none" stroke="#fbbf24" stroke-width="1.8" stroke-linecap="round" />
+  <circle cx="45" cy="40" r="1.5" fill="#f59e0b" />
+
+  <!-- Sparkle Stars -->
+  <circle cx="32" cy="45" r="1.8" fill="#fbbf24" />
+</svg>
+

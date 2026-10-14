@@ -5,8 +5,9 @@ import { useSiteData } from '../context/SiteContext';
 const icons = [Flame, BookCheck, Sparkles];
 
 const CoCurricular = () => {
-  const { siteData } = useSiteData();
-  const activities = siteData.coCurricular || [];
+  const { siteData, navigateTo } = useSiteData();
+  const allActivities = siteData.coCurricular || [];
+  const activities = allActivities.slice(0, 3);
 
   return (
     <section id="activities" className="py-24 bg-white relative">
@@ -82,17 +83,38 @@ const CoCurricular = () => {
                     )}
                   </div>
 
-                  <a
-                    href="#admissions"
-                    className="inline-flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl text-sm font-semibold text-slate-800 bg-white border border-slate-200 hover:bg-slate-900 hover:text-white transition-colors duration-200 shadow-sm"
+                  <button
+                    type="button"
+                    onClick={() => navigateTo('activities')}
+                    className="inline-flex items-center justify-between w-full py-3 px-4 rounded-xl text-sm font-semibold text-slate-700 bg-white border border-slate-200 hover:border-slate-900 hover:bg-slate-900 hover:text-white transition-all duration-300 shadow-xs group/btn cursor-pointer"
                   >
-                    <span>Learn More</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </a>
+                    <span>Explore Program Details</span>
+                    <span className="w-6 h-6 rounded-lg bg-slate-100 group-hover/btn:bg-white/10 group-hover/btn:text-amber-400 flex items-center justify-center text-slate-500 transition-colors">
+                      <ArrowRight className="w-3.5 h-3.5 group-hover/btn:translate-x-0.5 transition-transform" />
+                    </span>
+                  </button>
                 </div>
               </div>
             );
           })}
+        </div>
+
+        {/* View All Activities Action Button */}
+        <div className="mt-16 text-center">
+          <button
+            type="button"
+            onClick={() => navigateTo('activities')}
+            className="group inline-flex items-center gap-3 px-8 py-4 rounded-full bg-slate-950 text-white font-semibold text-sm shadow-lg shadow-slate-950/20 hover:shadow-2xl hover:bg-slate-900 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer"
+          >
+            <Sparkles className="w-4 h-4 text-amber-400 group-hover:rotate-12 transition-transform" />
+            <span>Discover All Student Activities</span>
+            <span className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-400/20 text-amber-300 border border-amber-400/30">
+              {allActivities.length} Clubs
+            </span>
+            <span className="w-6 h-6 rounded-full bg-white/10 group-hover:bg-amber-400 group-hover:text-slate-950 flex items-center justify-center text-white transition-colors ml-1">
+              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+            </span>
+          </button>
         </div>
 
       </div>

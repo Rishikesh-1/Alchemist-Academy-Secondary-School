@@ -189,16 +189,11 @@ const AdmissionsCTA = () => {
 
                     <button
                       type="submit"
-                      className="w-full mt-2 py-3.5 px-6 rounded-xl font-bold text-sm text-white bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 shadow-lg shadow-amber-600/30 active:scale-[0.99] transition-all flex items-center justify-center gap-2 group cursor-pointer"
+                      className="w-full mt-2 py-3.5 px-6 rounded-full font-bold text-sm text-slate-950 bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center justify-center gap-2 group cursor-pointer"
                     >
                       <span>{admissions.btnText || "Enroll Now"}</span>
-                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                      <ArrowRight className="w-4 h-4 text-slate-950 group-hover:translate-x-1 transition-transform" />
                     </button>
-
-                    <p className="text-[10px] text-slate-400 text-center flex items-center justify-center gap-1">
-                      <ShieldCheck className="w-3 h-3 text-emerald-500" />
-                      <span>Data protected by encrypted school transmission</span>
-                    </p>
                   </form>
                 )}
               </div>

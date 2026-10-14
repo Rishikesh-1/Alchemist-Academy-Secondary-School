@@ -381,6 +381,39 @@ const Dashboard = () => {
                   )}
                 </div>
 
+                {/* Browser Tab Icon (Favicon) */}
+                <div className="pt-4 border-t border-slate-800 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
+                        Browser Tab Icon (Favicon)
+                      </label>
+                      <p className="text-xs text-slate-400 mt-0.5">
+                        Displays in the browser tab next to the school page title.
+                      </p>
+                    </div>
+
+                    {formData.branding.logoImage && (
+                      <button
+                        type="button"
+                        onClick={() => updateField('branding', 'favicon', formData.branding.logoImage)}
+                        className="text-xs px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/30 hover:bg-amber-500/30 transition-colors font-medium cursor-pointer"
+                      >
+                        Use Brand Logo as Favicon
+                      </button>
+                    )}
+                  </div>
+
+                  <ImageFieldWithPicker
+                    label="Favicon File"
+                    value={formData.branding.favicon || ''}
+                    onChange={(url) => updateField('branding', 'favicon', url)}
+                    category="Logos & Badges"
+                    placeholder="e.g. ./favicon.png, favicon.ico, or choose from Media Library"
+                    helpText="Recommended: 32x32 or 64x64 transparent square PNG, SVG, or ICO icon."
+                  />
+                </div>
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4 border-t border-slate-800">
                   <div>
                     <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
@@ -1259,6 +1292,57 @@ const Dashboard = () => {
                     onChange={(e) => updateField('footer', 'hours', e.target.value)}
                     className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-400"
                   />
+                </div>
+
+                {/* Google Maps Configuration */}
+                <div className="pt-4 border-t border-slate-800 space-y-4">
+                  <div>
+                    <h3 className="text-sm font-bold text-amber-400 uppercase tracking-wider">
+                      Google Maps & Location Integration
+                    </h3>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      Configure your direct Google Maps location URL and optional interactive map embed for the Contact Us page.
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                      Google Maps Direct Link / Share URL
+                    </label>
+                    <input
+                      type="url"
+                      placeholder="e.g. https://maps.app.goo.gl/... or https://maps.google.com/?q=Alchemist+Academy"
+                      value={formData.footer.googleMapsUrl || ''}
+                      onChange={(e) => updateField('footer', 'googleMapsUrl', e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-400"
+                    />
+                    <span className="text-[11px] text-slate-400 mt-1 block">
+                      Used when visitors click "Open in Google Maps" or "Get Driving Directions".
+                    </span>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                      Interactive Google Maps Embed URL / Iframe Code
+                    </label>
+                    <textarea
+                      rows={2}
+                      placeholder="e.g. https://www.google.com/maps/embed?pb=... or full <iframe src='...'></iframe>"
+                      value={formData.footer.mapEmbedUrl || ''}
+                      onChange={(e) => {
+                        let val = e.target.value;
+                        const srcMatch = val.match(/src=["']([^"']+)["']/);
+                        if (srcMatch && srcMatch[1]) {
+                          val = srcMatch[1];
+                        }
+                        updateField('footer', 'mapEmbedUrl', val);
+                      }}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-amber-400 font-mono"
+                    />
+                    <span className="text-[11px] text-slate-400 mt-1 block">
+                      Paste the Google Maps embed code or URL. If provided, an interactive map appears on the Contact Us page (automatically extracts the URL if you paste a full iframe code).
+                    </span>
+                  </div>
                 </div>
 
                 <div>

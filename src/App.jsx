@@ -13,15 +13,19 @@ import AdmissionsCTA from './components/AdmissionsCTA';
 import Footer from './components/Footer';
 import Dashboard from './components/Dashboard';
 import AdminLogin from './components/AdminLogin';
+import AboutPage from './pages/AboutPage';
+import AcademicsPage from './pages/AcademicsPage';
+import ActivitiesPage from './pages/ActivitiesPage';
+import BlogPage from './pages/BlogPage';
+import ContactPage from './pages/ContactPage';
 
 function AppRouter() {
-  const { currentRoute, navigateTo } = useSiteData();
+  const { currentRoute } = useSiteData();
   const { isAuthenticated } = useAuth();
 
   // 1. Secret/Gated Route: Admin Login Portal
   if (currentRoute === 'admin-login') {
     if (isAuthenticated) {
-      // If already logged in, navigate straight to the dashboard
       return <Dashboard />;
     }
     return <AdminLogin />;
@@ -30,42 +34,47 @@ function AppRouter() {
   // 2. Secret/Gated Route: CMS Dashboard (Protected by RBAC)
   if (currentRoute === 'dashboard') {
     if (!isAuthenticated) {
-      // Unauthorized visitor attempting to view CMS is redirected to the login gate
       return <AdminLogin />;
     }
     return <Dashboard />;
   }
 
-  // 3. Public Student / Parent / Visitor Portal (Pure Landing Page)
+  // 3. Render Dedicated Page or Full Landing Overview
+  const renderCurrentPage = () => {
+    switch (currentRoute) {
+      case 'about':
+        return <AboutPage />;
+      case 'academics':
+        return <AcademicsPage />;
+      case 'activities':
+        return <ActivitiesPage />;
+      case 'blog':
+        return <BlogPage />;
+      case 'contact':
+        return <ContactPage />;
+      default:
+        return (
+          <>
+            <Hero />
+            <Stats />
+            <About />
+            <HeadmasterQuote />
+            <Curriculum />
+            <CoCurricular />
+            <Blog />
+            <AdmissionsCTA />
+          </>
+        );
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 font-sans selection:bg-amber-600 selection:text-white">
       {/* Semantic Top Navigation */}
       <Navbar />
 
       <main className="flex-grow">
-        {/* Hero Section */}
-        <Hero />
-
-        {/* School at a Glance Stats */}
-        <Stats />
-
-        {/* About & Mission Section */}
-        <About />
-
-        {/* Leadership Message */}
-        <HeadmasterQuote />
-
-        {/* Academic Curriculum Grid */}
-        <Curriculum />
-
-        {/* Co-curricular Activities */}
-        <CoCurricular />
-
-        {/* School Blog & Updates */}
-        <Blog />
-
-        {/* Admissions Call to Action */}
-        <AdmissionsCTA />
+        {renderCurrentPage()}
       </main>
 
       {/* Semantic Footer */}

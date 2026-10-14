@@ -1,5 +1,5 @@
 import React from 'react';
-import { Palette, Music, Laptop, Microscope, Trophy, Activity, ArrowUpRight } from 'lucide-react';
+import { Palette, Music, Laptop, Microscope, Trophy, Activity, ArrowUpRight, ArrowRight, BookOpen } from 'lucide-react';
 import { useSiteData } from '../context/SiteContext';
 
 const iconMap = {
@@ -12,8 +12,9 @@ const iconMap = {
 };
 
 const Curriculum = () => {
-  const { siteData } = useSiteData();
-  const subjects = siteData.curriculum || [];
+  const { siteData, navigateTo } = useSiteData();
+  const allSubjects = siteData.curriculum || [];
+  const subjects = allSubjects.slice(0, 6);
 
   return (
     <section id="academics" className="py-24 bg-slate-50 relative">
@@ -39,7 +40,8 @@ const Curriculum = () => {
             return (
               <div
                 key={item.id || item.title}
-                className="group bg-white rounded-2xl overflow-hidden border border-slate-200/80 shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 flex flex-col"
+                onClick={() => navigateTo('academics')}
+                className="group bg-white rounded-2xl overflow-hidden border border-slate-200/80 shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 flex flex-col cursor-pointer"
               >
                 {/* Image Preview with Hover Zoom */}
                 <div className="relative h-48 overflow-hidden bg-slate-100">
@@ -72,14 +74,34 @@ const Curriculum = () => {
                     </p>
                   </div>
 
-                  <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-slate-500 group-hover:text-amber-600">
-                    <span>Explore Syllabus</span>
-                    <ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                  <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-slate-500 group-hover:text-amber-600 transition-colors">
+                    <span>Explore Full Syllabus</span>
+                    <span className="w-6 h-6 rounded-full bg-slate-100 group-hover:bg-amber-100 group-hover:text-amber-700 flex items-center justify-center transition-colors">
+                      <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                    </span>
                   </div>
                 </div>
               </div>
             );
           })}
+        </div>
+
+        {/* View Full Curriculum Action Button */}
+        <div className="mt-16 text-center">
+          <button
+            type="button"
+            onClick={() => navigateTo('academics')}
+            className="group inline-flex items-center gap-3 px-8 py-4 rounded-full bg-white text-slate-900 font-semibold text-sm border border-slate-200/90 shadow-sm hover:shadow-xl hover:border-amber-400 hover:text-amber-700 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer"
+          >
+            <BookOpen className="w-4 h-4 text-amber-500 group-hover:scale-110 transition-transform" />
+            <span>Explore All Academic Pathways</span>
+            <span className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-800 border border-amber-500/20">
+              {allSubjects.length} Streams
+            </span>
+            <span className="w-6 h-6 rounded-full bg-slate-100 group-hover:bg-amber-500 group-hover:text-white flex items-center justify-center text-slate-500 transition-colors ml-1">
+              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+            </span>
+          </button>
         </div>
 
       </div>
