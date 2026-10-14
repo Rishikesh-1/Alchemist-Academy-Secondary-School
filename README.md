@@ -94,16 +94,16 @@ Place the repository inside your Apache web root (e.g., `c:\xampp\htdocs\Alchemi
 
 ---
 
-## 🔒 Default Staff Credentials (Demo / Testing)
+## 🔒 Role-Based Staff Access
 
-| Username | Default Password | Role |
-| :--- | :--- | :--- |
-| `admin` | `AlchemistAdmin2026` | Super Administrator |
-| `editor` | `EditorPass2026` | Content Editor |
-| `admissions` | `AdmissionsPass2026` | Admissions Officer |
-| `coordinator` | `AcademicPass2026` | Academic Coordinator |
+Access to the administrative CMS is restricted to authorized personnel. Role tiers and responsibilities:
 
-> **Note**: Default passwords can be changed and updated by the Super Administrator at any time inside the **Staff & Team Access** tab.
+- **Super Administrator (`superadmin`)**: Full unconstrained site customization, logo, hero banner, SEO, and team account provisioning.
+- **Content Editor (`editor`)**: Curates school blog publications, notices, and co-curricular highlights.
+- **Admissions Officer (`admissions`)**: Manages admissions phone hotlines, enrollment status, and metric counters.
+- **Academic Coordinator (`academic`)**: Oversees curriculum pathways, faculty narrative, and syllabus structure.
+
+> **Security Notice**: Staff credentials and security keys are managed privately by the Super Administrator within the **Staff & Team Access** management panel. Credentials should never be shared publicly or committed to version control.
 
 ---
 
