@@ -1,5 +1,4 @@
-import React from 'react';
-import { ArrowRight, BookOpen, Sparkles, Award } from 'lucide-react';
+import { ArrowRight, BookOpen, Sparkles, Award, ShieldCheck, CheckCircle2, Star, GraduationCap, Users, Heart } from 'lucide-react';
 import { useSiteData } from '../context/SiteContext';
 
 const renderIcon = (name, className = "w-4 h-4") => {
@@ -10,6 +9,18 @@ const renderIcon = (name, className = "w-4 h-4") => {
       return <BookOpen className={className} />;
     case 'Award':
       return <Award className={className} />;
+    case 'ShieldCheck':
+      return <ShieldCheck className={className} />;
+    case 'CheckCircle2':
+      return <CheckCircle2 className={className} />;
+    case 'Star':
+      return <Star className={className} />;
+    case 'GraduationCap':
+      return <GraduationCap className={className} />;
+    case 'Users':
+      return <Users className={className} />;
+    case 'Heart':
+      return <Heart className={className} />;
     default:
       return <Sparkles className={className} />;
   }

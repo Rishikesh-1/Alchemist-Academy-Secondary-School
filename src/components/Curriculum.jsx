@@ -14,7 +14,7 @@ const iconMap = {
 const Curriculum = () => {
   const { siteData, navigateTo, isDark } = useSiteData();
   const allSubjects = siteData.curriculum || [];
-  const subjects = allSubjects.slice(0, 6);
+  const subjects = allSubjects.slice(0, 3);
 
   return (
     <section id="academics" className={`py-24 relative transition-colors duration-300 ${isDark ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'}`}>

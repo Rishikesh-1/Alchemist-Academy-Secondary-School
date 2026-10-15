@@ -35,6 +35,23 @@ export const SiteProvider = ({ children }) => {
         return {
           ...defaultSiteData,
           ...parsed,
+          hero: {
+            ...defaultSiteData.hero,
+            ...(parsed.hero || {}),
+            features: (parsed.hero?.features && parsed.hero.features.length > 0)
+              ? parsed.hero.features
+              : defaultSiteData.hero.features,
+          },
+          about: {
+            ...defaultSiteData.about,
+            ...(parsed.about || {}),
+            values: (parsed.about?.values && parsed.about.values.length > 0)
+              ? parsed.about.values
+              : defaultSiteData.about.values,
+          },
+          coCurricular: (Array.isArray(parsed.coCurricular) && parsed.coCurricular.length > 0)
+            ? parsed.coCurricular
+            : defaultSiteData.coCurricular,
           branding: {
             ...defaultSiteData.branding,
             ...(parsed.branding || {}),
@@ -58,6 +75,19 @@ export const SiteProvider = ({ children }) => {
           ...defaultSiteData,
           ...prev,
           ...remoteSettings,
+          hero: {
+            ...defaultSiteData.hero,
+            ...(prev.hero || {}),
+            ...(remoteSettings.hero || {}),
+            features: remoteSettings.hero?.features || prev.hero?.features || defaultSiteData.hero.features,
+          },
+          about: {
+            ...defaultSiteData.about,
+            ...(prev.about || {}),
+            ...(remoteSettings.about || {}),
+            values: remoteSettings.about?.values || prev.about?.values || defaultSiteData.about.values,
+          },
+          coCurricular: remoteSettings.coCurricular || prev.coCurricular || defaultSiteData.coCurricular,
           branding: {
             ...defaultSiteData.branding,
             ...(prev.branding || {}),

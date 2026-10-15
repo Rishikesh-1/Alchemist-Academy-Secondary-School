@@ -697,6 +697,117 @@ const Dashboard = () => {
                   </div>
                 </div>
 
+                {/* Hero Key Features (3 Points Bar on Banner) */}
+                <div className="pt-6 border-t border-slate-800 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
+                        Banner Key Highlights & Badges
+                      </label>
+                      <p className="text-xs text-slate-400 mt-0.5">
+                        These points display in the bottom strip of the hero banner on the homepage.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const curFeatures = Array.isArray(formData.hero?.features)
+                          ? [...formData.hero.features]
+                          : [
+                              { text: "Government Recognized Excellence", icon: "Award" },
+                              { text: "Nursery to 10th Grade Stream", icon: "Sparkles" },
+                              { text: "Holistic Student Development", icon: "BookOpen" },
+                            ];
+                        curFeatures.push({ text: "New School Highlight", icon: "CheckCircle2" });
+                        updateField('hero', 'features', curFeatures);
+                      }}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/30 hover:bg-amber-500/30 text-xs font-medium transition-colors cursor-pointer"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Add Highlight</span>
+                    </button>
+                  </div>
+
+                  <div className="space-y-3">
+                    {(formData.hero?.features || [
+                      { text: "Government Recognized Excellence", icon: "Award" },
+                      { text: "Nursery to 10th Grade Stream", icon: "Sparkles" },
+                      { text: "Holistic Student Development", icon: "BookOpen" },
+                    ]).map((feat, fIdx) => (
+                      <div key={fIdx} className="flex items-center gap-3 bg-slate-900 border border-slate-800 rounded-xl p-3">
+                        <div className="w-44 shrink-0">
+                          <label className="block text-[10px] text-slate-400 uppercase font-semibold mb-1">Icon</label>
+                          <select
+                            value={feat.icon || 'Sparkles'}
+                            onChange={(e) => {
+                              const cur = Array.isArray(formData.hero?.features)
+                                ? [...formData.hero.features]
+                                : [
+                                    { text: "Government Recognized Excellence", icon: "Award" },
+                                    { text: "Nursery to 10th Grade Stream", icon: "Sparkles" },
+                                    { text: "Holistic Student Development", icon: "BookOpen" },
+                                  ];
+                              cur[fIdx] = { ...cur[fIdx], icon: e.target.value };
+                              updateField('hero', 'features', cur);
+                            }}
+                            className="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-amber-400 cursor-pointer"
+                          >
+                            <option value="Award">🏆 Award</option>
+                            <option value="Sparkles">✨ Sparkles</option>
+                            <option value="BookOpen">📖 Book Open</option>
+                            <option value="ShieldCheck">🛡️ Shield Check</option>
+                            <option value="CheckCircle2">✅ Check Circle</option>
+                            <option value="Star">⭐ Star</option>
+                            <option value="GraduationCap">🎓 Graduation Cap</option>
+                            <option value="Users">👥 Users</option>
+                            <option value="Heart">❤️ Heart</option>
+                          </select>
+                        </div>
+
+                        <div className="flex-1">
+                          <label className="block text-[10px] text-slate-400 uppercase font-semibold mb-1">Highlight Text</label>
+                          <input
+                            type="text"
+                            value={feat.text}
+                            onChange={(e) => {
+                              const cur = Array.isArray(formData.hero?.features)
+                                ? [...formData.hero.features]
+                                : [
+                                    { text: "Government Recognized Excellence", icon: "Award" },
+                                    { text: "Nursery to 10th Grade Stream", icon: "Sparkles" },
+                                    { text: "Holistic Student Development", icon: "BookOpen" },
+                                  ];
+                              cur[fIdx] = { ...cur[fIdx], text: e.target.value };
+                              updateField('hero', 'features', cur);
+                            }}
+                            className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-400"
+                            placeholder="e.g. Government Recognized Excellence"
+                          />
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const cur = Array.isArray(formData.hero?.features)
+                              ? [...formData.hero.features]
+                              : [
+                                  { text: "Government Recognized Excellence", icon: "Award" },
+                                  { text: "Nursery to 10th Grade Stream", icon: "Sparkles" },
+                                  { text: "Holistic Student Development", icon: "BookOpen" },
+                                ];
+                            cur.splice(fIdx, 1);
+                            updateField('hero', 'features', cur);
+                          }}
+                          className="p-2 text-slate-500 hover:text-rose-400 hover:bg-rose-950/40 rounded-lg transition-colors cursor-pointer mt-4"
+                          title="Remove Highlight"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
               </div>
             </div>
           )}
@@ -778,6 +889,89 @@ const Dashboard = () => {
                       onChange={(e) => updateField('about', 'gradePill', e.target.value)}
                       className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-400"
                     />
+                  </div>
+                </div>
+
+                {/* Core Pillars / 4 Highlights List */}
+                <div className="pt-6 border-t border-slate-800 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
+                        Core Values & Highlights (About Grid Points)
+                      </label>
+                      <p className="text-xs text-slate-400 mt-0.5">
+                        These points display with green checkmarks in the 2-column grid inside the About section.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const curValues = Array.isArray(formData.about?.values)
+                          ? [...formData.about.values]
+                          : [
+                              "Holistic Curriculum Approach",
+                              "Dedicated & Caring Mentors",
+                              "Strong Ethical Foundations",
+                              "Co-curricular Excellence",
+                            ];
+                        curValues.push("New Core Value");
+                        updateField('about', 'values', curValues);
+                      }}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/30 hover:bg-amber-500/30 text-xs font-medium transition-colors cursor-pointer"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Add Value Point</span>
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {(formData.about?.values || [
+                      "Holistic Curriculum Approach",
+                      "Dedicated & Caring Mentors",
+                      "Strong Ethical Foundations",
+                      "Co-curricular Excellence",
+                    ]).map((val, vIdx) => (
+                      <div key={vIdx} className="flex items-center gap-2 bg-slate-900 border border-slate-800 rounded-xl p-2.5">
+                        <span className="text-emerald-400 text-xs font-bold shrink-0">✓</span>
+                        <input
+                          type="text"
+                          value={val}
+                          onChange={(e) => {
+                            const cur = Array.isArray(formData.about?.values)
+                              ? [...formData.about.values]
+                              : [
+                                  "Holistic Curriculum Approach",
+                                  "Dedicated & Caring Mentors",
+                                  "Strong Ethical Foundations",
+                                  "Co-curricular Excellence",
+                                ];
+                            cur[vIdx] = e.target.value;
+                            updateField('about', 'values', cur);
+                          }}
+                          className="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-400"
+                          placeholder="e.g. Holistic Curriculum Approach"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const cur = Array.isArray(formData.about?.values)
+                              ? [...formData.about.values]
+                              : [
+                                  "Holistic Curriculum Approach",
+                                  "Dedicated & Caring Mentors",
+                                  "Strong Ethical Foundations",
+                                  "Co-curricular Excellence",
+                                ];
+                            cur.splice(vIdx, 1);
+                            updateField('about', 'values', cur);
+                          }}
+                          className="p-1.5 text-slate-500 hover:text-rose-400 hover:bg-rose-950/40 rounded-lg transition-colors cursor-pointer"
+                          title="Remove Point"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 </div>
 
@@ -1264,21 +1458,73 @@ const Dashboard = () => {
           {/* 7. CO-CURRICULAR */}
           {activeSection === 'cocurricular' && (
             <div className="space-y-6">
-              <div>
-                <h2 className="text-2xl font-bold font-serif-brand text-white">Co-curricular Activities</h2>
-                <p className="text-sm text-slate-400 mt-1">Customize feature cards for athletics, publications, and performing arts.</p>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-2xl font-bold font-serif-brand text-white">Co-curricular Activities</h2>
+                  <p className="text-sm text-slate-400 mt-1">Customize feature cards, category tags, banner photos, and key bullet points.</p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newAct = {
+                      id: Date.now(),
+                      title: "New Student Activity",
+                      subtitle: "Developing creativity, leadership, and athletic skill",
+                      tag: "Student Club",
+                      image: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=800&q=80",
+                      highlights: [
+                        "Dedicated weekly coaching and mentoring",
+                        "Inter-school competitions and festivals",
+                        "Creative exploration and teamwork",
+                      ],
+                    };
+                    const cur = Array.isArray(formData.coCurricular) ? [...formData.coCurricular] : [];
+                    setFormData({ ...formData, coCurricular: [newAct, ...cur] });
+                  }}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow transition-all cursor-pointer"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Add New Activity</span>
+                </button>
               </div>
 
               <div className="space-y-6">
-                {formData.coCurricular.map((act, idx) => (
-                  <div key={act.id || idx} className="bg-slate-950/80 border border-slate-800 rounded-3xl p-6 sm:p-8 space-y-4">
-                    <span className="text-xs font-bold text-amber-400 uppercase tracking-wider">
-                      Activity #{idx + 1}: {act.title}
-                    </span>
+                {(Array.isArray(formData.coCurricular) ? formData.coCurricular : []).map((act, idx) => (
+                  <div key={act.id || idx} className="bg-slate-950/80 border border-slate-800 rounded-3xl p-6 sm:p-8 space-y-5">
+                    <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+                      <div className="flex items-center gap-2.5">
+                        <span className="text-xs font-bold text-amber-400 uppercase tracking-wider">
+                          Activity #{idx + 1}:
+                        </span>
+                        <span className="text-sm font-semibold text-white">
+                          {act.title || 'Untitled Activity'}
+                        </span>
+                        {act.tag && (
+                          <span className="text-[10px] uppercase font-bold bg-amber-500/10 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full">
+                            {act.tag}
+                          </span>
+                        )}
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (window.confirm(`Are you sure you want to delete activity "${act.title}"?`)) {
+                            const newActs = formData.coCurricular.filter((_, i) => i !== idx);
+                            setFormData({ ...formData, coCurricular: newActs });
+                          }
+                        }}
+                        className="p-1.5 text-slate-500 hover:text-rose-400 hover:bg-rose-950/40 rounded-lg transition-colors cursor-pointer"
+                        title="Delete Activity"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-xs text-slate-400 mb-1">Title</label>
+                        <label className="block text-xs font-semibold text-slate-300 mb-1.5">Activity Title</label>
                         <input
                           type="text"
                           value={act.title}
@@ -1287,23 +1533,38 @@ const Dashboard = () => {
                             newAct[idx].title = e.target.value;
                             setFormData({ ...formData, coCurricular: newAct });
                           }}
-                          className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white"
+                          className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-400"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-xs text-slate-400 mb-1">Subtitle</label>
+                        <label className="block text-xs font-semibold text-slate-300 mb-1.5">Category Tag / Badge</label>
                         <input
                           type="text"
-                          value={act.subtitle}
+                          value={act.tag || ''}
                           onChange={(e) => {
                             const newAct = [...formData.coCurricular];
-                            newAct[idx].subtitle = e.target.value;
+                            newAct[idx].tag = e.target.value;
                             setFormData({ ...formData, coCurricular: newAct });
                           }}
-                          className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white"
+                          placeholder="e.g. Physical Health, Literary & Media"
+                          className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-400"
                         />
                       </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-300 mb-1.5">Subtitle / Short Description</label>
+                      <input
+                        type="text"
+                        value={act.subtitle}
+                        onChange={(e) => {
+                          const newAct = [...formData.coCurricular];
+                          newAct[idx].subtitle = e.target.value;
+                          setFormData({ ...formData, coCurricular: newAct });
+                        }}
+                        className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-400"
+                      />
                     </div>
 
                     <ImageFieldWithPicker
@@ -1317,6 +1578,64 @@ const Dashboard = () => {
                       category="Campus & Events"
                       placeholder="e.g. https://... or select from Media Library"
                     />
+
+                    {/* Highlights / Points Editor */}
+                    <div className="pt-4 border-t border-slate-800 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
+                          Key Highlights / Feature Points ({Array.isArray(act.highlights) ? act.highlights.length : 0})
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newAct = [...formData.coCurricular];
+                            const curHighlights = Array.isArray(newAct[idx].highlights) ? [...newAct[idx].highlights] : [];
+                            curHighlights.push("New highlight point");
+                            newAct[idx] = { ...newAct[idx], highlights: curHighlights };
+                            setFormData({ ...formData, coCurricular: newAct });
+                          }}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 text-xs font-medium transition-colors cursor-pointer"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          <span>Add Point</span>
+                        </button>
+                      </div>
+
+                      <div className="space-y-2">
+                        {(Array.isArray(act.highlights) ? act.highlights : []).map((point, pIdx) => (
+                          <div key={pIdx} className="flex items-center gap-2 bg-slate-900 border border-slate-800 rounded-xl p-2">
+                            <span className="text-emerald-400 text-xs font-bold shrink-0">✓</span>
+                            <input
+                              type="text"
+                              value={point}
+                              onChange={(e) => {
+                                const newAct = [...formData.coCurricular];
+                                const curHighlights = [...(newAct[idx].highlights || [])];
+                                curHighlights[pIdx] = e.target.value;
+                                newAct[idx] = { ...newAct[idx], highlights: curHighlights };
+                                setFormData({ ...formData, coCurricular: newAct });
+                              }}
+                              className="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-400"
+                              placeholder="e.g. Inter-school track and field tournaments"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newAct = [...formData.coCurricular];
+                                const curHighlights = [...(newAct[idx].highlights || [])];
+                                curHighlights.splice(pIdx, 1);
+                                newAct[idx] = { ...newAct[idx], highlights: curHighlights };
+                                setFormData({ ...formData, coCurricular: newAct });
+                              }}
+                              className="p-1.5 text-slate-500 hover:text-rose-400 hover:bg-rose-950/40 rounded-lg transition-colors cursor-pointer"
+                              title="Remove Point"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>
