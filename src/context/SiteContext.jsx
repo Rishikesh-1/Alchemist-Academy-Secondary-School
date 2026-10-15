@@ -155,15 +155,25 @@ export const SiteProvider = ({ children }) => {
   // Client view state: 'home' | 'about' | 'academics' | 'activities' | 'blog' | 'contact' | 'admin-login' | 'dashboard'
   const [currentRoute, setCurrentRoute] = useState(parseRouteFromLocation);
 
-  // Listen to hash changes for deep linking to each dedicated page & admin portal
+  // Listen to hash changes and browser history for clean URLs & deep linking
   useEffect(() => {
-    const handleHash = () => {
+    // Clean up '#/' or '#' on home page so the URL stays clean (https://domain.edu.np)
+    if (window.location.hash === '#/' || window.location.hash === '#') {
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    }
+
+    const handleNavigation = () => {
       const target = parseRouteFromLocation();
       setCurrentRoute(target);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     };
-    window.addEventListener('hashchange', handleHash);
-    return () => window.removeEventListener('hashchange', handleHash);
+
+    window.addEventListener('hashchange', handleNavigation);
+    window.addEventListener('popstate', handleNavigation);
+    return () => {
+      window.removeEventListener('hashchange', handleNavigation);
+      window.removeEventListener('popstate', handleNavigation);
+    };
   }, []);
 
   // Live dynamic browser tab Favicon and Title sync
@@ -236,7 +246,9 @@ export const SiteProvider = ({ children }) => {
   const navigateTo = (route) => {
     setCurrentRoute(route);
     if (route === 'home' || route === 'landing') {
-      window.location.hash = '#/';
+      if (window.location.hash) {
+        window.history.pushState(null, '', window.location.pathname + window.location.search);
+      }
     } else if (route === 'admin-login') {
       window.location.hash = '#/admin/login';
     } else if (route === 'dashboard') {
