@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { Menu, X, GraduationCap, Sparkles, BookOpen, Award, Sun, Moon } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Menu, X, GraduationCap, Sparkles, BookOpen, Award, Sun, Moon, ChevronDown, Users, ShieldCheck, ArrowRight } from 'lucide-react';
 import { useSiteData } from '../context/SiteContext';
+import { useAuth } from '../context/AuthContext';
 
 const TwitterIcon = ({ className = "w-4 h-4" }) => (
   <svg className={className} fill="currentColor" viewBox="0 0 24 24">
@@ -37,8 +38,21 @@ const renderIcon = (name, className = "w-6 h-6") => {
 
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [portalDropdownOpen, setPortalDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
   const { siteData, currentRoute, navigateTo, isDark, toggleTheme } = useSiteData();
+  const { isAuthenticated, currentUser } = useAuth();
   const { branding, socials } = siteData;
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setPortalDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const navLinks = [
     { name: 'Home', route: 'home' },
@@ -186,22 +200,123 @@ const Navbar = () => {
               </a>
             )}
 
-            {/* Student & Parent Portal Quick Switch */}
-            <button
-              type="button"
-              onClick={() => handleNavClick('student-portal')}
-              className={`inline-flex items-center gap-1.5 px-3 xl:px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer border shrink-0 ${
-                currentRoute === 'student-portal'
-                  ? 'bg-amber-500 text-white border-amber-600 shadow-sm'
-                  : isDark
-                  ? 'border-slate-800 bg-slate-900 hover:bg-slate-800 text-amber-400 hover:text-amber-300'
-                  : 'border-amber-200 bg-amber-50/80 hover:bg-amber-100 text-amber-800'
-              }`}
-              title="Student & Parent Portal"
-            >
-              <GraduationCap className="w-3.5 h-3.5 text-amber-500" />
-              <span>Portal</span>
-            </button>
+            {/* Portals Dropdown */}
+            <div className="relative" ref={dropdownRef}>
+              <button
+                type="button"
+                onClick={() => setPortalDropdownOpen(!portalDropdownOpen)}
+                className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer border shrink-0 ${
+                  portalDropdownOpen || ['student-portal', 'teacher-portal', 'dashboard', 'admin-login'].includes(currentRoute)
+                    ? 'bg-amber-500 text-white border-amber-600 shadow-sm'
+                    : isDark
+                    ? 'border-slate-800 bg-slate-900 hover:bg-slate-800 text-amber-400 hover:text-amber-300'
+                    : 'border-amber-200 bg-amber-50/80 hover:bg-amber-100 text-amber-800'
+                }`}
+                title="School Portals & ERP Workspace"
+                aria-expanded={portalDropdownOpen}
+              >
+                <GraduationCap className="w-3.5 h-3.5 text-amber-500" />
+                <span>Portals</span>
+                <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${portalDropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {portalDropdownOpen && (
+                <div className={`absolute right-0 mt-2 w-80 rounded-2xl border shadow-2xl p-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150 backdrop-blur-xl ${
+                  isDark
+                    ? 'bg-slate-950/95 border-slate-800 text-white shadow-black/70'
+                    : 'bg-white/95 border-slate-200 text-slate-900 shadow-slate-300/80'
+                }`}>
+                  <div className={`px-3 py-2 text-[10px] font-bold uppercase tracking-wider border-b mb-1 ${
+                    isDark ? 'border-slate-800/80 text-slate-400' : 'border-slate-100 text-slate-500'
+                  }`}>
+                    Institutional Digital Portals
+                  </div>
+
+                  {/* 1. Student & Parent Portal */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleNavClick('student-portal');
+                      setPortalDropdownOpen(false);
+                    }}
+                    className={`w-full p-2.5 rounded-xl flex items-start gap-3 transition-colors text-left group cursor-pointer ${
+                      currentRoute === 'student-portal'
+                        ? isDark ? 'bg-slate-900 text-amber-400' : 'bg-amber-50 text-amber-700'
+                        : isDark ? 'hover:bg-slate-900/80' : 'hover:bg-slate-50'
+                    }`}
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-amber-500 to-orange-500 text-white flex items-center justify-center shrink-0 shadow-xs">
+                      <GraduationCap className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold leading-tight">Student & Parent Portal</span>
+                        <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </div>
+                      <p className={`text-[11px] truncate mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                        Live bus GPS, fees, admit cards & grades
+                      </p>
+                    </div>
+                  </button>
+
+                  {/* 2. Teacher Cockpit */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleNavClick('teacher-portal');
+                      setPortalDropdownOpen(false);
+                    }}
+                    className={`w-full p-2.5 rounded-xl flex items-start gap-3 transition-colors text-left group cursor-pointer ${
+                      currentRoute === 'teacher-portal'
+                        ? isDark ? 'bg-slate-900 text-amber-400' : 'bg-amber-50 text-amber-700'
+                        : isDark ? 'hover:bg-slate-900/80' : 'hover:bg-slate-50'
+                    }`}
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                      <BookOpen className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold leading-tight">Teacher Cockpit</span>
+                        <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </div>
+                      <p className={`text-[11px] truncate mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                        Roll call, marks entry & homework grading
+                      </p>
+                    </div>
+                  </button>
+
+                  {/* 3. Staff Administration & ERP */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleNavClick(isAuthenticated ? 'dashboard' : 'admin-login');
+                      setPortalDropdownOpen(false);
+                    }}
+                    className={`w-full p-2.5 rounded-xl flex items-start gap-3 transition-colors text-left group cursor-pointer ${
+                      currentRoute === 'dashboard' || currentRoute === 'admin-login'
+                        ? isDark ? 'bg-slate-900 text-amber-400' : 'bg-amber-50 text-amber-700'
+                        : isDark ? 'hover:bg-slate-900/80' : 'hover:bg-slate-50'
+                    }`}
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-emerald-600 to-teal-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                      <ShieldCheck className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold leading-tight">
+                          Staff Administration & ERP
+                        </span>
+                        <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </div>
+                      <p className={`text-[11px] truncate mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                        {isAuthenticated ? `Logged in: ${currentUser?.name || 'Administrator'}` : 'Admissions CRM, fee counter & site CMS'}
+                      </p>
+                    </div>
+                  </button>
+                </div>
+              )}
+            </div>
 
             {/* Apply Now Action Button */}
             <button
@@ -272,15 +387,66 @@ const Navbar = () => {
               );
             })}
 
-            {/* Mobile Student Portal Link */}
-            <button
-              type="button"
-              onClick={() => handleNavClick('student-portal')}
-              className="flex items-center gap-2.5 text-left font-bold py-2.5 px-3 rounded-xl transition-colors cursor-pointer bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30"
-            >
-              <GraduationCap className="w-4 h-4 text-amber-500" />
-              <span>Student & Parent Portal</span>
-            </button>
+            {/* Institutional Digital Portals on Mobile */}
+            <div className={`mt-2 pt-2 border-t ${isDark ? 'border-slate-800' : 'border-slate-100'} space-y-1.5`}>
+              <div className={`text-[10px] font-bold uppercase tracking-wider px-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                Institutional Portals
+              </div>
+              
+              <button
+                type="button"
+                onClick={() => handleNavClick('student-portal')}
+                className={`w-full flex items-center justify-between text-left font-bold py-2.5 px-3 rounded-xl transition-colors cursor-pointer border ${
+                  currentRoute === 'student-portal'
+                    ? 'bg-amber-500 text-white border-amber-600'
+                    : isDark
+                    ? 'bg-slate-900 border-slate-800 text-amber-400'
+                    : 'bg-amber-50/70 border-amber-200 text-amber-800'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <GraduationCap className="w-4 h-4 text-amber-500" />
+                  <span className="text-xs">Student & Parent Portal</span>
+                </div>
+                <ArrowRight className="w-3.5 h-3.5 opacity-60" />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleNavClick('teacher-portal')}
+                className={`w-full flex items-center justify-between text-left font-bold py-2.5 px-3 rounded-xl transition-colors cursor-pointer border ${
+                  currentRoute === 'teacher-portal'
+                    ? 'bg-blue-600 text-white border-blue-700'
+                    : isDark
+                    ? 'bg-slate-900 border-slate-800 text-blue-400'
+                    : 'bg-blue-50/70 border-blue-200 text-blue-800'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <BookOpen className="w-4 h-4 text-blue-500" />
+                  <span className="text-xs">Teacher Cockpit</span>
+                </div>
+                <ArrowRight className="w-3.5 h-3.5 opacity-60" />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleNavClick(isAuthenticated ? 'dashboard' : 'admin-login')}
+                className={`w-full flex items-center justify-between text-left font-bold py-2.5 px-3 rounded-xl transition-colors cursor-pointer border ${
+                  currentRoute === 'dashboard' || currentRoute === 'admin-login'
+                    ? 'bg-emerald-600 text-white border-emerald-700'
+                    : isDark
+                    ? 'bg-slate-900 border-slate-800 text-emerald-400'
+                    : 'bg-emerald-50/70 border-emerald-200 text-emerald-800'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <ShieldCheck className="w-4 h-4 text-emerald-500" />
+                  <span className="text-xs">Staff Administration & ERP</span>
+                </div>
+                <ArrowRight className="w-3.5 h-3.5 opacity-60" />
+              </button>
+            </div>
             
             <div className="pt-2 flex items-center justify-between border-t border-slate-200 dark:border-slate-800">
               <span className="text-xs text-slate-500 dark:text-slate-400">Theme</span>

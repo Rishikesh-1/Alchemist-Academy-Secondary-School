@@ -10,7 +10,7 @@ export const ROLES = {
   superadmin: {
     title: 'Super Administrator',
     badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
-    description: 'Full unconstrained access to all branding, hero, admissions, curriculum, blogs, footer, media library, and user management.',
+    description: 'Full unconstrained access to all CMS modules, Academic ERP (CRM, SIS, Faculty, CDC Grading, Attendance), Finance Terminal, and SaaS Multi-School Console.',
     allowedSections: [
       'branding',
       'hero',
@@ -23,8 +23,15 @@ export const ROLES = {
       'admissions',
       'footer',
       'media',
-      'cashier',
       'users',
+      'crm',
+      'sis',
+      'faculty',
+      'cdc-grading',
+      'attendance',
+      'cashier',
+      'fee-structures',
+      'audit-trail',
     ],
   },
   editor: {
@@ -36,20 +43,20 @@ export const ROLES = {
   admissions: {
     title: 'Admissions & Cashier Officer',
     badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
-    description: 'Access to student admissions, enrollment leads, and counter fee collection.',
-    allowedSections: ['admissions', 'cashier', 'stats', 'media'],
+    description: 'Access to student admissions, enrollment leads pipeline, student directory, and counter fee collection.',
+    allowedSections: ['admissions', 'crm', 'sis', 'cashier', 'fee-structures', 'audit-trail', 'stats', 'media'],
   },
   academic: {
     title: 'Academic Coordinator',
     badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
-    description: 'Manages school curriculum pathways, about details, and co-curricular programs.',
-    allowedSections: ['about', 'curriculum', 'cocurricular', 'headmaster', 'media'],
+    description: 'Manages school curriculum pathways, about details, faculty rosters, CDC grading engine, and attendance.',
+    allowedSections: ['about', 'curriculum', 'cocurricular', 'headmaster', 'media', 'sis', 'faculty', 'cdc-grading', 'attendance'],
   },
   accountant: {
     title: 'Senior Bursar & Cashier',
     badgeColor: 'bg-teal-500/20 text-teal-300 border-teal-500/40',
-    description: 'Manages tuition fee billing, counters cash/cheque collection, and digital payment reconciliation.',
-    allowedSections: ['cashier', 'stats', 'admissions'],
+    description: 'Manages tuition fee billing, counters cash/cheque collection, fee structures, and digital payment reconciliation.',
+    allowedSections: ['cashier', 'fee-structures', 'audit-trail', 'stats', 'admissions'],
   },
 };
 

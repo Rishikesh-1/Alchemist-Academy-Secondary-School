@@ -17,7 +17,6 @@ import StudentPortal from './components/StudentPortal';
 import TeacherPortal from './components/TeacherPortal';
 import VendorMasterHub from './components/VendorMasterHub';
 import LicenseLockScreen from './components/LicenseLockScreen';
-import ExecutiveSwitcherDock from './components/ExecutiveSwitcherDock';
 import { SchoolDataProvider, useSchoolData } from './context/SchoolDataContext';
 import AboutPage from './pages/AboutPage';
 import AcademicsPage from './pages/AcademicsPage';
@@ -118,7 +117,6 @@ function App() {
       <SiteProvider>
         <SchoolDataProvider>
           <AppRouter />
-          <ExecutiveSwitcherDock />
         </SchoolDataProvider>
       </SiteProvider>
     </AuthProvider>

@@ -28,47 +28,135 @@ import {
   Sun,
   Moon,
   CreditCard,
+  LogOut,
+  UserCheck,
+  GraduationCap,
+  Crown,
+  UserPlus,
+  Award,
+  Calendar,
+  Clock,
+  ArrowRight,
+  Search,
+  FileCheck,
+  CheckCircle2,
+  Printer,
+  QrCode,
+  TrendingUp,
+  School,
+  AlertCircle,
+  Filter,
 } from 'lucide-react';
 import { useSiteData } from '../context/SiteContext';
 import { useAuth } from '../context/AuthContext';
-import { LogOut, UserCheck } from 'lucide-react';
+import { useSchoolData } from '../context/SchoolDataContext';
 import ImageFieldWithPicker from './ImageFieldWithPicker';
 import MediaLibraryManager from './MediaLibraryManager';
 import CashierFeeCollector from './CashierFeeCollector';
+import DigitalStudentIDModal from './portal/DigitalStudentIDModal';
 import { saveSiteSettings } from '../services/api';
 
 const Dashboard = () => {
   const { siteData, setSiteData, updateFullSiteData, resetToDefault, navigateTo, isDark, toggleTheme } = useSiteData();
   const { currentUser, logout, canAccessSection, users, addUser, updateUser, deleteUser, ROLES } = useAuth();
-  
-  // Navigation Items with RBAC permissions
-  const allNavItems = [
+  const { schoolData } = useSchoolData();
+  const { classRoster = [], teacher = {}, bills = {}, timetable = [] } = schoolData || {};
+
+  // 3-in-1 Workspace Switcher: 'cms' | 'erp' | 'finance'
+  const [currentWorkspace, setCurrentWorkspace] = useState('cms');
+  const [selectedStudentForID, setSelectedStudentForID] = useState(null);
+  const [selectedStudentProfile, setSelectedStudentProfile] = useState(null);
+
+  // CRM State
+  const [leads, setLeads] = useState(() => {
+    try {
+      const saved = localStorage.getItem('alchemist_crm_leads_v2');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return [
+      { id: 'LD-101', studentName: 'Rohan Shrestha', parentName: 'Bikash Shrestha', phone: '9851122334', email: 'bikash.sh@gmail.com', grade: 'Grade 10', date: '2026-10-14', status: 'Campus Visit', notes: 'Interested in STEM lab & scholarship criteria' },
+      { id: 'LD-102', studentName: 'Anushka Bajracharya', parentName: 'Kishor Bajracharya', phone: '9841889900', email: 'kbajra@gmail.com', grade: 'Grade 8', date: '2026-10-15', status: 'New', notes: 'Online inquiry from website contact form' },
+      { id: 'LD-103', studentName: 'Kritesh Basnet', parentName: 'Mina Basnet', phone: '9813554433', email: 'mina.basnet@outlook.com', grade: 'Grade 5', date: '2026-10-13', status: 'Contacted', notes: 'Requested school bus route info for Jorpati area' },
+      { id: 'LD-104', studentName: 'Samir Acharya', parentName: 'Dev Acharya', phone: '9849223311', email: 'dev.acharya@hotmail.com', grade: 'Grade 10', date: '2026-10-11', status: 'Enrolled', notes: 'Completed registration & paid admission token' },
+      { id: 'LD-105', studentName: 'Pooja Timilsina', parentName: 'Ramesh Timilsina', phone: '9860112233', email: 'ramesh.t@gmail.com', grade: 'Grade 9', date: '2026-10-16', status: 'New', notes: 'Transferring from Pokhara, inquiries about hostel facilities' },
+    ];
+  });
+  const [leadStatusFilter, setLeadStatusFilter] = useState('all');
+  const [crmSearch, setCrmSearch] = useState('');
+  const [showAddLeadModal, setShowAddLeadModal] = useState(false);
+  const [newLeadForm, setNewLeadForm] = useState({
+    studentName: '',
+    parentName: '',
+    phone: '',
+    email: '',
+    grade: 'Grade 10',
+    notes: '',
+  });
+
+  // SIS Search state
+  const [sisSearch, setSisSearch] = useState('');
+
+  // Persist leads
+  useEffect(() => {
+    try {
+      localStorage.setItem('alchemist_crm_leads_v2', JSON.stringify(leads));
+    } catch (e) {}
+  }, [leads]);
+
+  // Navigation Items defined per Workspace
+  const cmsNavItems = [
     { id: 'branding', label: 'Branding & Logo', icon: Palette },
     { id: 'hero', label: 'Hero Banner & BG', icon: ImageIcon },
     { id: 'about', label: 'About School', icon: Compass },
     { id: 'stats', label: 'Stats Grid', icon: Users },
-    { id: 'headmaster', label: "Leadership Messages (Home/About)", icon: MessageSquare },
+    { id: 'headmaster', label: "Leadership Messages", icon: MessageSquare },
     { id: 'curriculum', label: 'Curriculum Subjects', icon: BookOpen },
     { id: 'cocurricular', label: 'Co-curricular Activities', icon: Sparkles },
     { id: 'blogs', label: 'Blog & Articles', icon: FileText },
     { id: 'admissions', label: 'Admissions CTA', icon: Phone },
-    { id: 'cashier', label: 'Cashier & Fee Counter', icon: CreditCard },
     { id: 'footer', label: 'Footer & Address', icon: LayoutDashboard },
     { id: 'media', label: 'Media Library', icon: FolderOpen },
     { id: 'users', label: 'Staff & Team Access', icon: ShieldCheck, superadminOnly: true },
   ];
 
-  // Filter based on currently logged-in user permissions
-  const allowedNavItems = allNavItems.filter((item) => {
-    if (item.superadminOnly) {
-      return currentUser?.role === 'superadmin';
-    }
-    return canAccessSection(item.id);
-  });
+  const erpNavItems = [
+    { id: 'crm', label: 'Admissions & Leads CRM', icon: UserPlus },
+    { id: 'sis', label: 'Student SIS & ID Cards', icon: Users },
+    { id: 'faculty', label: 'Faculty & Roster', icon: GraduationCap },
+    { id: 'cdc-grading', label: 'CDC & NEB Grading Engine', icon: Award },
+    { id: 'attendance', label: 'Attendance & Timetable', icon: Calendar },
+  ];
 
-  const [activeSection, setActiveSection] = useState(
-    allowedNavItems[0]?.id || 'blogs'
-  );
+  const financeNavItems = [
+    { id: 'cashier', label: 'Cashier Terminal', icon: CreditCard },
+    { id: 'fee-structures', label: 'Fee Structures & Tariffs', icon: FileCheck },
+    { id: 'audit-trail', label: 'Payment Receipts & Ledger', icon: Clock },
+  ];
+
+  const getCurrentWorkspaceItems = () => {
+    let items = cmsNavItems;
+    if (currentWorkspace === 'erp') items = erpNavItems;
+    if (currentWorkspace === 'finance') items = financeNavItems;
+
+    return items.filter((item) => {
+      if (item.superadminOnly) {
+        return currentUser?.role === 'superadmin';
+      }
+      return canAccessSection(item.id);
+    });
+  };
+
+  const allowedNavItems = getCurrentWorkspaceItems();
+
+  const [activeSection, setActiveSection] = useState('branding');
+
+  const switchWorkspace = (ws) => {
+    setCurrentWorkspace(ws);
+    if (ws === 'cms') setActiveSection('branding');
+    if (ws === 'erp') setActiveSection('crm');
+    if (ws === 'finance') setActiveSection('cashier');
+  };
+
   const [savedNotice, setSavedNotice] = useState(false);
   const [blogAddedNotice, setBlogAddedNotice] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -157,10 +245,10 @@ const Dashboard = () => {
           </div>
           <div>
             <h1 className={`font-serif-brand font-bold text-lg leading-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
-              Alchemist Academy CMS
+              {currentWorkspace === 'erp' ? 'Academic ERP Command' : currentWorkspace === 'finance' ? 'Finance & Billing Counter' : 'Alchemist Academy CMS'}
             </h1>
             <p className="text-xs text-amber-500 font-medium">
-              Live Customizer & Site Dashboard
+              {currentWorkspace === 'erp' ? 'Admissions CRM, SIS, Grading & Roster' : currentWorkspace === 'finance' ? 'Cashier Terminal, Tariffs & Receipts' : 'Live Customizer & Content Modules'}
             </p>
           </div>
         </div>
@@ -189,14 +277,16 @@ const Dashboard = () => {
             <span className="hidden sm:inline">{isDark ? "Light Mode" : "Dark Mode"}</span>
           </button>
 
-          <button
-            onClick={handleSave}
-            disabled={isSaving}
-            className="inline-flex items-center gap-1.5 px-4 sm:px-5 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs sm:text-sm shadow-md shadow-amber-500/20 active:scale-95 transition-all cursor-pointer disabled:opacity-60"
-          >
-            <Save className={`w-4 h-4 ${isSaving ? 'animate-spin' : ''}`} />
-            <span>{isSaving ? 'Saving...' : 'Save & Apply'}</span>
-          </button>
+          {currentWorkspace === 'cms' && (
+            <button
+              onClick={handleSave}
+              disabled={isSaving}
+              className="inline-flex items-center gap-1.5 px-4 sm:px-5 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs sm:text-sm shadow-md shadow-amber-500/20 active:scale-95 transition-all cursor-pointer disabled:opacity-60"
+            >
+              <Save className={`w-4 h-4 ${isSaving ? 'animate-spin' : ''}`} />
+              <span>{isSaving ? 'Saving...' : 'Save & Apply'}</span>
+            </button>
+          )}
 
           {/* Current Admin Session User Indicator */}
           <div className={`hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs ${
@@ -213,6 +303,20 @@ const Dashboard = () => {
               {currentUser?.role || 'Superadmin'}
             </span>
           </div>
+
+          {/* Superadmin Multi-School SaaS Console Direct Switcher */}
+          {currentUser?.role === 'superadmin' && (
+            <button
+              type="button"
+              onClick={() => navigateTo('vendor-hub')}
+              className="inline-flex items-center gap-1.5 px-3 sm:px-3.5 py-2 rounded-lg bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 hover:from-amber-500 hover:to-orange-500 text-white font-bold text-xs sm:text-sm shadow-md transition-all cursor-pointer"
+              title="Open Multi-School SaaS Console (Vendor Fleets, Licenses & Remote Lock)"
+            >
+              <Crown className="w-4 h-4 text-amber-200" />
+              <span className="hidden md:inline">Vendor SaaS Console</span>
+              <span className="md:hidden">SaaS</span>
+            </button>
+          )}
 
           <button
             onClick={() => {
@@ -267,10 +371,91 @@ const Dashboard = () => {
             </p>
           </div>
 
+          {/* 3-in-1 Workspace Switcher Tabs */}
+          <div className="mb-4">
+            <div className={`text-[10px] font-bold uppercase tracking-wider mb-2 px-1 ${
+              isDark ? 'text-slate-400' : 'text-slate-500'
+            }`}>
+              Workspace Environment
+            </div>
+            <div className={`p-1 rounded-2xl border flex flex-col gap-1 ${
+              isDark ? 'bg-slate-900 border-slate-800' : 'bg-slate-100 border-slate-200'
+            }`}>
+              {/* 1. Website CMS */}
+              <button
+                type="button"
+                onClick={() => switchWorkspace('cms')}
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  currentWorkspace === 'cms'
+                    ? 'bg-amber-500 text-slate-950 shadow-sm'
+                    : isDark
+                    ? 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/80'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <LayoutDashboard className="w-3.5 h-3.5" />
+                  <span>Website CMS</span>
+                </div>
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${
+                  currentWorkspace === 'cms' ? 'bg-black/20 text-slate-950' : 'bg-slate-700/30 text-slate-400'
+                }`}>
+                  12
+                </span>
+              </button>
+
+              {/* 2. Academic ERP */}
+              <button
+                type="button"
+                onClick={() => switchWorkspace('erp')}
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  currentWorkspace === 'erp'
+                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-sm'
+                    : isDark
+                    ? 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/80'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <GraduationCap className="w-3.5 h-3.5" />
+                  <span>Academic ERP</span>
+                </div>
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${
+                  currentWorkspace === 'erp' ? 'bg-white/20 text-white' : 'bg-slate-700/30 text-slate-400'
+                }`}>
+                  5
+                </span>
+              </button>
+
+              {/* 3. Finance & Billing */}
+              <button
+                type="button"
+                onClick={() => switchWorkspace('finance')}
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  currentWorkspace === 'finance'
+                    ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-sm'
+                    : isDark
+                    ? 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/80'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <CreditCard className="w-3.5 h-3.5" />
+                  <span>Finance & Billing</span>
+                </div>
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${
+                  currentWorkspace === 'finance' ? 'bg-white/20 text-white' : 'bg-slate-700/30 text-slate-400'
+                }`}>
+                  3
+                </span>
+              </button>
+            </div>
+          </div>
+
           <div className={`text-[11px] font-bold uppercase tracking-wider px-3 mb-2 ${
             isDark ? 'text-slate-400' : 'text-slate-500'
           }`}>
-            Permitted Modules ({allowedNavItems.length})
+            {currentWorkspace === 'cms' ? 'CMS Visual Modules' : currentWorkspace === 'erp' ? 'ERP Academic Operations' : 'Accounts & Counter Modules'} ({allowedNavItems.length})
           </div>
 
           {allowedNavItems.map((item) => {
@@ -2541,11 +2726,1022 @@ const Dashboard = () => {
             </div>
           )}
 
-          {/* Cashier & Accounts Fee Collection Terminal */}
+          {/* =========================================================================
+              2. ACADEMIC ERP WORKSPACE MODULES
+              ========================================================================= */}
+
+          {/* ERP 1. ADMISSIONS & LEADS CRM */}
+          {activeSection === 'crm' && (
+            <div className="space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                  <h2 className="text-2xl font-bold font-serif-brand">Admissions & Enrollment CRM</h2>
+                  <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
+                    Track prospective student inquiries, follow-up calls, campus visits, and new enrollments.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowAddLeadModal(true)}
+                  className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-md shadow-amber-500/20 active:scale-95 transition-all cursor-pointer"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Add New Inquiry</span>
+                </button>
+              </div>
+
+              {/* KPI Summary Cards */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className={`p-4 rounded-2xl border ${isDark ? 'bg-slate-950/80 border-slate-800' : 'bg-white border-slate-200'} shadow-sm`}>
+                  <div className="flex items-center justify-between text-xs font-semibold text-slate-400 mb-1">
+                    <span>Total Inquiries</span>
+                    <Users className="w-4 h-4 text-amber-500" />
+                  </div>
+                  <div className="text-2xl font-bold font-serif-brand">{leads.length}</div>
+                  <div className="text-[10px] text-amber-500 font-medium mt-1">2026 Academic Batch</div>
+                </div>
+
+                <div className={`p-4 rounded-2xl border ${isDark ? 'bg-slate-950/80 border-slate-800' : 'bg-white border-slate-200'} shadow-sm`}>
+                  <div className="flex items-center justify-between text-xs font-semibold text-slate-400 mb-1">
+                    <span>New Leads</span>
+                    <Sparkles className="w-4 h-4 text-blue-400" />
+                  </div>
+                  <div className="text-2xl font-bold font-serif-brand text-blue-400">
+                    {leads.filter((l) => l.status === 'New').length}
+                  </div>
+                  <div className="text-[10px] text-slate-400 mt-1">Requires initial call</div>
+                </div>
+
+                <div className={`p-4 rounded-2xl border ${isDark ? 'bg-slate-950/80 border-slate-800' : 'bg-white border-slate-200'} shadow-sm`}>
+                  <div className="flex items-center justify-between text-xs font-semibold text-slate-400 mb-1">
+                    <span>Campus Visits</span>
+                    <Compass className="w-4 h-4 text-purple-400" />
+                  </div>
+                  <div className="text-2xl font-bold font-serif-brand text-purple-400">
+                    {leads.filter((l) => l.status === 'Campus Visit').length}
+                  </div>
+                  <div className="text-[10px] text-slate-400 mt-1">Scheduled appointments</div>
+                </div>
+
+                <div className={`p-4 rounded-2xl border ${isDark ? 'bg-slate-950/80 border-slate-800' : 'bg-white border-slate-200'} shadow-sm`}>
+                  <div className="flex items-center justify-between text-xs font-semibold text-slate-400 mb-1">
+                    <span>Enrolled</span>
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                  </div>
+                  <div className="text-2xl font-bold font-serif-brand text-emerald-400">
+                    {leads.filter((l) => l.status === 'Enrolled').length}
+                  </div>
+                  <div className="text-[10px] text-emerald-500/80 font-medium mt-1">Admitted & registered</div>
+                </div>
+              </div>
+
+              {/* Filter & Search Bar */}
+              <div className={`p-4 rounded-2xl border flex flex-col sm:flex-row items-center justify-between gap-3 ${
+                isDark ? 'bg-slate-950/80 border-slate-800' : 'bg-white border-slate-200'
+              }`}>
+                <div className="relative w-full sm:w-80">
+                  <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
+                    value={crmSearch}
+                    onChange={(e) => setCrmSearch(e.target.value)}
+                    placeholder="Search candidate, parent, phone..."
+                    className={`w-full pl-9 pr-3 py-2 rounded-xl text-xs border focus:outline-none focus:border-amber-500 transition-colors ${
+                      isDark ? 'bg-slate-900 border-slate-800 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'
+                    }`}
+                  />
+                </div>
+
+                <div className="flex items-center gap-1.5 flex-wrap w-full sm:w-auto">
+                  {['all', 'New', 'Contacted', 'Campus Visit', 'Enrolled'].map((status) => (
+                    <button
+                      key={status}
+                      type="button"
+                      onClick={() => setLeadStatusFilter(status)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                        leadStatusFilter === status
+                          ? 'bg-amber-500 text-slate-950 shadow-xs'
+                          : isDark
+                          ? 'bg-slate-900 text-slate-400 hover:text-white'
+                          : 'bg-slate-100 text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      {status === 'all' ? 'All Leads' : status}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Leads Table */}
+              <div className={`rounded-2xl border overflow-hidden ${
+                isDark ? 'bg-slate-950/80 border-slate-800' : 'bg-white border-slate-200'
+              } shadow-sm`}>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead className={`border-b text-[11px] font-bold uppercase tracking-wider ${
+                      isDark ? 'bg-slate-900/60 border-slate-800 text-slate-400' : 'bg-slate-50 border-slate-200 text-slate-500'
+                    }`}>
+                      <tr>
+                        <th className="py-3 px-4">Student & Grade</th>
+                        <th className="py-3 px-4">Parent Details</th>
+                        <th className="py-3 px-4">Contact Phone</th>
+                        <th className="py-3 px-4">Inquiry Notes</th>
+                        <th className="py-3 px-4">Pipeline Status</th>
+                        <th className="py-3 px-4 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className={`divide-y ${isDark ? 'divide-slate-800/60' : 'divide-slate-100'}`}>
+                      {leads
+                        .filter((l) => {
+                          const matchesFilter = leadStatusFilter === 'all' || l.status === leadStatusFilter;
+                          const matchesSearch =
+                            l.studentName.toLowerCase().includes(crmSearch.toLowerCase()) ||
+                            l.parentName.toLowerCase().includes(crmSearch.toLowerCase()) ||
+                            l.phone.includes(crmSearch) ||
+                            l.notes.toLowerCase().includes(crmSearch.toLowerCase());
+                          return matchesFilter && matchesSearch;
+                        })
+                        .map((lead) => {
+                          const cleanPhone = lead.phone.replace(/[^0-9]/g, '');
+                          return (
+                            <tr key={lead.id} className={isDark ? 'hover:bg-slate-900/40' : 'hover:bg-slate-50/80'}>
+                              <td className="py-3.5 px-4 font-semibold">
+                                <div className="text-sm font-bold">{lead.studentName}</div>
+                                <div className="text-[11px] text-amber-500">{lead.grade}</div>
+                              </td>
+                              <td className="py-3.5 px-4">
+                                <div className="font-medium">{lead.parentName}</div>
+                                <div className="text-[10px] text-slate-400">{lead.email}</div>
+                              </td>
+                              <td className="py-3.5 px-4">
+                                <a
+                                  href={`tel:${lead.phone}`}
+                                  className="inline-flex items-center gap-1 font-mono text-emerald-400 hover:underline"
+                                >
+                                  <Phone className="w-3 h-3" />
+                                  <span>{lead.phone}</span>
+                                </a>
+                              </td>
+                              <td className="py-3.5 px-4 max-w-xs text-slate-400">
+                                <span className="line-clamp-2">{lead.notes || '—'}</span>
+                              </td>
+                              <td className="py-3.5 px-4">
+                                <select
+                                  value={lead.status}
+                                  onChange={(e) => {
+                                    const newStatus = e.target.value;
+                                    setLeads(leads.map((l) => (l.id === lead.id ? { ...l, status: newStatus } : l)));
+                                  }}
+                                  className={`px-2.5 py-1 rounded-lg text-xs font-bold border focus:outline-none cursor-pointer ${
+                                    lead.status === 'Enrolled'
+                                      ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
+                                      : lead.status === 'Campus Visit'
+                                      ? 'bg-purple-500/20 text-purple-400 border-purple-500/40'
+                                      : lead.status === 'Contacted'
+                                      ? 'bg-blue-500/20 text-blue-400 border-blue-500/40'
+                                      : 'bg-amber-500/20 text-amber-400 border-amber-500/40'
+                                  }`}
+                                >
+                                  <option value="New" className="bg-slate-900 text-white">New</option>
+                                  <option value="Contacted" className="bg-slate-900 text-white">Contacted</option>
+                                  <option value="Campus Visit" className="bg-slate-900 text-white">Campus Visit</option>
+                                  <option value="Enrolled" className="bg-slate-900 text-white">Enrolled</option>
+                                </select>
+                              </td>
+                              <td className="py-3.5 px-4 text-right">
+                                <div className="flex items-center justify-end gap-1.5">
+                                  <a
+                                    href={`https://wa.me/977${cleanPhone}`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-slate-950 transition-colors"
+                                    title="WhatsApp Parent"
+                                  >
+                                    <MessageSquare className="w-3.5 h-3.5" />
+                                  </a>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      if (window.confirm(`Delete lead record for ${lead.studentName}?`)) {
+                                        setLeads(leads.filter((l) => l.id !== lead.id));
+                                      }
+                                    }}
+                                    className="p-1.5 rounded-lg text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer"
+                                    title="Delete Lead"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ERP 2. STUDENT SIS & ID CARDS */}
+          {activeSection === 'sis' && (
+            <div className="space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                  <h2 className="text-2xl font-bold font-serif-brand">Student Information System (SIS)</h2>
+                  <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
+                    Active student directory, parent contacts, terminal exam records & instant PVC digital ID badges.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-semibold px-3 py-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-400">
+                    Class 10 - Section A • {classRoster.length} Active Students
+                  </span>
+                </div>
+              </div>
+
+              {/* SIS Search */}
+              <div className={`p-4 rounded-2xl border flex items-center justify-between gap-4 ${
+                isDark ? 'bg-slate-950/80 border-slate-800' : 'bg-white border-slate-200'
+              }`}>
+                <div className="relative w-full max-w-md">
+                  <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
+                    value={sisSearch}
+                    onChange={(e) => setSisSearch(e.target.value)}
+                    placeholder="Search by student name, roll no, or ID..."
+                    className={`w-full pl-9 pr-3 py-2 rounded-xl text-xs border focus:outline-none focus:border-amber-500 transition-colors ${
+                      isDark ? 'bg-slate-900 border-slate-800 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'
+                    }`}
+                  />
+                </div>
+                <div className="text-xs text-slate-400 hidden sm:block">
+                  Class Teacher: <span className="font-semibold text-amber-500">RJ Rana</span>
+                </div>
+              </div>
+
+              {/* SIS Roster Table */}
+              <div className={`rounded-2xl border overflow-hidden ${
+                isDark ? 'bg-slate-950/80 border-slate-800' : 'bg-white border-slate-200'
+              } shadow-sm`}>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead className={`border-b text-[11px] font-bold uppercase tracking-wider ${
+                      isDark ? 'bg-slate-900/60 border-slate-800 text-slate-400' : 'bg-slate-50 border-slate-200 text-slate-500'
+                    }`}>
+                      <tr>
+                        <th className="py-3 px-4">Roll</th>
+                        <th className="py-3 px-4">Student ID & Name</th>
+                        <th className="py-3 px-4">Gender</th>
+                        <th className="py-3 px-4">Guardian & Phone</th>
+                        <th className="py-3 px-4">Terminal Exam</th>
+                        <th className="py-3 px-4">Attendance</th>
+                        <th className="py-3 px-4 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className={`divide-y ${isDark ? 'divide-slate-800/60' : 'divide-slate-100'}`}>
+                      {classRoster
+                        .filter((student) => {
+                          const query = sisSearch.toLowerCase();
+                          return (
+                            student.name.toLowerCase().includes(query) ||
+                            (student.id && student.id.toLowerCase().includes(query)) ||
+                            String(student.rollNo).includes(query) ||
+                            (student.guardian && student.guardian.toLowerCase().includes(query))
+                          );
+                        })
+                        .map((student) => (
+                          <tr key={student.id || student.rollNo} className={isDark ? 'hover:bg-slate-900/40' : 'hover:bg-slate-50/80'}>
+                            <td className="py-3.5 px-4 font-bold text-amber-500">
+                              #{student.rollNo}
+                            </td>
+                            <td className="py-3.5 px-4">
+                              <div className="font-bold text-sm">{student.name}</div>
+                              <div className="text-[10px] text-slate-400 font-mono">{student.id}</div>
+                            </td>
+                            <td className="py-3.5 px-4 text-slate-400">{student.gender || '—'}</td>
+                            <td className="py-3.5 px-4">
+                              <div className="font-medium">{student.guardian || 'Guardian'}</div>
+                              <a href={`tel:${student.contact}`} className="text-[10px] text-emerald-400 font-mono hover:underline">
+                                {student.contact}
+                              </a>
+                            </td>
+                            <td className="py-3.5 px-4">
+                              <span className="font-semibold text-slate-200">
+                                {(student.examTheory || 70) + (student.examPractical || 24)}/100
+                              </span>
+                              <span className="ml-1 text-[10px] text-emerald-400 font-bold">
+                                (A)
+                              </span>
+                            </td>
+                            <td className="py-3.5 px-4">
+                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
+                                student.attendanceStatus === 'present'
+                                  ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
+                                  : student.attendanceStatus === 'late'
+                                  ? 'bg-amber-500/20 text-amber-400 border-amber-500/40'
+                                  : 'bg-rose-500/20 text-rose-400 border-rose-500/40'
+                              }`}>
+                                {student.attendanceStatus || 'present'}
+                              </span>
+                            </td>
+                            <td className="py-3.5 px-4 text-right">
+                              <div className="flex items-center justify-end gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setSelectedStudentForID({
+                                      id: student.id || `STU-100${student.rollNo}`,
+                                      name: student.name,
+                                      avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=300&q=80',
+                                      grade: 'Grade 10',
+                                      section: 'Section A',
+                                      rollNo: student.rollNo,
+                                      registrationNo: `AA-2026-${student.rollNo < 10 ? '0' + student.rollNo : student.rollNo}`,
+                                      academicYear: '2026 / 2083 BS',
+                                      bloodGroup: 'O+',
+                                      dob: '2010-04-18',
+                                      guardianName: student.guardian || 'Sunita Sharma',
+                                      guardianPhone: student.contact || '+977 9841234567',
+                                      address: 'Jorpati, Kathmandu, Nepal',
+                                      busRoute: 'Route 3 (Eastern Belt)',
+                                      classTeacher: 'RJ Rana (Senior Academic Guide)',
+                                      emergencyContact: student.contact || '+977 9841234567',
+                                    });
+                                  }}
+                                  className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-[11px] shadow transition-all cursor-pointer"
+                                  title="Generate Digital PVC Student Badge"
+                                >
+                                  <QrCode className="w-3.5 h-3.5" />
+                                  <span>PVC ID Card</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedStudentProfile(student)}
+                                  className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors cursor-pointer"
+                                  title="View Quick Profile"
+                                >
+                                  <Eye className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ERP 3. FACULTY & ROSTER */}
+          {activeSection === 'faculty' && (
+            <div className="space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                  <h2 className="text-2xl font-bold font-serif-brand">Faculty & Academic Guides</h2>
+                  <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
+                    Teaching staff, departmental coordinators, classroom allocations and teacher cockpit access.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => navigateTo('teacher-portal')}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow transition-all cursor-pointer"
+                >
+                  <BookOpen className="w-4 h-4" />
+                  <span>Launch Teacher Cockpit</span>
+                  <ExternalLink className="w-3 h-3 opacity-70" />
+                </button>
+              </div>
+
+              {/* Lead Faculty Member Spotlight */}
+              <div className={`p-6 rounded-3xl border flex flex-col md:flex-row items-start md:items-center justify-between gap-6 ${
+                isDark ? 'bg-gradient-to-br from-slate-900 to-slate-950 border-slate-800' : 'bg-white border-slate-200 shadow-sm'
+              }`}>
+                <div className="flex items-center gap-4">
+                  <img
+                    src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80"
+                    alt="RJ Rana"
+                    className="w-16 h-16 rounded-2xl object-cover border-2 border-amber-500 shadow-md"
+                  />
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-lg font-bold">RJ Rana</h3>
+                      <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30">
+                        Senior Academic Guide
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      Mathematics & STEM Sciences Coordinator • Class Teacher (Grade 10-A)
+                    </p>
+                    <div className="flex items-center gap-4 text-xs text-slate-400 mt-2 font-mono">
+                      <span>Room: 104</span>
+                      <span>•</span>
+                      <span>+977 9851098765</span>
+                      <span>•</span>
+                      <span>rj.rana@alchemist.edu.np</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <div className={`px-4 py-2 rounded-xl border text-center ${
+                    isDark ? 'bg-slate-900/60 border-slate-800' : 'bg-slate-50 border-slate-200'
+                  }`}>
+                    <div className="text-lg font-bold text-amber-500">42</div>
+                    <div className="text-[10px] text-slate-400">Class Students</div>
+                  </div>
+                  <div className={`px-4 py-2 rounded-xl border text-center ${
+                    isDark ? 'bg-slate-900/60 border-slate-800' : 'bg-slate-50 border-slate-200'
+                  }`}>
+                    <div className="text-lg font-bold text-emerald-400">95.2%</div>
+                    <div className="text-[10px] text-slate-400">Attendance</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Department Faculty Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {[
+                  { name: 'Dr. Sita Poudel', dept: 'Science & Technology HOD', room: 'Physics Lab 102', email: 'sita.p@alchemist.edu.np', classes: 'Grade 9, 10' },
+                  { name: 'Bikram Sharma', dept: 'English Language & Literature', room: 'Faculty 105', email: 'bikram.s@alchemist.edu.np', classes: 'Grade 8, 9, 10' },
+                  { name: 'Anish Tamang', dept: 'Computer Science & AI Lab', room: 'Robotics Lab 201', email: 'anish.t@alchemist.edu.np', classes: 'Grade 7, 8, 9, 10' },
+                ].map((f, i) => (
+                  <div key={i} className={`p-5 rounded-2xl border space-y-2 ${
+                    isDark ? 'bg-slate-950/80 border-slate-800' : 'bg-white border-slate-200 shadow-sm'
+                  }`}>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold">{f.name}</span>
+                      <GraduationCap className="w-4 h-4 text-amber-500" />
+                    </div>
+                    <div className="text-xs text-amber-500 font-medium">{f.dept}</div>
+                    <div className="text-[11px] text-slate-400">{f.room} • {f.classes}</div>
+                    <div className="text-[11px] font-mono text-slate-400 truncate">{f.email}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ERP 4. CDC & NEB GRADING ENGINE */}
+          {activeSection === 'cdc-grading' && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-2xl font-bold font-serif-brand">Nepal CDC & NEB Grading Engine</h2>
+                <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
+                  Standard Curriculum Development Center (CDC) 8-point letter grading scale and SEE Secondary level weighting system.
+                </p>
+              </div>
+
+              {/* CDC Scale Matrix Table */}
+              <div className={`rounded-2xl border overflow-hidden ${
+                isDark ? 'bg-slate-950/80 border-slate-800' : 'bg-white border-slate-200'
+              } shadow-sm`}>
+                <div className={`p-4 border-b font-bold text-xs flex items-center justify-between ${
+                  isDark ? 'bg-slate-900/60 border-slate-800' : 'bg-slate-50 border-slate-200'
+                }`}>
+                  <span>Official CDC 8-Point Grading Matrix (Grades 1 to 10)</span>
+                  <span className="text-amber-500 font-mono">NEB Standards • 2083 BS</span>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead className={`border-b text-[11px] font-bold uppercase tracking-wider ${
+                      isDark ? 'bg-slate-900/40 border-slate-800 text-slate-400' : 'bg-slate-50 border-slate-200 text-slate-500'
+                    }`}>
+                      <tr>
+                        <th className="py-3 px-4">Score Range</th>
+                        <th className="py-3 px-4">Letter Grade</th>
+                        <th className="py-3 px-4">Grade Point (GPA)</th>
+                        <th className="py-3 px-4">Performance Descriptor</th>
+                        <th className="py-3 px-4">NEB Remarks</th>
+                      </tr>
+                    </thead>
+                    <tbody className={`divide-y ${isDark ? 'divide-slate-800/60' : 'divide-slate-100'}`}>
+                      {[
+                        { range: '90% and above', grade: 'A+', gpa: '4.0', desc: 'Outstanding', remarks: 'Exceptional mastery across theoretical & practical rubrics', color: 'text-emerald-400' },
+                        { range: '80% to below 90%', grade: 'A', gpa: '3.6', desc: 'Excellent', remarks: 'Superior conceptual understanding and problem solving', color: 'text-emerald-400' },
+                        { range: '70% to below 80%', grade: 'B+', gpa: '3.2', desc: 'Very Good', remarks: 'High proficiency in learning competencies', color: 'text-blue-400' },
+                        { range: '60% to below 70%', grade: 'B', gpa: '2.8', desc: 'Good', remarks: 'Satisfactory application of required syllabus benchmarks', color: 'text-blue-400' },
+                        { range: '50% to below 60%', grade: 'C+', gpa: '2.4', desc: 'Satisfactory', remarks: 'Adequate grasp of core concepts with room for progress', color: 'text-amber-400' },
+                        { range: '40% to below 50%', grade: 'C', gpa: '2.0', desc: 'Acceptable', remarks: 'Meets minimum grade advancement requirements', color: 'text-amber-400' },
+                        { range: '35% to below 40%', grade: 'D', gpa: '1.6', desc: 'Basic', remarks: 'Elementary level achievement; requires remedial guidance', color: 'text-orange-400' },
+                        { range: 'Below 35%', grade: 'NG', gpa: '0.0', desc: 'Non-Graded', remarks: 'Not qualified for credit certification; mandatory re-exam', color: 'text-rose-400' },
+                      ].map((row, idx) => (
+                        <tr key={idx} className={isDark ? 'hover:bg-slate-900/40' : 'hover:bg-slate-50/80'}>
+                          <td className="py-3 px-4 font-mono font-medium">{row.range}</td>
+                          <td className="py-3 px-4">
+                            <span className={`text-sm font-bold font-mono ${row.color}`}>{row.grade}</span>
+                          </td>
+                          <td className="py-3 px-4 font-bold font-mono">{row.gpa}</td>
+                          <td className="py-3 px-4 font-semibold">{row.desc}</td>
+                          <td className="py-3 px-4 text-slate-400 max-w-sm">{row.remarks}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Theory + Practical Weightage Rules */}
+              <div className={`p-6 rounded-2xl border ${isDark ? 'bg-slate-950/80 border-slate-800' : 'bg-white border-slate-200'} space-y-3`}>
+                <h4 className="font-bold text-sm text-amber-500">NEB Secondary Assessment Weights (Class 9 & 10)</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                  <div className={`p-4 rounded-xl border ${isDark ? 'bg-slate-900/60 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+                    <div className="font-bold mb-1">Theoretical Evaluation (75 Marks)</div>
+                    <p className="text-slate-400 leading-relaxed">
+                      Assessed through 3-hour terminal examinations covering knowledge, comprehension, application, and higher-ability reasoning. A minimum of 35% (26.25 marks) is strictly required to pass theory.
+                    </p>
+                  </div>
+                  <div className={`p-4 rounded-xl border ${isDark ? 'bg-slate-900/60 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+                    <div className="font-bold mb-1">Internal / Practical Evaluation (25 Marks)</div>
+                    <p className="text-slate-400 leading-relaxed">
+                      Formative continuous assessment composed of laboratory records (10 marks), attendance & punctuality (4 marks), project work & presentations (6 marks), and terminal terminal tests (5 marks). Minimum 40% (10 marks) required.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ERP 5. ATTENDANCE & TIMETABLE */}
+          {activeSection === 'attendance' && (
+            <div className="space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                  <h2 className="text-2xl font-bold font-serif-brand">Attendance Analytics & Timetable</h2>
+                  <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
+                    Today's roll call status, Nepali calendar (Bikram Sambat 2083) logs and period schedules.
+                  </p>
+                </div>
+                <div className="text-xs font-mono px-3 py-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-400">
+                  Today: Ashwin 28, 2083 BS • Punctuality 95.2%
+                </div>
+              </div>
+
+              {/* Class Timetable Grid */}
+              <div className={`rounded-2xl border overflow-hidden ${
+                isDark ? 'bg-slate-950/80 border-slate-800' : 'bg-white border-slate-200'
+              } shadow-sm`}>
+                <div className={`p-4 border-b font-bold text-xs ${
+                  isDark ? 'bg-slate-900/60 border-slate-800 text-slate-300' : 'bg-slate-50 border-slate-200 text-slate-800'
+                }`}>
+                  Class 10-A Daily Academic Timetable
+                </div>
+                <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                  {[
+                    { period: 'Period 1 (09:45 - 10:30)', subject: 'Compulsory Mathematics', teacher: 'RJ Rana', room: 'Room 104' },
+                    { period: 'Period 2 (10:30 - 11:15)', subject: 'Science & Technology', teacher: 'Dr. Sita Poudel', room: 'Physics Lab' },
+                    { period: 'Period 3 (11:15 - 12:00)', subject: 'English Communication', teacher: 'Bikram Sharma', room: 'Room 104' },
+                    { period: 'Break (12:00 - 12:45)', subject: 'Lunch & Social Hub', teacher: 'Campus Grounds', room: 'Cafeteria' },
+                    { period: 'Period 4 (12:45 - 01:30)', subject: 'Social Studies & Culture', teacher: 'Shila Shrestha', room: 'Room 104' },
+                    { period: 'Period 5 (01:30 - 02:15)', subject: 'Optional Mathematics', teacher: 'RJ Rana', room: 'Room 104' },
+                    { period: 'Period 6 (02:15 - 03:00)', subject: 'Computer & AI Science', teacher: 'Anish Tamang', room: 'IT Lab 2' },
+                    { period: 'Period 7 (03:00 - 03:45)', subject: 'ECA / Sports & Library', teacher: 'Sports Coaches', room: 'Playground' },
+                  ].map((p, idx) => (
+                    <div key={idx} className={`p-3.5 rounded-xl border ${
+                      isDark ? 'bg-slate-900/60 border-slate-800' : 'bg-slate-50 border-slate-200'
+                    }`}>
+                      <div className="text-[10px] text-amber-500 font-bold uppercase">{p.period}</div>
+                      <div className="text-xs font-bold mt-1">{p.subject}</div>
+                      <div className="text-[11px] text-slate-400 mt-0.5">{p.teacher} • {p.room}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* =========================================================================
+              3. FINANCE & BILLING WORKSPACE MODULES
+              ========================================================================= */}
+
+          {/* FINANCE 1. CASHIER TERMINAL */}
           {activeSection === 'cashier' && <CashierFeeCollector />}
+
+          {/* FINANCE 2. FEE STRUCTURES & TARIFFS */}
+          {activeSection === 'fee-structures' && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-2xl font-bold font-serif-brand">Fee Structures & Tariffs</h2>
+                <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
+                  Approved institutional fee schedules for Academic Session 2026 / 2083 BS.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Primary Wing */}
+                <div className={`p-6 rounded-3xl border space-y-4 ${
+                  isDark ? 'bg-slate-950/80 border-slate-800' : 'bg-white border-slate-200 shadow-sm'
+                }`}>
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-800/60">
+                    <h3 className="font-bold text-base">Primary Wing (Grades 1 - 5)</h3>
+                    <span className="text-[10px] font-bold uppercase bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded-full">
+                      Foundation
+                    </span>
+                  </div>
+                  <div className="space-y-2 text-xs">
+                    <div className="flex justify-between py-1 border-b border-slate-800/40">
+                      <span className="text-slate-400">Monthly Tuition:</span>
+                      <span className="font-bold font-mono">NPR 4,500</span>
+                    </div>
+                    <div className="flex justify-between py-1 border-b border-slate-800/40">
+                      <span className="text-slate-400">Terminal Exam Fee:</span>
+                      <span className="font-bold font-mono">NPR 1,200</span>
+                    </div>
+                    <div className="flex justify-between py-1 border-b border-slate-800/40">
+                      <span className="text-slate-400">ECA & Activity Charge:</span>
+                      <span className="font-bold font-mono">NPR 800</span>
+                    </div>
+                    <div className="flex justify-between py-1">
+                      <span className="text-slate-400">Annual Development:</span>
+                      <span className="font-bold font-mono">NPR 6,000</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Lower Secondary */}
+                <div className={`p-6 rounded-3xl border space-y-4 ${
+                  isDark ? 'bg-slate-950/80 border-slate-800' : 'bg-white border-slate-200 shadow-sm'
+                }`}>
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-800/60">
+                    <h3 className="font-bold text-base">Lower Secondary (Grades 6 - 8)</h3>
+                    <span className="text-[10px] font-bold uppercase bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded-full">
+                      Intermediate
+                    </span>
+                  </div>
+                  <div className="space-y-2 text-xs">
+                    <div className="flex justify-between py-1 border-b border-slate-800/40">
+                      <span className="text-slate-400">Monthly Tuition:</span>
+                      <span className="font-bold font-mono">NPR 6,200</span>
+                    </div>
+                    <div className="flex justify-between py-1 border-b border-slate-800/40">
+                      <span className="text-slate-400">Computer & Robotics Lab:</span>
+                      <span className="font-bold font-mono">NPR 1,000</span>
+                    </div>
+                    <div className="flex justify-between py-1 border-b border-slate-800/40">
+                      <span className="text-slate-400">Terminal Exam Fee:</span>
+                      <span className="font-bold font-mono">NPR 1,500</span>
+                    </div>
+                    <div className="flex justify-between py-1">
+                      <span className="text-slate-400">Annual Development:</span>
+                      <span className="font-bold font-mono">NPR 7,500</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Secondary Level */}
+                <div className={`p-6 rounded-3xl border space-y-4 ${
+                  isDark ? 'bg-slate-950/80 border-slate-800' : 'bg-white border-slate-200 shadow-sm'
+                }`}>
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-800/60">
+                    <h3 className="font-bold text-base">Secondary Wing (Grades 9 - 10)</h3>
+                    <span className="text-[10px] font-bold uppercase bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-full">
+                      SEE Batch
+                    </span>
+                  </div>
+                  <div className="space-y-2 text-xs">
+                    <div className="flex justify-between py-1 border-b border-slate-800/40">
+                      <span className="text-slate-400">Monthly Tuition:</span>
+                      <span className="font-bold font-mono">NPR 8,500</span>
+                    </div>
+                    <div className="flex justify-between py-1 border-b border-slate-800/40">
+                      <span className="text-slate-400">Science & STEM Lab:</span>
+                      <span className="font-bold font-mono">NPR 2,000</span>
+                    </div>
+                    <div className="flex justify-between py-1 border-b border-slate-800/40">
+                      <span className="text-slate-400">Pre-Board & Terminal Exam:</span>
+                      <span className="font-bold font-mono">NPR 2,500</span>
+                    </div>
+                    <div className="flex justify-between py-1">
+                      <span className="text-slate-400">Annual Development:</span>
+                      <span className="font-bold font-mono">NPR 9,000</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Transit Bus Routes */}
+              <div className={`p-6 rounded-2xl border ${isDark ? 'bg-slate-950/80 border-slate-800' : 'bg-white border-slate-200'}`}>
+                <h4 className="font-bold text-sm text-amber-500 mb-3">Bus Transit Monthly Subscriptions</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                  <div className={`p-3.5 rounded-xl border ${isDark ? 'bg-slate-900/60 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+                    <div className="font-bold">Zone 1: Local Eastern Belt</div>
+                    <div className="text-slate-400 text-[11px] mt-0.5">Jorpati, Gokarna, Dakshinkali Hub</div>
+                    <div className="font-bold font-mono text-amber-500 mt-2">NPR 2,200 / month</div>
+                  </div>
+                  <div className={`p-3.5 rounded-xl border ${isDark ? 'bg-slate-900/60 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+                    <div className="font-bold">Zone 2: Ring Road Corridor</div>
+                    <div className="text-slate-400 text-[11px] mt-0.5">Bouddha, Chabahil, Gaushala, Sukedhara</div>
+                    <div className="font-bold font-mono text-amber-500 mt-2">NPR 2,800 / month</div>
+                  </div>
+                  <div className={`p-3.5 rounded-xl border ${isDark ? 'bg-slate-900/60 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+                    <div className="font-bold">Zone 3: Extended Express Belt</div>
+                    <div className="text-slate-400 text-[11px] mt-0.5">Baneshwor, Koteshwor, Maharajgunj</div>
+                    <div className="font-bold font-mono text-amber-500 mt-2">NPR 3,400 / month</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* FINANCE 3. AUDIT TRAIL & PAYMENT RECEIPTS */}
+          {activeSection === 'audit-trail' && (
+            <div className="space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                  <h2 className="text-2xl font-bold font-serif-brand">Payment Receipts & Reconciliation</h2>
+                  <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
+                    Live digital receipt log across eSewa, Khalti, FonePay QR, and cash counters.
+                  </p>
+                </div>
+                <div className="text-xs font-mono px-3 py-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-400">
+                  Total Cleared Today: NPR 34,000
+                </div>
+              </div>
+
+              {/* Transactions Table */}
+              <div className={`rounded-2xl border overflow-hidden ${
+                isDark ? 'bg-slate-950/80 border-slate-800' : 'bg-white border-slate-200'
+              } shadow-sm`}>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead className={`border-b text-[11px] font-bold uppercase tracking-wider ${
+                      isDark ? 'bg-slate-900/60 border-slate-800 text-slate-400' : 'bg-slate-50 border-slate-200 text-slate-500'
+                    }`}>
+                      <tr>
+                        <th className="py-3 px-4">Receipt ID</th>
+                        <th className="py-3 px-4">Student & Invoice</th>
+                        <th className="py-3 px-4">Date</th>
+                        <th className="py-3 px-4">Payment Method</th>
+                        <th className="py-3 px-4">Ref Number</th>
+                        <th className="py-3 px-4 text-right">Amount Paid</th>
+                        <th className="py-3 px-4 text-center">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className={`divide-y ${isDark ? 'divide-slate-800/60' : 'divide-slate-100'}`}>
+                      {(bills?.paymentHistory || [
+                        { id: 'PAY-1049', invoiceNo: 'INV-2026-09', description: 'Bhadra Tuition & Transport', date: '2026-09-08', amount: 8500, method: 'eSewa Mobile Wallet', refNo: 'ESEWA-98418902', status: 'paid' },
+                        { id: 'PAY-1032', invoiceNo: 'INV-2026-08', description: 'Shrawan Tuition & Labs', date: '2026-08-05', amount: 8500, method: 'FonePay QR', refNo: 'FONE-44921029', status: 'paid' },
+                        { id: 'PAY-1011', invoiceNo: 'INV-2026-07', description: 'Ashad Tuition Fee', date: '2026-07-06', amount: 8500, method: 'Cash Counter', refNo: 'CSH-00291', status: 'paid' },
+                      ]).map((item, idx) => (
+                        <tr key={idx} className={isDark ? 'hover:bg-slate-900/40' : 'hover:bg-slate-50/80'}>
+                          <td className="py-3.5 px-4 font-mono font-bold text-amber-500">{item.id}</td>
+                          <td className="py-3.5 px-4">
+                            <div className="font-bold">Aarav Sharma (STU-1001)</div>
+                            <div className="text-[10px] text-slate-400">{item.description} • {item.invoiceNo}</div>
+                          </td>
+                          <td className="py-3.5 px-4 font-mono text-slate-400">{item.date}</td>
+                          <td className="py-3.5 px-4">
+                            <span className="font-semibold text-slate-300">{item.method}</span>
+                          </td>
+                          <td className="py-3.5 px-4 font-mono text-[11px] text-slate-400">{item.refNo}</td>
+                          <td className="py-3.5 px-4 text-right font-bold font-mono text-emerald-400">
+                            NPR {item.amount?.toLocaleString()}
+                          </td>
+                          <td className="py-3.5 px-4 text-center">
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">
+                              Cleared
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
 
         </main>
       </div>
+
+      {/* MODAL 1: Digital Student ID Badge */}
+      {selectedStudentForID && (
+        <DigitalStudentIDModal
+          student={selectedStudentForID}
+          onClose={() => setSelectedStudentForID(null)}
+        />
+      )}
+
+      {/* MODAL 2: Student Quick Profile */}
+      {selectedStudentProfile && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md">
+          <div className={`w-full max-w-lg rounded-3xl border p-6 sm:p-8 shadow-2xl ${
+            isDark ? 'bg-slate-900 border-slate-800 text-white' : 'bg-white border-slate-200 text-slate-900'
+          }`}>
+            <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+              <div className="flex items-center gap-2">
+                <Users className="w-5 h-5 text-amber-500" />
+                <h3 className="font-bold text-base">Student Academic Profile</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedStudentProfile(null)}
+                className="text-slate-400 hover:text-white p-1 rounded-lg cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="py-4 space-y-4 text-xs">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-2xl bg-amber-500/20 text-amber-500 font-bold text-xl flex items-center justify-center border border-amber-500/40">
+                  {selectedStudentProfile.name?.charAt(0)}
+                </div>
+                <div>
+                  <h4 className="text-base font-bold">{selectedStudentProfile.name}</h4>
+                  <p className="text-slate-400">Roll #{selectedStudentProfile.rollNo} • Class 10 (Section A)</p>
+                  <p className="text-amber-500 font-mono mt-0.5">{selectedStudentProfile.id}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 pt-2">
+                <div className={`p-3 rounded-xl border ${isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+                  <span className="text-slate-400 block text-[10px] uppercase font-semibold">Guardian</span>
+                  <span className="font-bold text-xs">{selectedStudentProfile.guardian || 'Sunita Sharma'}</span>
+                </div>
+                <div className={`p-3 rounded-xl border ${isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+                  <span className="text-slate-400 block text-[10px] uppercase font-semibold">Contact</span>
+                  <a href={`tel:${selectedStudentProfile.contact}`} className="font-bold text-emerald-400 font-mono text-xs hover:underline">
+                    {selectedStudentProfile.contact}
+                  </a>
+                </div>
+                <div className={`p-3 rounded-xl border ${isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+                  <span className="text-slate-400 block text-[10px] uppercase font-semibold">Terminal Marks</span>
+                  <span className="font-bold text-xs">
+                    {(selectedStudentProfile.examTheory || 70) + (selectedStudentProfile.examPractical || 24)} / 100
+                  </span>
+                </div>
+                <div className={`p-3 rounded-xl border ${isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+                  <span className="text-slate-400 block text-[10px] uppercase font-semibold">Attendance</span>
+                  <span className="font-bold text-emerald-400 uppercase text-xs">
+                    {selectedStudentProfile.attendanceStatus || 'present'}
+                  </span>
+                </div>
+              </div>
+
+              <div className={`p-3 rounded-xl border ${isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+                <span className="text-slate-400 block text-[10px] uppercase font-semibold">Academic Guidance Note</span>
+                <p className="text-slate-300 mt-1 leading-relaxed">
+                  {selectedStudentProfile.remarks || 'Active classroom participation and strong conceptual discipline in mathematics.'}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-3 border-t border-slate-800">
+              <button
+                type="button"
+                onClick={() => setSelectedStudentProfile(null)}
+                className="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow cursor-pointer"
+              >
+                Close Profile
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 3: Add New Lead */}
+      {showAddLeadModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md">
+          <div className={`w-full max-w-md rounded-3xl border p-6 sm:p-8 shadow-2xl ${
+            isDark ? 'bg-slate-900 border-slate-800 text-white' : 'bg-white border-slate-200 text-slate-900'
+          }`}>
+            <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+              <div className="flex items-center gap-2">
+                <UserPlus className="w-5 h-5 text-amber-500" />
+                <h3 className="font-bold text-base">New Admission Inquiry</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowAddLeadModal(false)}
+                className="text-slate-400 hover:text-white p-1 rounded-lg cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!newLeadForm.studentName || !newLeadForm.phone) return;
+                const newLead = {
+                  id: `LD-${Date.now().toString().slice(-4)}`,
+                  studentName: newLeadForm.studentName,
+                  parentName: newLeadForm.parentName,
+                  phone: newLeadForm.phone,
+                  email: newLeadForm.email,
+                  grade: newLeadForm.grade,
+                  date: new Date().toISOString().split('T')[0],
+                  status: 'New',
+                  notes: newLeadForm.notes,
+                };
+                setLeads([newLead, ...leads]);
+                setShowAddLeadModal(false);
+                setNewLeadForm({
+                  studentName: '',
+                  parentName: '',
+                  phone: '',
+                  email: '',
+                  grade: 'Grade 10',
+                  notes: '',
+                });
+              }}
+              className="py-4 space-y-3.5 text-xs"
+            >
+              <div>
+                <label className="block text-slate-300 font-semibold mb-1">Student / Candidate Full Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={newLeadForm.studentName}
+                  onChange={(e) => setNewLeadForm({ ...newLeadForm, studentName: e.target.value })}
+                  placeholder="e.g. Sambridh Gautam"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-300 font-semibold mb-1">Parent / Guardian Name</label>
+                  <input
+                    type="text"
+                    value={newLeadForm.parentName}
+                    onChange={(e) => setNewLeadForm({ ...newLeadForm, parentName: e.target.value })}
+                    placeholder="e.g. Madhav Gautam"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-300 font-semibold mb-1">Class Applying For</label>
+                  <select
+                    value={newLeadForm.grade}
+                    onChange={(e) => setNewLeadForm({ ...newLeadForm, grade: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500"
+                  >
+                    {['Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10'].map((g) => (
+                      <option key={g} value={g}>{g}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-300 font-semibold mb-1">Contact Phone *</label>
+                  <input
+                    type="tel"
+                    required
+                    value={newLeadForm.phone}
+                    onChange={(e) => setNewLeadForm({ ...newLeadForm, phone: e.target.value })}
+                    placeholder="98XXXXXXXX"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-300 font-semibold mb-1">Email Address</label>
+                  <input
+                    type="email"
+                    value={newLeadForm.email}
+                    onChange={(e) => setNewLeadForm({ ...newLeadForm, email: e.target.value })}
+                    placeholder="parent@gmail.com"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-slate-300 font-semibold mb-1">Inquiry / Consultation Notes</label>
+                <textarea
+                  rows={2}
+                  value={newLeadForm.notes}
+                  onChange={(e) => setNewLeadForm({ ...newLeadForm, notes: e.target.value })}
+                  placeholder="e.g. Inquired about school bus to Jorpati, hostel, and science scholarship..."
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setShowAddLeadModal(false)}
+                  className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-semibold cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow cursor-pointer"
+                >
+                  Save Inquiry
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
