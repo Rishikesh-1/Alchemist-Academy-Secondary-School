@@ -108,3 +108,4 @@ try {
     }
     jsonResponse(false, 'Promotion failed: ' . $e->getMessage(), null, 500);
 }
+

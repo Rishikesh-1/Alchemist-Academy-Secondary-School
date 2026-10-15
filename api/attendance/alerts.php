@@ -139,3 +139,4 @@ try {
     }
     jsonResponse(false, 'Alerts dispatch failed: ' . $e->getMessage(), null, 500);
 }
+

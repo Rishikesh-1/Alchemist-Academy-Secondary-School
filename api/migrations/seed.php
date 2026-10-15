@@ -329,3 +329,4 @@ try {
     echo "\n[ERROR] Seeding failed:\n" . $e->getMessage() . "\n";
     exit(1);
 }
+

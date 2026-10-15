@@ -131,3 +131,4 @@ jsonResponse(true, 'Report card generated.', [
         'attendance'    => $attendance,
     ],
 ]);
+

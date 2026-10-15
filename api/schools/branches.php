@@ -48,3 +48,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 }
 
 jsonResponse(false, 'Method not allowed.', null, 405);
+

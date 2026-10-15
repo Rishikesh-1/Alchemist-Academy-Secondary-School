@@ -23,3 +23,4 @@ jsonResponse(true, 'User authenticated.', [
         'department' => $user['department'],
     ],
 ]);
+

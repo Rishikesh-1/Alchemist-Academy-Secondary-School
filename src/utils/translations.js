@@ -136,3 +136,4 @@ export const TRANSLATIONS = {
 export function getTranslation(key, lang = 'en') {
   return TRANSLATIONS[lang]?.[key] || TRANSLATIONS.en[key] || key;
 }
+

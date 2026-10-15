@@ -142,3 +142,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 jsonResponse(false, 'Method not allowed.', null, 405);
+

@@ -102,3 +102,4 @@ export function formatDualDate(adDateString, lang = 'en') {
   }
   return `${adDateString} AD (${bs} BS)`;
 }
+

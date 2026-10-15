@@ -242,3 +242,4 @@ const AdmissionsMeritTab = ({ isDark }) => {
 };
 
 export default AdmissionsMeritTab;
+

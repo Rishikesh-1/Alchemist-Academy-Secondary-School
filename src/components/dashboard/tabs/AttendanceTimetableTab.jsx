@@ -569,3 +569,4 @@ const AttendanceTimetableTab = ({ isDark }) => {
 };
 
 export default AttendanceTimetableTab;
+
