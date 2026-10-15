@@ -54,7 +54,7 @@ const Hero = () => {
       <div className="absolute bottom-10 right-10 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
       {/* Content Container */}
-      <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
+      <div className="relative z-10 w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 py-16 sm:py-24 lg:py-28 text-center">
         {/* Badge */}
         {hero.badge && (
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/20 border border-amber-400/30 text-amber-300 text-xs sm:text-sm font-semibold tracking-wide uppercase mb-6 backdrop-blur-sm shadow-inner">
@@ -64,7 +64,7 @@ const Hero = () => {
         )}
 
         {/* Main Heading */}
-        <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-serif-brand font-bold text-white tracking-tight leading-[1.15] mb-6 drop-shadow-md">
+        <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-serif-brand font-bold text-white tracking-tight leading-[1.15] mb-6 drop-shadow-md max-w-5xl mx-auto">
           {hero.titlePart1}{' '}
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-amber-400 to-yellow-300">
             {hero.titleHighlight}
@@ -73,7 +73,7 @@ const Hero = () => {
 
         {/* Subheading */}
         {hero.subheading && (
-          <p className="text-xl sm:text-2xl md:text-3xl font-quote italic text-slate-200 max-w-3xl mx-auto mb-10 font-normal tracking-wide">
+          <p className="text-lg sm:text-2xl md:text-3xl font-quote italic text-slate-200 max-w-4xl mx-auto mb-10 font-normal tracking-wide">
             {hero.subheading}
           </p>
         )}
@@ -106,7 +106,7 @@ const Hero = () => {
 
         {/* Key Feature Highlights */}
         {hero.features && hero.features.length > 0 && (
-          <div className="mt-16 grid grid-cols-2 md:grid-cols-3 gap-4 pt-10 border-t border-slate-800/80 max-w-4xl mx-auto">
+          <div className="mt-12 sm:mt-16 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 pt-8 sm:pt-10 border-t border-slate-800/80 max-w-5xl mx-auto">
             {hero.features.map((feat, index) => (
               <div 
                 key={index} 

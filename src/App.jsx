@@ -13,6 +13,12 @@ import AdmissionsCTA from './components/AdmissionsCTA';
 import Footer from './components/Footer';
 import Dashboard from './components/Dashboard';
 import AdminLogin from './components/AdminLogin';
+import StudentPortal from './components/StudentPortal';
+import TeacherPortal from './components/TeacherPortal';
+import VendorMasterHub from './components/VendorMasterHub';
+import LicenseLockScreen from './components/LicenseLockScreen';
+import ExecutiveSwitcherDock from './components/ExecutiveSwitcherDock';
+import { SchoolDataProvider, useSchoolData } from './context/SchoolDataContext';
 import AboutPage from './pages/AboutPage';
 import AcademicsPage from './pages/AcademicsPage';
 import ActivitiesPage from './pages/ActivitiesPage';
@@ -22,8 +28,29 @@ import ContactPage from './pages/ContactPage';
 function AppRouter() {
   const { currentRoute, isDark } = useSiteData();
   const { isAuthenticated } = useAuth();
+  const { currentSchoolInstance } = useSchoolData();
 
-  // 1. Secret/Gated Route: Admin Login Portal
+  // Option 2 Remote Killswitch: If client instance license is suspended by Vendor Master Console, lock institution domain
+  if (currentSchoolInstance?.status === 'suspended' && currentRoute !== 'vendor-hub') {
+    return <LicenseLockScreen />;
+  }
+
+  // 1. Ecosystem Route: Student & Parent Portal
+  if (currentRoute === 'student-portal') {
+    return <StudentPortal />;
+  }
+
+  // 2. Ecosystem Route: Teacher Cockpit & Grading Workspace
+  if (currentRoute === 'teacher-portal') {
+    return <TeacherPortal />;
+  }
+
+  // 3. Ecosystem Route: Vendor Master Command Center (Rishi's Multi-School Console)
+  if (currentRoute === 'vendor-hub') {
+    return <VendorMasterHub />;
+  }
+
+  // 3. Secret/Gated Route: Admin Login Portal
   if (currentRoute === 'admin-login') {
     if (isAuthenticated) {
       return <Dashboard />;
@@ -31,7 +58,7 @@ function AppRouter() {
     return <AdminLogin />;
   }
 
-  // 2. Secret/Gated Route: CMS Dashboard (Protected by RBAC)
+  // 4. Secret/Gated Route: CMS Dashboard (Protected by RBAC)
   if (currentRoute === 'dashboard') {
     if (!isAuthenticated) {
       return <AdminLogin />;
@@ -69,13 +96,13 @@ function AppRouter() {
   };
 
   return (
-    <div className={`min-h-screen flex flex-col font-sans selection:bg-amber-600 selection:text-white transition-colors duration-300 ${
+    <div className={`min-h-screen w-full overflow-x-hidden flex flex-col font-sans selection:bg-amber-600 selection:text-white transition-colors duration-300 ${
       isDark ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'
     }`}>
       {/* Semantic Top Navigation */}
       <Navbar />
 
-      <main className="flex-grow">
+      <main className="flex-grow w-full overflow-x-hidden">
         {renderCurrentPage()}
       </main>
 
@@ -89,7 +116,10 @@ function App() {
   return (
     <AuthProvider>
       <SiteProvider>
-        <AppRouter />
+        <SchoolDataProvider>
+          <AppRouter />
+          <ExecutiveSwitcherDock />
+        </SchoolDataProvider>
       </SiteProvider>
     </AuthProvider>
   );

@@ -14,7 +14,7 @@ const About = () => {
       <div className={`absolute top-0 right-0 w-96 h-96 rounded-full blur-3xl -z-10 ${isDark ? 'bg-amber-500/5' : 'bg-amber-50'}`}></div>
       <div className={`absolute bottom-0 left-0 w-80 h-80 rounded-full blur-2xl -z-10 ${isDark ? 'bg-slate-800/10' : 'bg-slate-50'}`}></div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
           
           {/* Left Column: Visual Showcase */}
@@ -31,7 +31,7 @@ const About = () => {
 
               {/* Floating Highlight Card */}
               {about.locationBadgeTitle && (
-                <div className={`absolute -bottom-8 -right-4 sm:-right-8 p-6 rounded-2xl shadow-xl border max-w-xs transition-colors ${
+                <div className={`absolute -bottom-6 sm:-bottom-8 right-2 sm:-right-8 p-4 sm:p-6 rounded-2xl shadow-xl border max-w-[260px] sm:max-w-xs transition-colors ${
                   isDark ? 'bg-slate-950/95 backdrop-blur-md border-slate-800 text-white' : 'bg-white/95 backdrop-blur-md border-slate-100 text-slate-900'
                 }`}>
                   <div className="flex items-start gap-4">

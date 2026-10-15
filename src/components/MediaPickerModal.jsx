@@ -40,9 +40,6 @@ const MediaPickerModal = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedItem, setSelectedItem] = useState(null);
-  const [urlInput, setUrlInput] = useState('');
-  const [urlTitle, setUrlTitle] = useState('');
-  const [showAddUrl, setShowAddUrl] = useState(false);
   const [uploadNotice, setUploadNotice] = useState('');
   const fileInputRef = useRef(null);
 
@@ -104,31 +101,6 @@ const MediaPickerModal = ({
     e.target.value = ''; // Reset input
   };
 
-  // Add custom URL to media library
-  const handleAddUrl = (e) => {
-    e.preventDefault();
-    if (!urlInput.trim()) return;
-
-    const newItem = {
-      id: 'url-' + Date.now(),
-      title: urlTitle.trim() || 'Imported Web Image',
-      url: urlInput.trim(),
-      category: 'Custom Uploads',
-      dateAdded: new Date().toISOString().split('T')[0],
-      description: 'Imported web asset URL',
-      isDefault: false,
-    };
-
-    const updated = [newItem, ...mediaList];
-    setMediaList(updated);
-    saveStoredMedia(updated);
-    setSelectedItem(newItem);
-    setUrlInput('');
-    setUrlTitle('');
-    setShowAddUrl(false);
-    setUploadNotice('Asset imported to Media Library!');
-    setTimeout(() => setUploadNotice(''), 3000);
-  };
 
   // Delete an item from media library
   const handleDeleteItem = (itemToDelete, e) => {
@@ -202,14 +174,6 @@ const MediaPickerModal = ({
             />
 
             <button
-              onClick={() => setShowAddUrl(!showAddUrl)}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-colors cursor-pointer"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Add via URL</span>
-            </button>
-
-            <button
               onClick={onClose}
               className="p-2 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800 transition-colors ml-1 cursor-pointer"
             >
@@ -224,47 +188,6 @@ const MediaPickerModal = ({
             <Check className="w-4 h-4" />
             <span>{uploadNotice}</span>
           </div>
-        )}
-
-        {/* Optional Add via URL Drawer */}
-        {showAddUrl && (
-          <form
-            onSubmit={handleAddUrl}
-            className="px-6 py-3 bg-slate-950/90 border-b border-slate-800 flex flex-wrap items-center gap-3"
-          >
-            <div className="flex-1 min-w-[200px]">
-              <input
-                type="url"
-                required
-                placeholder="Image URL (e.g. https://domain.com/photo.jpg or ./assets/image.webp)"
-                value={urlInput}
-                onChange={(e) => setUrlInput(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-400"
-              />
-            </div>
-            <div className="w-48">
-              <input
-                type="text"
-                placeholder="Asset Title (optional)"
-                value={urlTitle}
-                onChange={(e) => setUrlTitle(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-400"
-              />
-            </div>
-            <button
-              type="submit"
-              className="px-4 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs cursor-pointer"
-            >
-              Save to Library
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowAddUrl(false)}
-              className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs cursor-pointer"
-            >
-              Cancel
-            </button>
-          </form>
         )}
 
         {/* Controls Toolbar: Search & Category Filter */}

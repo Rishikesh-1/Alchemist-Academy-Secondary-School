@@ -11,7 +11,7 @@ const CoCurricular = () => {
 
   return (
     <section id="activities" className={`py-24 relative transition-colors duration-300 ${isDark ? 'bg-slate-900 text-slate-100' : 'bg-white text-slate-900'}`}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12">
         
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto mb-16">
@@ -27,7 +27,7 @@ const CoCurricular = () => {
         </div>
 
         {/* Feature Cards Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {activities.map((activity, idx) => {
             const Icon = icons[idx % icons.length];
             return (

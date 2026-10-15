@@ -72,7 +72,7 @@ const AboutPage = () => {
       {/* Page Header / Breadcrumb Banner */}
       <section className="bg-slate-950 text-white py-8 sm:py-10 relative overflow-hidden border-b border-slate-900">
         <div className="absolute inset-0 bg-radial from-amber-600/10 via-transparent to-transparent pointer-events-none" />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 relative z-10">
           <nav className="flex items-center gap-2 text-xs text-amber-400 font-semibold mb-2 uppercase tracking-wider">
             <button onClick={() => navigateTo('home')} className="hover:underline cursor-pointer">
               Home
@@ -91,7 +91,7 @@ const AboutPage = () => {
       </section>
 
       {/* Campus Narrative Section */}
-      <section className="py-10 sm:py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-10 sm:py-16 w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           
           {/* Left Column: Campus Feature Image */}
@@ -105,7 +105,7 @@ const AboutPage = () => {
             </div>
 
             {/* Floating Location Badge */}
-            <div className={`absolute -bottom-6 -right-4 sm:right-6 p-5 rounded-2xl shadow-xl max-w-xs flex items-start gap-3 ${
+            <div className={`absolute -bottom-6 right-2 sm:right-6 p-5 rounded-2xl shadow-xl max-w-xs flex items-start gap-3 ${
               isDark ? 'bg-slate-900 border border-slate-800 text-white' : 'bg-white border border-slate-100 text-slate-900'
             }`}>
               <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0">
@@ -185,7 +185,7 @@ const AboutPage = () => {
       <section className={`py-16 sm:py-24 border-y transition-colors duration-300 ${
         isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200/80'
       }`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12">
           <div className="text-center max-w-2xl mx-auto mb-14">
             <span className="text-xs uppercase font-bold tracking-widest text-amber-500">
               Foundational Principles
@@ -232,7 +232,7 @@ const AboutPage = () => {
       <HeadmasterQuote page="about" />
 
       {/* Grade Stages Progression */}
-      <section className="py-16 sm:py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-16 sm:py-24 w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12">
         <div className="text-center max-w-2xl mx-auto mb-14">
           <span className="text-xs uppercase font-bold tracking-widest text-amber-500">
             Educational Trajectory
@@ -269,7 +269,7 @@ const AboutPage = () => {
       </section>
 
       {/* Ready to Experience Alchemist Academy CTA Banner */}
-      <section className="pb-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="pb-20 w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12">
         <div className="rounded-3xl bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 p-8 sm:p-12 text-center text-white relative overflow-hidden border border-slate-800 shadow-2xl">
           <div className="absolute top-0 right-0 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
           <span className="text-xs uppercase font-bold tracking-widest text-amber-400">Join Our Community</span>

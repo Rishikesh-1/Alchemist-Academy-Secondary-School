@@ -41,7 +41,7 @@ const BlogPage = () => {
       {/* Banner */}
       <section className="bg-slate-950 text-white py-8 sm:py-10 relative overflow-hidden border-b border-slate-900">
         <div className="absolute inset-0 bg-radial from-amber-600/10 via-transparent to-transparent pointer-events-none" />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <nav className="flex items-center gap-2 text-xs text-amber-400 font-semibold mb-2 uppercase tracking-wider">
               <button onClick={() => navigateTo('home')} className="hover:underline cursor-pointer">
@@ -84,7 +84,7 @@ const BlogPage = () => {
       </section>
 
       {/* Toolbar: Search & Category Filter */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8">
+      <section className="w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 pt-6 sm:pt-8">
         <div className={`p-4 sm:p-5 rounded-2xl border transition-colors duration-200 flex flex-col md:flex-row md:items-center justify-between gap-4 ${
           isDark 
             ? 'bg-slate-900/90 border-slate-800 shadow-lg' 
@@ -144,7 +144,7 @@ const BlogPage = () => {
       </section>
 
       {/* Article Grid */}
-      <section className="py-12 sm:py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-12 sm:py-16 w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12">
         {filteredBlogs.length === 0 ? (
           <div className={`text-center py-20 rounded-3xl border p-8 ${
             isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'

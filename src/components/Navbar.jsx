@@ -60,18 +60,18 @@ const Navbar = () => {
         ? 'bg-slate-950/95 border-slate-800/90 text-white shadow-lg shadow-black/20' 
         : 'bg-white/95 border-slate-100 text-slate-900 shadow-sm'
     }`}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12">
         <div className="flex items-center justify-between h-20">
           
           {/* Left: Brand Identity */}
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-3 shrink-0 min-w-0">
             <button
               type="button"
               onClick={() => handleNavClick('home')}
-              className="flex items-center gap-3 group text-left cursor-pointer"
+              className="flex items-center gap-2.5 sm:gap-3 group text-left cursor-pointer min-w-0"
             >
               {branding.logoType === 'image' && branding.logoImage ? (
-                <div className={`w-11 h-11 rounded-xl overflow-hidden shadow-md group-hover:scale-105 transition-transform duration-300 border flex items-center justify-center p-1 ${
+                <div className={`w-9 h-9 sm:w-11 sm:h-11 rounded-xl overflow-hidden shadow-md group-hover:scale-105 transition-transform duration-300 border flex items-center justify-center p-1 shrink-0 ${
                   isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100'
                 }`}>
                   <img
@@ -82,19 +82,19 @@ const Navbar = () => {
                 </div>
               ) : (
                 <div 
-                  className="w-11 h-11 rounded-xl flex items-center justify-center text-white shadow-md group-hover:scale-105 transition-transform duration-300"
+                  className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center text-white shadow-md group-hover:scale-105 transition-transform duration-300 shrink-0"
                   style={{ backgroundColor: branding.logoColor || '#e67300' }}
                 >
-                  {renderIcon(branding.logoIcon, "w-6 h-6 stroke-[2.2]")}
+                  {renderIcon(branding.logoIcon, "w-5 h-5 sm:w-6 sm:h-6 stroke-[2.2]")}
                 </div>
               )}
-              <div className="flex flex-col">
-                <span className={`font-serif-brand font-bold text-lg sm:text-xl tracking-wider group-hover:text-[#e67300] transition-colors leading-tight ${
+              <div className="flex flex-col min-w-0">
+                <span className={`font-serif-brand font-bold text-base sm:text-lg lg:text-xl tracking-wider group-hover:text-[#e67300] transition-colors leading-tight truncate ${
                   isDark ? 'text-white' : 'text-slate-900'
                 }`}>
                   {branding.name}
                 </span>
-                <span className="text-[9px] uppercase tracking-[0.2em] text-slate-400 font-semibold mt-0.5">
+                <span className="text-[8px] sm:text-[9px] uppercase tracking-[0.15em] sm:tracking-[0.2em] text-slate-400 font-semibold mt-0.5 truncate max-w-[150px] sm:max-w-none">
                   {branding.tagline}
                 </span>
               </div>
@@ -102,7 +102,7 @@ const Navbar = () => {
           </div>
 
           {/* Center: Public Dedicated Page Links */}
-          <nav className="hidden lg:flex items-center space-x-2" aria-label="Main Navigation">
+          <nav className="hidden lg:flex items-center space-x-1 xl:space-x-2" aria-label="Main Navigation">
             {navLinks.map((link) => {
               const isCurrent =
                 currentRoute === link.route ||
@@ -113,7 +113,7 @@ const Navbar = () => {
                   key={link.name}
                   type="button"
                   onClick={() => handleNavClick(link.route)}
-                  className={`font-semibold text-sm tracking-wide transition-all duration-200 cursor-pointer px-4 py-2 rounded-full ${
+                  className={`font-semibold text-xs xl:text-sm tracking-wide transition-all duration-200 cursor-pointer px-3 xl:px-4 py-2 rounded-full whitespace-nowrap ${
                     isCurrent
                       ? isDark
                         ? 'text-amber-400 bg-amber-500/10 font-bold border border-amber-500/30 shadow-xs'
@@ -130,12 +130,12 @@ const Navbar = () => {
           </nav>
 
           {/* Right: Theme Toggle + Public Social Links + Apply Now Button */}
-          <div className="hidden sm:flex items-center space-x-2.5">
+          <div className="hidden sm:flex items-center space-x-2 xl:space-x-2.5 shrink-0">
             {/* Global Light / Dark Mode Toggle Button */}
             <button
               type="button"
               onClick={toggleTheme}
-              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer border ${
+              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer border shrink-0 ${
                 isDark
                   ? 'bg-slate-900 hover:bg-slate-800 text-amber-400 border-slate-700 shadow-inner'
                   : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
@@ -152,7 +152,7 @@ const Navbar = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Visit Twitter / X"
-                className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors ${
+                className={`hidden md:flex w-9 h-9 rounded-full items-center justify-center transition-colors shrink-0 ${
                   isDark ? 'bg-slate-900 hover:bg-slate-800 text-slate-300' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
                 }`}
               >
@@ -165,7 +165,7 @@ const Navbar = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Visit Facebook"
-                className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors ${
+                className={`hidden md:flex w-9 h-9 rounded-full items-center justify-center transition-colors shrink-0 ${
                   isDark ? 'bg-slate-900 hover:bg-slate-800 text-slate-300' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
                 }`}
               >
@@ -178,7 +178,7 @@ const Navbar = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Visit Instagram"
-                className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors ${
+                className={`hidden md:flex w-9 h-9 rounded-full items-center justify-center transition-colors shrink-0 ${
                   isDark ? 'bg-slate-900 hover:bg-slate-800 text-slate-300' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
                 }`}
               >
@@ -186,11 +186,28 @@ const Navbar = () => {
               </a>
             )}
 
+            {/* Student & Parent Portal Quick Switch */}
+            <button
+              type="button"
+              onClick={() => handleNavClick('student-portal')}
+              className={`inline-flex items-center gap-1.5 px-3 xl:px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer border shrink-0 ${
+                currentRoute === 'student-portal'
+                  ? 'bg-amber-500 text-white border-amber-600 shadow-sm'
+                  : isDark
+                  ? 'border-slate-800 bg-slate-900 hover:bg-slate-800 text-amber-400 hover:text-amber-300'
+                  : 'border-amber-200 bg-amber-50/80 hover:bg-amber-100 text-amber-800'
+              }`}
+              title="Student & Parent Portal"
+            >
+              <GraduationCap className="w-3.5 h-3.5 text-amber-500" />
+              <span>Portal</span>
+            </button>
+
             {/* Apply Now Action Button */}
             <button
               type="button"
               onClick={() => handleNavClick('contact')}
-              className="inline-flex items-center justify-center px-5 py-2 text-xs uppercase tracking-wider font-bold rounded-full text-white shadow-sm hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 transition-all cursor-pointer ml-1"
+              className="inline-flex items-center justify-center px-4 xl:px-5 py-2 text-xs uppercase tracking-wider font-bold rounded-full text-white shadow-sm hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 transition-all cursor-pointer ml-1 shrink-0 whitespace-nowrap"
               style={{ backgroundColor: branding.logoColor || '#d96500' }}
             >
               {branding.headerApplyButtonText || "Apply Now"}
@@ -198,11 +215,11 @@ const Navbar = () => {
           </div>
 
           {/* Mobile menu and mobile theme toggle */}
-          <div className="flex lg:hidden items-center gap-2">
+          <div className="flex lg:hidden items-center gap-2 shrink-0">
             <button
               type="button"
               onClick={toggleTheme}
-              className={`p-2 rounded-lg border transition-colors ${
+              className={`p-2 rounded-lg border transition-colors sm:hidden ${
                 isDark ? 'bg-slate-900 border-slate-700 text-amber-400' : 'bg-slate-100 border-slate-200 text-slate-700'
               }`}
               title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
@@ -254,6 +271,16 @@ const Navbar = () => {
                 </button>
               );
             })}
+
+            {/* Mobile Student Portal Link */}
+            <button
+              type="button"
+              onClick={() => handleNavClick('student-portal')}
+              className="flex items-center gap-2.5 text-left font-bold py-2.5 px-3 rounded-xl transition-colors cursor-pointer bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30"
+            >
+              <GraduationCap className="w-4 h-4 text-amber-500" />
+              <span>Student & Parent Portal</span>
+            </button>
             
             <div className="pt-2 flex items-center justify-between border-t border-slate-200 dark:border-slate-800">
               <span className="text-xs text-slate-500 dark:text-slate-400">Theme</span>

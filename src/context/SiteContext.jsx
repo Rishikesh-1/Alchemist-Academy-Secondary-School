@@ -143,7 +143,33 @@ export const SiteProvider = ({ children }) => {
     if (window.location.hash === '#/admin/dashboard') {
       return 'dashboard';
     }
+    if (
+      params.get('portal') === 'student' ||
+      window.location.hash === '#/portal' ||
+      window.location.hash === '#/student-portal' ||
+      window.location.hash === '#/student'
+    ) {
+      return 'student-portal';
+    }
+    if (
+      params.get('portal') === 'teacher' ||
+      window.location.hash === '#/teacher-portal' ||
+      window.location.hash === '#/teacher'
+    ) {
+      return 'teacher-portal';
+    }
+    if (
+      params.get('portal') === 'vendor' ||
+      window.location.hash === '#/vendor-hub' ||
+      window.location.hash === '#/vendor' ||
+      window.location.hash === '#/saas'
+    ) {
+      return 'vendor-hub';
+    }
     const cleanHash = window.location.hash.replace(/^#\/?/, '').toLowerCase();
+    if (cleanHash === 'student-portal' || cleanHash === 'portal' || cleanHash === 'student') return 'student-portal';
+    if (cleanHash === 'teacher-portal' || cleanHash === 'teacher') return 'teacher-portal';
+    if (cleanHash === 'vendor-hub' || cleanHash === 'vendor' || cleanHash === 'saas') return 'vendor-hub';
     if (cleanHash === 'about') return 'about';
     if (cleanHash === 'academics' || cleanHash === 'curriculum') return 'academics';
     if (cleanHash === 'activities' || cleanHash === 'co-curricular') return 'activities';
@@ -204,6 +230,12 @@ export const SiteProvider = ({ children }) => {
           ? ' | School Blog & News'
           : currentRoute === 'contact'
           ? ' | Admissions & Contact'
+          : currentRoute === 'student-portal'
+          ? ' | Student & Parent Portal'
+          : currentRoute === 'teacher-portal'
+          ? ' | Teacher Cockpit & Grading'
+          : currentRoute === 'vendor-hub'
+          ? ' | Vendor Command Center & Licensing'
           : currentRoute === 'admin-login'
           ? ' | Staff Portal'
           : currentRoute === 'dashboard'
@@ -253,6 +285,12 @@ export const SiteProvider = ({ children }) => {
       window.location.hash = '#/admin/login';
     } else if (route === 'dashboard') {
       window.location.hash = '#/admin/dashboard';
+    } else if (route === 'student-portal' || route === 'portal') {
+      window.location.hash = '#/student-portal';
+    } else if (route === 'teacher-portal' || route === 'teacher') {
+      window.location.hash = '#/teacher-portal';
+    } else if (route === 'vendor-hub' || route === 'vendor') {
+      window.location.hash = '#/vendor-hub';
     } else {
       window.location.hash = `#/${route}`;
     }

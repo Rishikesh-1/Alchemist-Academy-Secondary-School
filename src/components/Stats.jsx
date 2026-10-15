@@ -15,7 +15,7 @@ const Stats = () => {
   ];
 
   return (
-    <section className="relative -mt-8 sm:-mt-12 z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="relative -mt-8 sm:-mt-12 z-20 w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12">
       <div className="bg-slate-900 text-white rounded-2xl sm:rounded-3xl p-5 sm:p-7 md:p-8 shadow-2xl border border-slate-800">
         
         {/* Compact Section Header */}

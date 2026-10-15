@@ -93,7 +93,7 @@ const ContactPage = () => {
       {/* Hero Header Banner */}
       <section className="bg-slate-950 text-white py-8 sm:py-10 relative overflow-hidden border-b border-slate-900">
         <div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 relative z-10">
           <nav className="flex items-center gap-2 text-xs text-amber-400 font-semibold mb-2 uppercase tracking-wider">
             <button
               type="button"
@@ -121,7 +121,7 @@ const ContactPage = () => {
       </section>
 
       {/* Main Content Grid: 2 Distinctly Separated Sections */}
-      <section className="py-10 sm:py-14 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-10 sm:py-14 w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
           
           {/* SECTION 1: Campus Headquarters & Direct Contact */}
@@ -271,7 +271,7 @@ const ContactPage = () => {
                   <input
                     type="text"
                     required
-                    placeholder="e.g. Ramesh Shrestha"
+                    placeholder="e.g. RJ Rana"
                     value={formData.parentName}
                     onChange={(e) => setFormData({ ...formData, parentName: e.target.value })}
                     className={`w-full rounded-xl px-4 py-2.5 text-xs sm:text-sm transition-colors focus:outline-none ${

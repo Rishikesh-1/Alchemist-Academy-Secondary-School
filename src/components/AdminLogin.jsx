@@ -188,6 +188,21 @@ const AdminLogin = () => {
                 <div className="font-bold">Academic Coord.</div>
                 <div className="text-[10px] text-slate-400">Curriculum & About only</div>
               </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setUsername('cashier');
+                  setPassword('CashierPass2026');
+                }}
+                className="p-2 rounded-xl bg-slate-950 hover:bg-slate-800 border border-cyan-500/30 text-cyan-300 text-left transition-all cursor-pointer col-span-2"
+              >
+                <div className="font-bold flex items-center justify-between">
+                  <span>Senior Bursar & Cashier</span>
+                  <span className="text-[10px] bg-cyan-500/20 px-2 py-0.5 rounded-full border border-cyan-500/40">Fee Counter</span>
+                </div>
+                <div className="text-[10px] text-slate-400">Cashier Fee Terminal, receipts & student ledger only</div>
+              </button>
             </div>
           </div>
         )}

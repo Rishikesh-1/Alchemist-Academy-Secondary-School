@@ -27,12 +27,14 @@ import {
   FolderOpen,
   Sun,
   Moon,
+  CreditCard,
 } from 'lucide-react';
 import { useSiteData } from '../context/SiteContext';
 import { useAuth } from '../context/AuthContext';
 import { LogOut, UserCheck } from 'lucide-react';
 import ImageFieldWithPicker from './ImageFieldWithPicker';
 import MediaLibraryManager from './MediaLibraryManager';
+import CashierFeeCollector from './CashierFeeCollector';
 import { saveSiteSettings } from '../services/api';
 
 const Dashboard = () => {
@@ -50,6 +52,7 @@ const Dashboard = () => {
     { id: 'cocurricular', label: 'Co-curricular Activities', icon: Sparkles },
     { id: 'blogs', label: 'Blog & Articles', icon: FileText },
     { id: 'admissions', label: 'Admissions CTA', icon: Phone },
+    { id: 'cashier', label: 'Cashier & Fee Counter', icon: CreditCard },
     { id: 'footer', label: 'Footer & Address', icon: LayoutDashboard },
     { id: 'media', label: 'Media Library', icon: FolderOpen },
     { id: 'users', label: 'Staff & Team Access', icon: ShieldCheck, superadminOnly: true },
@@ -2142,7 +2145,7 @@ const Dashboard = () => {
                       <input
                         type="text"
                         required
-                        placeholder="e.g. Ramesh Shrestha"
+                        placeholder="e.g. RJ Rana"
                         value={newStaffUser.name}
                         onChange={(e) => setNewStaffUser({ ...newStaffUser, name: e.target.value })}
                         className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white"
@@ -2154,7 +2157,7 @@ const Dashboard = () => {
                       <input
                         type="text"
                         required
-                        placeholder="e.g. ramesh"
+                        placeholder="e.g. rjrana"
                         value={newStaffUser.username}
                         onChange={(e) => setNewStaffUser({ ...newStaffUser, username: e.target.value.toLowerCase().trim() })}
                         className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white font-mono"
@@ -2537,6 +2540,9 @@ const Dashboard = () => {
 
             </div>
           )}
+
+          {/* Cashier & Accounts Fee Collection Terminal */}
+          {activeSection === 'cashier' && <CashierFeeCollector />}
 
         </main>
       </div>

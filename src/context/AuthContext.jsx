@@ -23,6 +23,7 @@ export const ROLES = {
       'admissions',
       'footer',
       'media',
+      'cashier',
       'users',
     ],
   },
@@ -33,16 +34,22 @@ export const ROLES = {
     allowedSections: ['blogs', 'curriculum', 'cocurricular', 'media'],
   },
   admissions: {
-    title: 'Admissions Officer',
+    title: 'Admissions & Cashier Officer',
     badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
-    description: 'Dedicated access to admissions hotline numbers, enrollment CTAs, and student statistics counters.',
-    allowedSections: ['admissions', 'stats', 'media'],
+    description: 'Access to student admissions, enrollment leads, and counter fee collection.',
+    allowedSections: ['admissions', 'cashier', 'stats', 'media'],
   },
   academic: {
     title: 'Academic Coordinator',
     badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
     description: 'Manages school curriculum pathways, about details, and co-curricular programs.',
     allowedSections: ['about', 'curriculum', 'cocurricular', 'headmaster', 'media'],
+  },
+  accountant: {
+    title: 'Senior Bursar & Cashier',
+    badgeColor: 'bg-teal-500/20 text-teal-300 border-teal-500/40',
+    description: 'Manages tuition fee billing, counters cash/cheque collection, and digital payment reconciliation.',
+    allowedSections: ['cashier', 'stats', 'admissions'],
   },
 };
 
@@ -59,6 +66,15 @@ export const DEFAULT_ACCOUNTS = [
   },
   {
     id: 2,
+    username: 'cashier',
+    name: 'RJ Rana',
+    role: 'accountant',
+    password: 'CashierPass2026',
+    department: 'Accounts & Finance',
+    status: 'active',
+  },
+  {
+    id: 3,
     username: 'editor',
     name: 'Rohan Shrestha',
     role: 'editor',
@@ -67,7 +83,7 @@ export const DEFAULT_ACCOUNTS = [
     status: 'active',
   },
   {
-    id: 3,
+    id: 4,
     username: 'admissions',
     name: 'Sunita Adhikari',
     role: 'admissions',
@@ -76,7 +92,7 @@ export const DEFAULT_ACCOUNTS = [
     status: 'active',
   },
   {
-    id: 4,
+    id: 5,
     username: 'coordinator',
     name: 'Pooja Thapa',
     role: 'academic',

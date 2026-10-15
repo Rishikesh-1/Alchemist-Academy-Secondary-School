@@ -61,7 +61,7 @@ const AcademicsPage = () => {
       {/* Banner */}
       <section className="bg-slate-950 text-white py-8 sm:py-10 relative overflow-hidden border-b border-slate-900">
         <div className="absolute inset-0 bg-radial from-amber-600/10 via-transparent to-transparent pointer-events-none" />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 relative z-10">
           <nav className="flex items-center gap-2 text-xs text-amber-400 font-semibold mb-2 uppercase tracking-wider">
             <button onClick={() => navigateTo('home')} className="hover:underline cursor-pointer">
               Home
@@ -80,7 +80,7 @@ const AcademicsPage = () => {
       </section>
 
       {/* Curriculum Grid */}
-      <section className="py-10 sm:py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-10 sm:py-16 w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12">
         <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-12">
           <span className="text-xs uppercase font-bold tracking-widest text-amber-500">
             Disciplines of Excellence
@@ -153,7 +153,7 @@ const AcademicsPage = () => {
       <section className={`py-16 sm:py-24 border-y transition-colors duration-300 ${
         isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200/80'
       }`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             
             <div className="space-y-6">

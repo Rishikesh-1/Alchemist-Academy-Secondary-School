@@ -50,11 +50,6 @@ const MediaLibraryManager = () => {
   });
 
   const [copiedId, setCopiedId] = useState(null);
-  const [showAddUrl, setShowAddUrl] = useState(false);
-  const [urlInput, setUrlInput] = useState('');
-  const [urlTitle, setUrlTitle] = useState('');
-  const [urlAltText, setUrlAltText] = useState('');
-  const [urlCategory, setUrlCategory] = useState('Custom Uploads');
   const [notice, setNotice] = useState('');
   const fileInputRef = useRef(null);
 
@@ -124,33 +119,6 @@ const MediaLibraryManager = () => {
     e.target.value = '';
   };
 
-  const handleAddUrl = (e) => {
-    e.preventDefault();
-    if (!urlInput.trim()) return;
-
-    const formattedTitle = urlTitle.trim() || 'Imported Web Image';
-    const newItem = {
-      id: 'url-' + Date.now(),
-      title: formattedTitle,
-      altText: urlAltText.trim() || `${formattedTitle} - Alchemist Academy, Kathmandu`,
-      url: urlInput.trim(),
-      category: urlCategory,
-      dateAdded: new Date().toISOString().split('T')[0],
-      description: 'Imported web asset URL',
-      tags: 'web asset, alchemist academy',
-      isDefault: false,
-    };
-
-    const updated = [newItem, ...mediaList];
-    setMediaList(updated);
-    saveStoredMedia(updated);
-    setUrlInput('');
-    setUrlTitle('');
-    setUrlAltText('');
-    setShowAddUrl(false);
-    setNotice('Asset successfully added with SEO metadata!');
-    setTimeout(() => setNotice(''), 3000);
-  };
 
   const handleDelete = (item) => {
     if (item.isDefault) {
@@ -263,14 +231,6 @@ const MediaLibraryManager = () => {
             className="hidden"
           />
 
-          <button
-            type="button"
-            onClick={() => setShowAddUrl(!showAddUrl)}
-            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 cursor-pointer transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Add via URL</span>
-          </button>
         </div>
       </div>
 
@@ -280,87 +240,6 @@ const MediaLibraryManager = () => {
           <Check className="w-4 h-4" />
           <span>{notice}</span>
         </div>
-      )}
-
-      {/* Add via URL Form Drawer */}
-      {showAddUrl && (
-        <form
-          onSubmit={handleAddUrl}
-          className="bg-slate-950 border border-slate-800 rounded-2xl p-4 sm:p-6 space-y-4 animate-in fade-in duration-150"
-        >
-          <div className="flex items-center justify-between">
-            <h4 className="text-xs uppercase font-bold text-slate-400 tracking-wider">
-              Import Asset by Direct Web URL with SEO Metadata
-            </h4>
-            <button
-              type="button"
-              onClick={() => setShowAddUrl(false)}
-              className="text-slate-500 hover:text-white text-xs"
-            >
-              Cancel
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="sm:col-span-2">
-              <label className="block text-[11px] text-slate-400 mb-1">Image URL *</label>
-              <input
-                type="url"
-                required
-                placeholder="https://images.unsplash.com/... or your CDN URL"
-                value={urlInput}
-                onChange={(e) => setUrlInput(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-400"
-              />
-            </div>
-            <div>
-              <label className="block text-[11px] text-slate-400 mb-1">Category</label>
-              <select
-                value={urlCategory}
-                onChange={(e) => setUrlCategory(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-400"
-              >
-                {CATEGORIES.filter((c) => c !== 'All').map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="block text-[11px] text-slate-400 mb-1">Title / Filename Label</label>
-              <input
-                type="text"
-                placeholder="e.g. Science Laboratory Physics Workshop"
-                value={urlTitle}
-                onChange={(e) => setUrlTitle(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-400"
-              />
-            </div>
-            <div>
-              <label className="block text-[11px] text-slate-400 mb-1">SEO Alt Text (For Search Engines)</label>
-              <input
-                type="text"
-                placeholder="e.g. Students conducting physics lab experiments at Alchemist Academy"
-                value={urlAltText}
-                onChange={(e) => setUrlAltText(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-400"
-              />
-            </div>
-          </div>
-
-          <div className="flex justify-end">
-            <button
-              type="submit"
-              className="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs cursor-pointer shadow"
-            >
-              Add to Library
-            </button>
-          </div>
-        </form>
       )}
 
       {/* Toolbar: Search & Categories */}
