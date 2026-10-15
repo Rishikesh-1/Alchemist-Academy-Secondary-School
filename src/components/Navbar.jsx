@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Menu, X, GraduationCap, Sparkles, BookOpen, Award, Sun, Moon, ChevronDown, Users, ShieldCheck, ArrowRight } from 'lucide-react';
+import { Menu, X, GraduationCap, Sparkles, BookOpen, Award, Sun, Moon, ChevronDown, Users, ShieldCheck, ArrowRight, School, LayoutDashboard } from 'lucide-react';
 import { useSiteData } from '../context/SiteContext';
 import { useAuth } from '../context/AuthContext';
 
@@ -200,19 +200,19 @@ const Navbar = () => {
               </a>
             )}
 
-            {/* Portals Dropdown */}
+              {/* Portals Dropdown */}
             <div className="relative" ref={dropdownRef}>
               <button
                 type="button"
                 onClick={() => setPortalDropdownOpen(!portalDropdownOpen)}
                 className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer border shrink-0 ${
-                  portalDropdownOpen || ['student-portal', 'teacher-portal', 'dashboard', 'admin-login'].includes(currentRoute)
+                  portalDropdownOpen || ['student-portal', 'teacher-portal', 'sms', 'sms-dashboard', 'dashboard', 'admin-login'].includes(currentRoute)
                     ? 'bg-amber-500 text-white border-amber-600 shadow-sm'
                     : isDark
                     ? 'border-slate-800 bg-slate-900 hover:bg-slate-800 text-amber-400 hover:text-amber-300'
                     : 'border-amber-200 bg-amber-50/80 hover:bg-amber-100 text-amber-800'
                 }`}
-                title="School Portals & ERP Workspace"
+                title="School Portals & Institutional Systems"
                 aria-expanded={portalDropdownOpen}
               >
                 <GraduationCap className="w-3.5 h-3.5 text-amber-500" />
@@ -221,7 +221,7 @@ const Navbar = () => {
               </button>
 
               {portalDropdownOpen && (
-                <div className={`absolute right-0 mt-2 w-80 rounded-2xl border shadow-2xl p-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150 backdrop-blur-xl ${
+                <div className={`absolute right-0 mt-2 w-84 rounded-2xl border shadow-2xl p-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150 backdrop-blur-xl ${
                   isDark
                     ? 'bg-slate-950/95 border-slate-800 text-white shadow-black/70'
                     : 'bg-white/95 border-slate-200 text-slate-900 shadow-slate-300/80'
@@ -286,7 +286,34 @@ const Navbar = () => {
                     </div>
                   </button>
 
-                  {/* 3. Staff Administration & ERP */}
+                  {/* 3. School Management System (SMS Dashboard) */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleNavClick('sms');
+                      setPortalDropdownOpen(false);
+                    }}
+                    className={`w-full p-2.5 rounded-xl flex items-start gap-3 transition-colors text-left group cursor-pointer ${
+                      currentRoute === 'sms' || currentRoute === 'sms-dashboard'
+                        ? isDark ? 'bg-slate-900 text-emerald-400' : 'bg-emerald-50 text-emerald-700'
+                        : isDark ? 'hover:bg-slate-900/80' : 'hover:bg-slate-50'
+                    }`}
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-emerald-600 to-teal-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                      <School className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold leading-tight">School Management (SMS)</span>
+                        <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </div>
+                      <p className={`text-[11px] truncate mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                        Admissions CRM, Student SIS, CDC Grading & Cashier
+                      </p>
+                    </div>
+                  </button>
+
+                  {/* 4. Website CMS Customizer */}
                   <button
                     type="button"
                     onClick={() => {
@@ -299,18 +326,16 @@ const Navbar = () => {
                         : isDark ? 'hover:bg-slate-900/80' : 'hover:bg-slate-50'
                     }`}
                   >
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-emerald-600 to-teal-600 text-white flex items-center justify-center shrink-0 shadow-xs">
-                      <ShieldCheck className="w-4 h-4" />
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-purple-600 to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                      <LayoutDashboard className="w-4 h-4" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold leading-tight">
-                          Staff Administration & ERP
-                        </span>
+                        <span className="text-xs font-bold leading-tight">Website CMS Customizer</span>
                         <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                       </div>
                       <p className={`text-[11px] truncate mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                        {isAuthenticated ? `Logged in: ${currentUser?.name || 'Administrator'}` : 'Admissions CRM, fee counter & site CMS'}
+                        Public website content, branding, blogs & pages
                       </p>
                     </div>
                   </button>
@@ -429,11 +454,12 @@ const Navbar = () => {
                 <ArrowRight className="w-3.5 h-3.5 opacity-60" />
               </button>
 
+              {/* 3. School Management System (SMS) */}
               <button
                 type="button"
-                onClick={() => handleNavClick(isAuthenticated ? 'dashboard' : 'admin-login')}
+                onClick={() => handleNavClick('sms')}
                 className={`w-full flex items-center justify-between text-left font-bold py-2.5 px-3 rounded-xl transition-colors cursor-pointer border ${
-                  currentRoute === 'dashboard' || currentRoute === 'admin-login'
+                  currentRoute === 'sms' || currentRoute === 'sms-dashboard'
                     ? 'bg-emerald-600 text-white border-emerald-700'
                     : isDark
                     ? 'bg-slate-900 border-slate-800 text-emerald-400'
@@ -441,8 +467,27 @@ const Navbar = () => {
                 }`}
               >
                 <div className="flex items-center gap-2.5">
-                  <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                  <span className="text-xs">Staff Administration & ERP</span>
+                  <School className="w-4 h-4 text-emerald-500" />
+                  <span className="text-xs">School Management (SMS)</span>
+                </div>
+                <ArrowRight className="w-3.5 h-3.5 opacity-60" />
+              </button>
+
+              {/* 4. Website CMS Customizer */}
+              <button
+                type="button"
+                onClick={() => handleNavClick(isAuthenticated ? 'dashboard' : 'admin-login')}
+                className={`w-full flex items-center justify-between text-left font-bold py-2.5 px-3 rounded-xl transition-colors cursor-pointer border ${
+                  currentRoute === 'dashboard' || currentRoute === 'admin-login'
+                    ? 'bg-purple-600 text-white border-purple-700'
+                    : isDark
+                    ? 'bg-slate-900 border-slate-800 text-purple-400'
+                    : 'bg-purple-50/70 border-purple-200 text-purple-800'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <LayoutDashboard className="w-4 h-4 text-purple-500" />
+                  <span className="text-xs">Website CMS Customizer</span>
                 </div>
                 <ArrowRight className="w-3.5 h-3.5 opacity-60" />
               </button>

@@ -16,6 +16,7 @@ import AdminLogin from './components/AdminLogin';
 import StudentPortal from './components/StudentPortal';
 import TeacherPortal from './components/TeacherPortal';
 import VendorMasterHub from './components/VendorMasterHub';
+import SchoolManagementDashboard from './components/SchoolManagementDashboard';
 import LicenseLockScreen from './components/LicenseLockScreen';
 import { SchoolDataProvider, useSchoolData } from './context/SchoolDataContext';
 import AboutPage from './pages/AboutPage';
@@ -34,17 +35,22 @@ function AppRouter() {
     return <LicenseLockScreen />;
   }
 
-  // 1. Ecosystem Route: Student & Parent Portal
+  // 1. Standalone Route: School Management System (SMS ERP & Finance)
+  if (currentRoute === 'sms' || currentRoute === 'sms-dashboard') {
+    return <SchoolManagementDashboard />;
+  }
+
+  // 2. Ecosystem Route: Student & Parent Portal
   if (currentRoute === 'student-portal') {
     return <StudentPortal />;
   }
 
-  // 2. Ecosystem Route: Teacher Cockpit & Grading Workspace
+  // 3. Ecosystem Route: Teacher Cockpit & Grading Workspace
   if (currentRoute === 'teacher-portal') {
     return <TeacherPortal />;
   }
 
-  // 3. Ecosystem Route: Vendor Master Command Center (Rishi's Multi-School Console)
+  // 4. Ecosystem Route: Vendor Master Command Center (Rishi's Multi-School Console)
   if (currentRoute === 'vendor-hub') {
     return <VendorMasterHub />;
   }

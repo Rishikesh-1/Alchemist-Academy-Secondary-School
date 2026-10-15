@@ -44,9 +44,8 @@ const VendorMasterHub = () => {
   const { siteData, navigateTo, isDark, toggleTheme } = useSiteData();
   const { currentUser, isAuthenticated: isSuperadminAuthenticated } = useAuth();
 
-  // Master Vendor Authentication Gate
+  // Master Vendor Authentication Gate (Exclusively for Rishi Kesh Rana)
   const [isVendorAuthenticated, setIsVendorAuthenticated] = useState(() => {
-    if (isSuperadminAuthenticated && currentUser?.role === 'superadmin') return true;
     try {
       const sess = sessionStorage.getItem('_aa_vendor_auth_session');
       return sess ? JSON.parse(sess)?.authenticated : false;

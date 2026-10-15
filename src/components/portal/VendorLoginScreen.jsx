@@ -1,18 +1,14 @@
 import React, { useState } from 'react';
-import { Crown, ShieldCheck, Lock, Eye, EyeOff, AlertTriangle, ArrowLeft, KeyRound, Server } from 'lucide-react';
+import { Crown, ShieldCheck, Lock, Eye, EyeOff, AlertTriangle, ArrowLeft, KeyRound } from 'lucide-react';
 import { useSiteData } from '../../context/SiteContext';
-import { useAuth } from '../../context/AuthContext';
 
 const VendorLoginScreen = ({ onLoginSuccess }) => {
   const { navigateTo } = useSiteData();
-  const { currentUser, isAuthenticated } = useAuth();
 
   const [passkey, setPasskey] = useState('');
   const [showPasskey, setShowPasskey] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-
-  const isSuperadmin = isAuthenticated && currentUser?.role === 'superadmin';
 
   const handleLogin = (e) => {
     e.preventDefault();
@@ -26,22 +22,19 @@ const VendorLoginScreen = ({ onLoginSuccess }) => {
 
     setSubmitting(true);
     setTimeout(() => {
-      // Master Developer Passkeys
+      // Exclusively Rishi Kesh Rana's Master Passkeys
       const validPasskeys = [
         'Rishi@2026',
         'rishi2026',
-        'admin',
-        'admin123',
-        'alchemist2026',
-        'vendor-root',
+        'rjrana2026',
       ];
 
-      if (validPasskeys.includes(cleanPass) || (isSuperadmin && cleanPass === 'admin')) {
+      if (validPasskeys.includes(cleanPass)) {
         sessionStorage.setItem(
           '_aa_vendor_auth_session',
           JSON.stringify({
             authenticated: true,
-            tier: 'Master SaaS Architect',
+            tier: 'Software Owner & Architect (Rishi Kesh Rana)',
             timestamp: Date.now(),
           })
         );
@@ -49,21 +42,9 @@ const VendorLoginScreen = ({ onLoginSuccess }) => {
         onLoginSuccess();
       } else {
         setSubmitting(false);
-        setErrorMessage('Access Denied. Cryptographic master token mismatch.');
+        setErrorMessage('Access Denied. Invalid Master Vendor Token. This console is strictly reserved for Rishi Kesh Rana.');
       }
     }, 500);
-  };
-
-  const handleSuperadminBypass = () => {
-    sessionStorage.setItem(
-      '_aa_vendor_auth_session',
-      JSON.stringify({
-        authenticated: true,
-        tier: 'Superadmin Direct Auth',
-        timestamp: Date.now(),
-      })
-    );
-    onLoginSuccess();
   };
 
   return (
@@ -93,29 +74,12 @@ const VendorLoginScreen = ({ onLoginSuccess }) => {
             Multi-School Cloud SaaS Core
           </span>
           <h1 className="text-2xl font-bold font-serif-brand text-white mt-2">
-            Vendor Command Center
+            Vendor SaaS Console
           </h1>
           <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
-            Restricted to Software Architect <strong className="text-slate-200">Rishi Kesh Rana</strong>. Fleet management, client license generation & remote domain lock switches.
+            Reserved exclusively for Software Architect <strong className="text-slate-200">Rishi Kesh Rana</strong>. Customer school fleets, license tokens & subscription billing control.
           </p>
         </div>
-
-        {/* Superadmin session quick unlock */}
-        {isSuperadmin && (
-          <div className="mb-6 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between gap-3 text-xs">
-            <div>
-              <div className="font-bold text-amber-400">Active Superadmin Verified</div>
-              <div className="text-[11px] text-slate-400">Authenticated as {currentUser.name}</div>
-            </div>
-            <button
-              type="button"
-              onClick={handleSuperadminBypass}
-              className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow cursor-pointer whitespace-nowrap"
-            >
-              Enter Console
-            </button>
-          </div>
-        )}
 
         {/* Error notification */}
         {errorMessage && (
@@ -137,7 +101,7 @@ const VendorLoginScreen = ({ onLoginSuccess }) => {
                 required
                 value={passkey}
                 onChange={(e) => setPasskey(e.target.value)}
-                placeholder="Enter master passkey (e.g. Rishi@2026)"
+                placeholder="Enter master passkey"
                 className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-400 focus:ring-1 focus:ring-purple-400 transition-all pr-11 font-mono"
               />
               <button
@@ -167,11 +131,11 @@ const VendorLoginScreen = ({ onLoginSuccess }) => {
           </button>
         </form>
 
-        {/* Demo Helper Box */}
+        {/* Developer Helper Box */}
         <div className="mt-6 pt-5 border-t border-slate-800 text-center">
           <div className="p-3 rounded-2xl bg-slate-950/70 border border-slate-800 text-xs text-slate-400 space-y-1.5">
             <div className="flex items-center justify-between">
-              <span className="font-semibold text-slate-300">Master Passkey Demo:</span>
+              <span className="font-semibold text-slate-300">Rishi's Master Passkey:</span>
               <button
                 type="button"
                 onClick={() => setPasskey('Rishi@2026')}
@@ -181,7 +145,7 @@ const VendorLoginScreen = ({ onLoginSuccess }) => {
               </button>
             </div>
             <div className="text-[11px] text-slate-400 font-mono text-left">
-              Passkey: <span className="text-purple-400 font-bold">Rishi@2026</span> (or <span className="text-purple-400 font-bold">admin</span>)
+              Passkey: <span className="text-purple-400 font-bold">Rishi@2026</span>
             </div>
           </div>
         </div>

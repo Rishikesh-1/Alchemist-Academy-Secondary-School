@@ -144,6 +144,14 @@ export const SiteProvider = ({ children }) => {
       return 'dashboard';
     }
     if (
+      params.get('portal') === 'sms' ||
+      window.location.hash === '#/sms' ||
+      window.location.hash === '#/sms-dashboard' ||
+      window.location.hash === '#/sms/login'
+    ) {
+      return 'sms';
+    }
+    if (
       params.get('portal') === 'student' ||
       window.location.hash === '#/portal' ||
       window.location.hash === '#/student-portal' ||
@@ -167,6 +175,7 @@ export const SiteProvider = ({ children }) => {
       return 'vendor-hub';
     }
     const cleanHash = window.location.hash.replace(/^#\/?/, '').toLowerCase();
+    if (cleanHash === 'sms' || cleanHash === 'sms-dashboard' || cleanHash === 'sms/login') return 'sms';
     if (cleanHash === 'student-portal' || cleanHash === 'portal' || cleanHash === 'student') return 'student-portal';
     if (cleanHash === 'teacher-portal' || cleanHash === 'teacher') return 'teacher-portal';
     if (cleanHash === 'vendor-hub' || cleanHash === 'vendor' || cleanHash === 'saas') return 'vendor-hub';
@@ -234,6 +243,8 @@ export const SiteProvider = ({ children }) => {
           ? ' | Student & Parent Portal'
           : currentRoute === 'teacher-portal'
           ? ' | Teacher Cockpit & Grading'
+          : currentRoute === 'sms' || currentRoute === 'sms-dashboard'
+          ? ' | School Management System (SMS)'
           : currentRoute === 'vendor-hub'
           ? ' | Vendor Command Center & Licensing'
           : currentRoute === 'admin-login'
@@ -285,6 +296,8 @@ export const SiteProvider = ({ children }) => {
       window.location.hash = '#/admin/login';
     } else if (route === 'dashboard') {
       window.location.hash = '#/admin/dashboard';
+    } else if (route === 'sms' || route === 'sms-dashboard') {
+      window.location.hash = '#/sms';
     } else if (route === 'student-portal' || route === 'portal') {
       window.location.hash = '#/student-portal';
     } else if (route === 'teacher-portal' || route === 'teacher') {

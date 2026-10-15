@@ -1,121 +1,186 @@
-# Alchemist Academy Secondary School
+# Alchemist Academy - School & College Management System (SMS) & CMS
 
-A modern, responsive, high-performance web platform and Role-Based CMS for **Alchemist Academy Secondary School** located in Kathmandu, Nepal.
+An enterprise, multi-tenant School & College Management System and Visual CMS built for **Alchemist Academy Secondary School & College** (Kathmandu, Nepal).
 
-Built with **React**, **Vite**, and **Tailwind CSS v4**, featuring comprehensive security hardening, SEO structured data, and an administrative dashboard with granular Role-Based Access Control (RBAC).
-
----
-
-## 🌟 Key Features
-
-### 1. Public School Experience
-- **Hero & Campus Showcase**: Responsive hero section featuring school events and cultural programs.
-- **Academic Narrative**: Highlights the journey from Nursery through Grade 10 with values-driven holistic education.
-- **Dynamic Stats Grid**: Key performance metrics (100% SEE pass rate, 25:1 student-faculty ratio, STEM labs, fine arts studios).
-- **Headmaster's Vision**: Message from Karmendra Vimal on transformative education.
-- **6 Curriculum Pathways**: Dedicated modules for Computer Science, Natural Sciences, Fine Arts, Music, Performing Arts, and Competitive Athletics.
-- **Co-Curricular Life**: Athletic programs, school publications, and creative arts clubs.
-- **Interactive Blog & Articles**: Reader modal with reading times, tags, and rich content.
-- **Admissions Inquiry Form**: Secure form with input sanitization, CSRF protection token, and rate limiting.
-
-### 2. Security Hardening & Architecture
-- **Hidden Admin Route**: Public navigation header remains clean without exposed administrative links.
-- **Role-Based Access Control (RBAC)**: Multi-tier access control separating administrative tasks.
-- **Security Headers (`.htaccess`)**:
-  - `Content-Security-Policy`
-  - `X-Frame-Options: SAMEORIGIN`
-  - `X-Content-Type-Options: nosniff`
-  - `Referrer-Policy: strict-origin-when-cross-origin`
-- **Session Management**: Session tokens stored in `sessionStorage` with an automatic 2-hour inactivity expiration.
-- **Form Sanitization**: XSS mitigation and phone/email format validation.
-
-### 3. Superadmin User Management & Team Maintenance
-The Super Administrator has full control to:
-- **Provision New Staff**: Create new team accounts with designated username, password, department, and role tier.
-- **Maintain & Edit Accounts**: Update staff names, departments, passwords, and assigned roles on the fly.
-- **Account Status Control**: Temporarily suspend or reactivate staff accounts without deleting them.
-- **Revoke / Delete Accounts**: Safely delete staff accounts (with root account protection).
-
-### 4. Central Media Library & Brand Logo Upload
-- **Centralized Asset Management**: Browse, search, filter, and organize all school photos, banners, and logos.
-- **Universal Media Picker**: Every image upload input in the CMS (Hero background, About image, Headmaster portrait, Curriculum covers, Co-curricular banners, and Blog post images) includes a **"Media Library"** picker and **"Upload"** button.
-- **Brand Logo & Crest Upload**: Upload custom school crests/logos (PNG, SVG, WebP) or switch between curated vector badge icons.
-- **Asset Reuse**: Upload once, reuse across any section seamlessly.
-
-### 5. Role Hierarchy
-
-| Role Tier | Display Title | Permitted Modules |
-| :--- | :--- | :--- |
-| `superadmin` | **Super Administrator** | All 12 CMS sections + Media Library + Staff User Management |
-| `editor` | **Content Editor** | Blog Articles, Curriculum Pathways, Co-Curricular Programs, Media Library |
-| `admissions` | **Admissions Officer** | Admissions Hotlines, CTAs, Student Statistics Counters, Media Library |
-| `academic` | **Academic Coordinator** | Curriculum Pathways, About Details, Co-Curricular, Headmaster's Note, Media Library |
+Featuring strict Role-Based Access Control (RBAC), multi-branch campus isolation, server-side Bcrypt password security, brute-force rate limiting, dual AD ⇄ BS Bikram Sambat calendar engine, official Nepal CDC / NEB grading scale, and immutable audit logging.
 
 ---
 
-## 🛠️ Tech Stack
+## 🏛️ System Architecture & Features
 
-- **Framework**: React 19 + Vite
-- **Styling**: Tailwind CSS v4
-- **Icons**: Lucide React
-- **Typography**: Playfair Display (Serif Brand) + Inter (Sans)
-- **Deployment Targets**: Apache / XAMPP, Vercel, Netlify, or GitHub Pages
+### 1. Multi-Tenant & Multi-Branch Architecture
+- **Tenant Isolation**: Designed for separated institutional colleges/schools with dedicated branch namespaces (`schools` and `branches`).
+- **Campus Selector**: Switch between branches (e.g. *Main Campus* vs *Bouddha Secondary Wing*) with automatic data scoping.
+
+### 2. Role-Based Access Control (RBAC) - 7 Authorized Roles
+Fine-grained clearance enforced across both backend API guards and frontend dashboards:
+
+| Role | Title | Clearance Scope | Seed Account |
+| :--- | :--- | :--- | :--- |
+| **`admin`** | School Administrator | Full authority over branches, staff roles, admissions, student records, fee billing, timetable, and audit logs | `admin` / `Admin@2026` |
+| **`principal`** | Principal / Headmaster | Academic oversight, curriculum regulation, faculty management, attendance audits, CDC grading approvals, and TC endorsements | `principal` / `Principal@2026` |
+| **`teacher`** | Faculty Teacher | Daily and period class roll-call, timetable inspection, student mark entry, and report card evaluations | `teacher` / `Teacher@2026` |
+| **`accountant`** | Senior Bursar & Cashier | Counter tuition collection, fee structures, installment schedules, receipt issuance, and 30/60/90+ day defaulter reports | `accountant` / `Accountant@2026` |
+| **`librarian`** | Librarian | Book cataloging, circulation issues/returns, student card validations, and fine collection | `librarian` / `Librarian@2026` |
+| **`parent`** | Guardian / Parent | Ward attendance records, digital report cards, tuition fee dues, and absence alerts | `parent` / `Parent@2026` |
+| **`student`** | Student | Personal profile, class timetable, homework/syllabus, CDC grade sheets, digital ID card, and library borrowings | `student` / `Student@2026` |
+| **`superadmin`** | Platform Director | Full unconstrained platform authority and SaaS console management | `superadmin` / `Admin@2026` |
+
+### 3. Secure Authentication & Rate Limiting
+- **Bcrypt Hashing**: Passwords stored as irreversible salted Bcrypt hashes (`PASSWORD_BCRYPT`). Legacy plaintext passwords are automatically and transparently upgraded to Bcrypt on next login.
+- **Brute-Force Rate Limiting**: Max 5 failed attempts per 15-minute window tracked per IP/username in `login_attempts`. Locked automatically upon threshold breach.
+- **Cryptographic Tokens**: Signed HMAC-SHA256 session bearer tokens with 7-day expiration and tamper verification.
+- *(Note: 2FA is deliberately deferred for pre-deployment phase as instructed).*
+
+### 4. Student Profiles (SIS), Bulk CSV Import, Promotions & TC
+- **Student Dossier**: Photo, roll number, admission number, guardian contact details, and uploaded documents.
+- **Bulk Import from Excel/CSV**: Ingest hundreds of student profiles in a single transactional import with validation.
+- **Academic Promotion Engine**: Move cohorts from one academic year/grade to the next with historical tracking in `student_promotions`.
+- **Transfer Certificates (TC)**: Issue official printable TCs with unique `tc_number` and cryptographically verifiable security tokens.
+
+### 5. Daily & Per-Period Attendance with Parent Absence Alerts
+- **Dual Mode**: Support both **Daily Roll-call** and **Per-Period Marking** (Periods 1 to 8).
+- **Bulk Class Marking**: Fast bulk toggles (*Present, Absent, Late, Excused*).
+- **Automated Absence Alerts**: Instant dispatch of absence notifications to parents of absent students via SMS/In-App.
+
+### 6. Fees, Installments, Receipts & Defaulters Aging
+- **Billing Tariffs & Installments**: Monthly, quarterly, and annual installment tariff configuration with due days and late penalty policies.
+- **Cashier Terminal**: Counter cash, cheque, and QR payment collection with real-time receipt generation (`REC-YYYY-XXXXXX`).
+- **Defaulters Aging Report**: Categorized into 4 aging buckets:
+  - Under 30 Days (Grace Period)
+  - 30 to 60 Days (Late Fee Active)
+  - 60 to 90 Days (Warning Phase)
+  - Over 90 Days (Critical Recovery)
+- **Due Reminders Dispatcher**: One-click broadcast of SMS fee due notices to parents of defaulters.
+
+### 7. Timetable with Automated Clash Detection & CDC Grading
+- **Collision Prevention**: Database unique constraints and pre-flight validation prevent:
+  - Faculty collision: Teacher assigned to two classes simultaneously.
+  - Room collision: Room booked by two classes at the same period.
+- **Nepal CDC / NEB Grading Engine**:
+  - Theory Marks (75) + Practical Marks (25) = Total (100).
+  - CDC Letter Grade (*A+, A, B+, B, C+, C, D, NG*), Grade Point (*0.0 to 4.0*), and GPA calculation.
+- **Official Terminal Grade Sheet**: Printable report cards with attendance summaries, CDC grades, and principal stamp blocks.
+
+### 8. Admissions Pipeline & Merit Lists
+- Online inquiry pipeline with status workflow (*New, Under Review, Campus Visit, Enrolled*).
+- Entrance exam scoring and automated **Merit List Ranking** with cut-off score publishing.
+
+### 9. Operations: Library, Transport & Staff Payroll
+- **Library Catalog**: ISBN tracking, real-time available copy counters, book issue loans, return processing, and overdue fine engine.
+- **Transport Fleet**: Vehicle registry with driver phone contacts, transit routes, and student stop pickup schedules.
+- **Staff Payroll**: Salary structures, allowances (dearness, medical), deductions (provident fund EPF, CIT, income tax), and monthly payslip generation.
+
+### 10. Dual Calendar (AD ⇄ BS) & Bilingual English / Nepali
+- **Dual Date Display**: Real-time conversion between Gregorian (AD) and Bikram Sambat (BS) with Devanagari numerals.
+- **Language Switcher**: Toggle between English and Nepali (`EN / नेपाली`) across all navigation items, tables, forms, and alerts.
+
+### 11. Immutable Audit Logging
+- Every update to student marks, fee collections, student registrations, promotions, and TC issuances is logged immutably in `audit_logs` with timestamps, staff user ID, IP address, and JSON diffs of before/after snapshots.
 
 ---
 
-## 🚀 Getting Started
+## 📁 Modular Codebase Organization
 
-### Prerequisites
-- Node.js (v18+)
-- npm or pnpm
+```
+Alchemist Academy/
+├── api/                               # PHP Backend API layer
+│   ├── config/
+│   │   ├── db.php                     # Smart DB connector (XAMPP local & cPanel fallback)
+│   │   ├── auth_guard.php             # JWT/HMAC token verifier & RBAC middleware
+│   │   └── cors.php                   # CORS & JSON response helpers
+│   ├── auth/
+│   │   ├── login.php                  # Rate limiting, Bcrypt auth & HMAC token issuer
+│   │   └── me.php                     # Authenticated user dossier
+│   ├── migrations/
+│   │   ├── migrate.php                # Safe idempotent database migration runner
+│   │   ├── seed.php                   # Database seeder with Bcrypt test accounts
+│   │   ├── 001_multi_tenant_branches_roles.sql
+│   │   ├── 002_academic_students_attendance.sql
+│   │   ├── 003_fees_billing_finance.sql
+│   │   ├── 004_timetable_exams_grading.sql
+│   │   ├── 005_library_transport_payroll.sql
+│   │   └── 006_admissions_merit_list.sql
+│   ├── students/                      # Student SIS, Bulk CSV, Promotions & TC
+│   ├── attendance/                    # Daily & period attendance + absence alerts
+│   ├── fees/                          # Structures, cashier collection & defaulters
+│   ├── timetable/                     # Clash-free period scheduler
+│   ├── exams/                         # CDC marks & report card generator
+│   ├── admissions/                    # Applications & merit list ranking
+│   ├── operations/                    # Library, transport fleet & staff payroll
+│   ├── notifications/                 # Multi-channel notification dispatcher
+│   └── audit/                         # Immutable audit logs endpoint
+│
+├── src/                               # React 19 Frontend
+│   ├── components/
+│   │   ├── SchoolManagementDashboard.jsx  # Main SMS Dashboard container
+│   │   ├── CashierFeeCollector.jsx        # Counter billing terminal
+│   │   ├── Dashboard.jsx                  # Visual Website CMS
+│   │   ├── dashboard/tabs/
+│   │   │   ├── BranchSwitcher.jsx         # Multi-branch selector pill
+│   │   │   ├── LanguageToggle.jsx         # EN ⇄ NE language switcher
+│   │   │   ├── SisTab.jsx                 # Student SIS, Bulk CSV, Promotions & TC
+│   │   │   ├── AttendanceTimetableTab.jsx # Daily/Period attendance & clash check
+│   │   │   ├── CashierFeesTab.jsx         # Defaulters aging & fee tariffs
+│   │   │   ├── CdcGradingTab.jsx          # CDC mark entry & printable grade sheets
+│   │   │   ├── AdmissionsMeritTab.jsx     # Applicant pipeline & merit lists
+│   │   │   ├── OperationsTab.jsx          # Library, transport transit & payroll
+│   │   │   └── AuditTrailTab.jsx          # Immutable audit trail inspector
+│   │   └── portal/
+│   │       ├── SMSLoginScreen.jsx         # SMS login screen with 7-role test buttons
+│   │       └── DigitalStudentIDModal.jsx  # Printable student ID card with QR
+│   ├── context/
+│   │   ├── AuthContext.jsx                # Multi-tenant auth, 7 roles, branch & lang
+│   │   └── SiteContext.jsx                # Public CMS site data
+│   ├── services/
+│   │   └── api.js                         # Enterprise API client with Bearer auth
+│   └── utils/
+│       ├── nepaliCalendar.js              # AD <-> BS Bikram Sambat dual converter
+│       └── translations.js                # English & Nepali UI dictionary
+```
 
-### Installation
+---
+
+## 🛠️ Database Setup & Migrations
+
+### Run Database Migrations
+Migrations are fully non-destructive and idempotent. Run anytime via CLI:
+```bash
+php api/migrations/migrate.php
+```
+
+### Seed Test Data
+Populates institutions, branches, classes, subjects, clash-free timetables, fee invoices, books, transport routes, and active Bcrypt accounts for all 7 roles:
+```bash
+php api/migrations/seed.php
+```
+
+---
+
+## 🔑 Test Credentials (Out of the Box)
+
+| Role | Username | Password | Notes |
+| :--- | :--- | :--- | :--- |
+| **Admin** | `admin` | `Admin@2026` | Full institutional administrator |
+| **Principal** | `principal` | `Principal@2026` | Academic oversight & TC endorsements |
+| **Teacher** | `teacher` | `Teacher@2026` | Attendance, marks & timetable |
+| **Accountant** | `accountant` | `Accountant@2026` | Cashier, fees & defaulters |
+| **Librarian** | `librarian` | `Librarian@2026` | Library catalog & book loans |
+| **Parent** | `parent` | `Parent@2026` | Ward attendance, report card & dues |
+| **Student** | `student` | `Student@2026` | ID card, grades, syllabus & timetable |
+
+---
+
+## 💻 Development & Production Build
 
 ```bash
-# Clone the repository
-git clone https://github.com/Rishikesh-1/Alchemist-Academy-Secondary-School.git
-cd Alchemist-Academy-Secondary-School
-
 # Install dependencies
 npm install
 
 # Start development server
 npm run dev
-```
 
-### Production Build
-
-```bash
-# Build production bundle
+# Compile production bundle
 npm run build
-
-# Preview build locally
-npm run preview
 ```
-
-### Running in XAMPP / Apache
-Place the repository inside your Apache web root (e.g., `c:\xampp\htdocs\Alchemist Academy`).
-- `index.php` automatically redirects visitors to the optimized production build in `dist/`.
-- Access via `http://localhost/Alchemist%20Academy/`
-
----
-
-## 🔒 Role-Based Staff Access
-
-Access to the administrative CMS is restricted to authorized personnel. Role tiers and responsibilities:
-
-- **Super Administrator (`superadmin`)**: Full unconstrained site customization, logo, hero banner, SEO, and team account provisioning.
-- **Content Editor (`editor`)**: Curates school blog publications, notices, and co-curricular highlights.
-- **Admissions Officer (`admissions`)**: Manages admissions phone hotlines, enrollment status, and metric counters.
-- **Academic Coordinator (`academic`)**: Oversees curriculum pathways, faculty narrative, and syllabus structure.
-
-> **Security Notice**: Staff credentials and security keys are managed privately by the Super Administrator within the **Staff & Team Access** management panel. Credentials should never be shared publicly or committed to version control.
-
----
-
-## 📈 SEO & Performance
-- Semantic HTML5 elements (`<header>`, `<nav>`, `<main>`, `<section>`, `<article>`, `<footer>`).
-- Validated `EducationalOrganization` / `School` schema in JSON-LD.
-- OpenGraph and Twitter card meta tags for rich social sharing.
-- Compressed WebP assets for optimal Core Web Vitals.
-
+In XAMPP, open `http://localhost/Alchemist%20Academy/` to access the application.
