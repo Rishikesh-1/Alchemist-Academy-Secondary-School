@@ -133,62 +133,64 @@ const AdminLogin = () => {
           </button>
         </form>
 
-        {/* Multi-Role Quick Access & Demonstration Panel */}
-        <div className="mt-8 pt-6 border-t border-slate-800">
-          <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider text-center mb-3">
-            Select Role for Quick Demonstration:
-          </p>
+        {/* Multi-Role Quick Access & Demonstration Panel (Development Only) */}
+        {import.meta.env.DEV && (
+          <div className="mt-8 pt-6 border-t border-slate-800">
+            <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider text-center mb-3">
+              Local Dev Only: Quick Access Helper
+            </p>
 
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            <button
-              type="button"
-              onClick={() => {
-                setUsername('admin');
-                setPassword('AlchemistAdmin2026');
-              }}
-              className="p-2 rounded-xl bg-slate-950 hover:bg-slate-800 border border-amber-500/30 text-amber-300 text-left transition-all cursor-pointer"
-            >
-              <div className="font-bold">Superadmin</div>
-              <div className="text-[10px] text-slate-400">Full Unrestricted Access</div>
-            </button>
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <button
+                type="button"
+                onClick={() => {
+                  setUsername('admin');
+                  setPassword('AlchemistAdmin2026');
+                }}
+                className="p-2 rounded-xl bg-slate-950 hover:bg-slate-800 border border-amber-500/30 text-amber-300 text-left transition-all cursor-pointer"
+              >
+                <div className="font-bold">Superadmin</div>
+                <div className="text-[10px] text-slate-400">Full Unrestricted Access</div>
+              </button>
 
-            <button
-              type="button"
-              onClick={() => {
-                setUsername('editor');
-                setPassword('EditorPass2026');
-              }}
-              className="p-2 rounded-xl bg-slate-950 hover:bg-slate-800 border border-blue-500/30 text-blue-300 text-left transition-all cursor-pointer"
-            >
-              <div className="font-bold">Content Editor</div>
-              <div className="text-[10px] text-slate-400">Blogs & Activities only</div>
-            </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setUsername('editor');
+                  setPassword('EditorPass2026');
+                }}
+                className="p-2 rounded-xl bg-slate-950 hover:bg-slate-800 border border-blue-500/30 text-blue-300 text-left transition-all cursor-pointer"
+              >
+                <div className="font-bold">Content Editor</div>
+                <div className="text-[10px] text-slate-400">Blogs & Activities only</div>
+              </button>
 
-            <button
-              type="button"
-              onClick={() => {
-                setUsername('admissions');
-                setPassword('AdmissionsPass2026');
-              }}
-              className="p-2 rounded-xl bg-slate-950 hover:bg-slate-800 border border-emerald-500/30 text-emerald-300 text-left transition-all cursor-pointer"
-            >
-              <div className="font-bold">Admissions Officer</div>
-              <div className="text-[10px] text-slate-400">Admissions & Stats only</div>
-            </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setUsername('admissions');
+                  setPassword('AdmissionsPass2026');
+                }}
+                className="p-2 rounded-xl bg-slate-950 hover:bg-slate-800 border border-emerald-500/30 text-emerald-300 text-left transition-all cursor-pointer"
+              >
+                <div className="font-bold">Admissions Officer</div>
+                <div className="text-[10px] text-slate-400">Admissions & Stats only</div>
+              </button>
 
-            <button
-              type="button"
-              onClick={() => {
-                setUsername('coordinator');
-                setPassword('AcademicPass2026');
-              }}
-              className="p-2 rounded-xl bg-slate-950 hover:bg-slate-800 border border-purple-500/30 text-purple-300 text-left transition-all cursor-pointer"
-            >
-              <div className="font-bold">Academic Coord.</div>
-              <div className="text-[10px] text-slate-400">Curriculum & About only</div>
-            </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setUsername('coordinator');
+                  setPassword('AcademicPass2026');
+                }}
+                className="p-2 rounded-xl bg-slate-950 hover:bg-slate-800 border border-purple-500/30 text-purple-300 text-left transition-all cursor-pointer"
+              >
+                <div className="font-bold">Academic Coord.</div>
+                <div className="text-[10px] text-slate-400">Curriculum & About only</div>
+              </button>
+            </div>
           </div>
-        </div>
+        )}
 
       </div>
 

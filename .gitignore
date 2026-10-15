@@ -48,5 +48,9 @@ Thumbs.db
 .vscode/
 .idea/
 *.local
+*.local.*
+*.local.md
+CONFIDENTIAL*
+*credentials*
 *.swp
 
