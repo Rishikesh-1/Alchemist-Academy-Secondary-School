@@ -1,13 +1,15 @@
+import schoolLogo from '../assets/school-logo.png';
+
 export const defaultSiteData = {
   // General & Branding
   branding: {
     name: "ALCHEMIST ACADEMY",
     tagline: "Excellence in Education",
     logoIcon: "GraduationCap", // GraduationCap, Sparkles, BookOpen, Award
-    logoImage: "", // Custom Brand Logo image URL or base64 upload
-    logoType: "icon", // 'icon' or 'image'
+    logoImage: schoolLogo, // Custom Brand Logo image URL
+    logoType: "image", // 'icon' or 'image'
     logoColor: "#e67300",
-    favicon: "", // Custom browser tab favicon URL or upload
+    favicon: schoolLogo, // Custom browser tab favicon URL
     headerApplyButtonText: "Apply Now",
     headerApplyButtonLink: "#contact",
   },

@@ -9,4 +9,18 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  server: {
+    proxy: {
+      '/api': {
+        target: 'https://alchemistacademy.edu.np',
+        changeOrigin: true,
+        secure: false,
+      },
+      '/uploads': {
+        target: 'https://alchemistacademy.edu.np',
+        changeOrigin: true,
+        secure: false,
+      },
+    },
+  },
 })
