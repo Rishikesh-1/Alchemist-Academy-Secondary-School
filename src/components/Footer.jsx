@@ -115,36 +115,6 @@ const Footer = () => {
                   Contact & Admissions
                 </button>
               </li>
-              <li>
-                <button
-                  type="button"
-                  onClick={() => navigateTo('student-portal')}
-                  className="hover:text-amber-400 transition-colors flex items-center gap-2 group cursor-pointer text-left text-amber-500 font-semibold"
-                >
-                  <ChevronRight className="w-3.5 h-3.5 text-amber-500 group-hover:translate-x-1 transition-all" />
-                  Student & Parent Portal
-                </button>
-              </li>
-              <li>
-                <button
-                  type="button"
-                  onClick={() => navigateTo('teacher-portal')}
-                  className="hover:text-amber-400 transition-colors flex items-center gap-2 group cursor-pointer text-left text-purple-400 font-semibold"
-                >
-                  <ChevronRight className="w-3.5 h-3.5 text-purple-400 group-hover:translate-x-1 transition-all" />
-                  Teacher & Faculty Cockpit
-                </button>
-              </li>
-              <li>
-                <button
-                  type="button"
-                  onClick={() => navigateTo('admin-login')}
-                  className="hover:text-amber-400 transition-colors flex items-center gap-2 group cursor-pointer text-left text-slate-400 hover:text-white"
-                >
-                  <ChevronRight className="w-3.5 h-3.5 text-slate-600 group-hover:text-amber-400 group-hover:translate-x-1 transition-all" />
-                  Staff CMS Portal
-                </button>
-              </li>
             </ul>
           </div>
 
@@ -184,7 +154,7 @@ const Footer = () => {
 
         </div>
 
-        {/* Bottom Bar: Institutional copyright & Rishi Rana Vendor connection */}
+        {/* Bottom Bar: Institutional copyright & Engineering credit */}
         <div className="pt-8 border-t border-slate-900 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4">
           <p>© {footer.copyrightYear || new Date().getFullYear()} {branding.name}. All rights reserved.</p>
           
@@ -197,14 +167,6 @@ const Footer = () => {
             >
               Engineered by <span className="font-bold text-slate-300 hover:text-amber-400">Rishi Kesh Rana</span>
             </a>
-            <span>•</span>
-            <button
-              type="button"
-              onClick={() => navigateTo('vendor-hub')}
-              className="text-slate-500 hover:text-purple-400 transition-colors cursor-pointer"
-            >
-              Vendor SaaS Console
-            </button>
           </div>
         </div>
 

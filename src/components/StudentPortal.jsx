@@ -30,9 +30,11 @@ import {
   Bus,
   BadgeCheck,
   IdCard,
+  LogOut,
 } from 'lucide-react';
 import { useSiteData } from '../context/SiteContext';
 import { useSchoolData } from '../context/SchoolDataContext';
+import StudentLoginScreen from './portal/StudentLoginScreen';
 import DigitalStudentIDModal from './portal/DigitalStudentIDModal';
 import ExamAdmitCardModal from './portal/ExamAdmitCardModal';
 import BusTransitTracker from './portal/BusTransitTracker';
@@ -58,6 +60,21 @@ const StudentPortal = () => {
     notices,
     notifications,
   } = schoolData;
+
+  // Student Authentication Session Gate
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    try {
+      const sess = sessionStorage.getItem('_aa_student_auth_session');
+      return sess ? JSON.parse(sess)?.authenticated : false;
+    } catch (e) {
+      return false;
+    }
+  });
+
+  const handleLogout = () => {
+    sessionStorage.removeItem('_aa_student_auth_session');
+    setIsAuthenticated(false);
+  };
 
   // Active View Tab: 'overview' | 'attendance' | 'assignments' | 'fees' | 'reportCard' | 'transit' | 'doubts' | 'timetable' | 'notices'
   const [activeTab, setActiveTab] = useState('overview');
@@ -132,6 +149,10 @@ const StudentPortal = () => {
   });
 
   const unreadNotifsCount = notifications?.filter((n) => !n.read).length || 0;
+
+  if (!isAuthenticated) {
+    return <StudentLoginScreen onLoginSuccess={() => setIsAuthenticated(true)} />;
+  }
 
   return (
     <div
@@ -298,6 +319,17 @@ const StudentPortal = () => {
                 title={isDark ? 'Light mode' : 'Dark mode'}
               >
                 {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              </button>
+
+              {/* Secure Session Sign Out Button */}
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-rose-950/60 hover:bg-rose-900 border border-rose-500/30 text-rose-300 transition-all cursor-pointer"
+                title="Lock Session & Sign Out"
+              >
+                <LogOut className="w-3.5 h-3.5 text-rose-400" />
+                <span className="hidden sm:inline">Sign Out</span>
               </button>
             </div>
           </div>

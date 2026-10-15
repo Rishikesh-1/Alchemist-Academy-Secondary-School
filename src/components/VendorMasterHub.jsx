@@ -33,12 +33,32 @@ import {
   ChevronRight,
   TrendingUp,
   Cpu,
+  LogOut,
 } from 'lucide-react';
 import { useSiteData } from '../context/SiteContext';
+import { useAuth } from '../context/AuthContext';
 import { initialVendorData } from '../data/vendorData';
+import VendorLoginScreen from './portal/VendorLoginScreen';
 
 const VendorMasterHub = () => {
   const { siteData, navigateTo, isDark, toggleTheme } = useSiteData();
+  const { currentUser, isAuthenticated: isSuperadminAuthenticated } = useAuth();
+
+  // Master Vendor Authentication Gate
+  const [isVendorAuthenticated, setIsVendorAuthenticated] = useState(() => {
+    if (isSuperadminAuthenticated && currentUser?.role === 'superadmin') return true;
+    try {
+      const sess = sessionStorage.getItem('_aa_vendor_auth_session');
+      return sess ? JSON.parse(sess)?.authenticated : false;
+    } catch (e) {
+      return false;
+    }
+  });
+
+  const handleVendorLogout = () => {
+    sessionStorage.removeItem('_aa_vendor_auth_session');
+    setIsVendorAuthenticated(false);
+  };
 
   // Active View Tab: 'fleet' | 'tiers' | 'license-generator' | 'analytics'
   const [activeTab, setActiveTab] = useState('fleet');
@@ -263,6 +283,10 @@ const VendorMasterHub = () => {
   const totalStudents = clientSchools.reduce((acc, s) => acc + (s.studentsCount || 0), 0);
   const totalStorage = clientSchools.reduce((acc, s) => acc + (s.storageUsedGB || 0), 0).toFixed(1);
 
+  if (!isVendorAuthenticated) {
+    return <VendorLoginScreen onLoginSuccess={() => setIsVendorAuthenticated(true)} />;
+  }
+
   return (
     <div
       className={`min-h-screen w-full font-sans transition-colors duration-300 pb-20 ${
@@ -331,18 +355,15 @@ const VendorMasterHub = () => {
                 <ExternalLink className="w-3 h-3" />
               </a>
 
-              {/* Student Portal quick test switch */}
+              {/* Secure Session Lock Button */}
               <button
                 type="button"
-                onClick={() => navigateTo('student-portal')}
-                className={`hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-colors cursor-pointer ${
-                  isDark
-                    ? 'border-slate-800 bg-slate-900 hover:bg-slate-800 text-amber-400'
-                    : 'border-slate-200 bg-slate-100 hover:bg-slate-200 text-amber-600'
-                }`}
+                onClick={handleVendorLogout}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-rose-950/60 hover:bg-rose-900 border border-rose-500/30 text-rose-300 transition-all cursor-pointer"
+                title="Lock Master Console & Terminate Session"
               >
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Student Portal</span>
+                <LogOut className="w-3.5 h-3.5 text-rose-400" />
+                <span className="hidden sm:inline">Lock Console</span>
               </button>
 
               {/* Theme toggle */}

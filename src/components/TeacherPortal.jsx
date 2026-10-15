@@ -29,9 +29,11 @@ import {
   QrCode,
   ShieldCheck,
   CheckCheck,
+  LogOut,
 } from 'lucide-react';
 import { useSiteData } from '../context/SiteContext';
 import { useSchoolData } from '../context/SchoolDataContext';
+import TeacherLoginScreen from './portal/TeacherLoginScreen';
 
 const TeacherPortal = () => {
   const { siteData, navigateTo, isDark, toggleTheme } = useSiteData();
@@ -52,6 +54,21 @@ const TeacherPortal = () => {
     teacherRoutine,
     doubtsMessages,
   } = schoolData;
+
+  // Teacher Authentication Session Gate
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    try {
+      const sess = sessionStorage.getItem('_aa_teacher_auth_session');
+      return sess ? JSON.parse(sess)?.authenticated : false;
+    } catch (e) {
+      return false;
+    }
+  });
+
+  const handleLogout = () => {
+    sessionStorage.removeItem('_aa_teacher_auth_session');
+    setIsAuthenticated(false);
+  };
 
   // Active Workspace Tab: 'attendance' | 'assignments' | 'gradebook' | 'doubts' | 'routine'
   const [activeTab, setActiveTab] = useState('attendance');
@@ -172,6 +189,10 @@ const TeacherPortal = () => {
     setReplyInput('');
   };
 
+  if (!isAuthenticated) {
+    return <TeacherLoginScreen onLoginSuccess={() => setIsAuthenticated(true)} />;
+  }
+
   return (
     <div
       className={`min-h-screen w-full font-sans transition-colors duration-300 pb-20 ${
@@ -260,6 +281,17 @@ const TeacherPortal = () => {
                 }`}
               >
                 {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              </button>
+
+              {/* Secure Session Sign Out Button */}
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-rose-950/60 hover:bg-rose-900 border border-rose-500/30 text-rose-300 transition-all cursor-pointer"
+                title="Lock Session & Sign Out"
+              >
+                <LogOut className="w-3.5 h-3.5 text-rose-400" />
+                <span className="hidden sm:inline">Sign Out</span>
               </button>
             </div>
           </div>
