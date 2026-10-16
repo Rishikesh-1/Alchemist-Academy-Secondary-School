@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Calendar,
   CheckCircle2,
@@ -31,6 +31,9 @@ import {
   BadgeCheck,
   IdCard,
   LogOut,
+  LineChart,
+  TrendingUp,
+  Medal,
 } from 'lucide-react';
 import { useSiteData } from '../context/SiteContext';
 import { useSchoolData } from '../context/SchoolDataContext';
@@ -39,6 +42,11 @@ import DigitalStudentIDModal from './portal/DigitalStudentIDModal';
 import ExamAdmitCardModal from './portal/ExamAdmitCardModal';
 import BusTransitTracker from './portal/BusTransitTracker';
 import DoubtChatDesk from './portal/DoubtChatDesk';
+import {
+  EXAM_TERMS,
+  generateStudentMultiTermResults,
+  generateStudentBehaviorHistory,
+} from '../data/mockExamResults';
 
 const StudentPortal = () => {
   const { siteData, navigateTo, isDark, toggleTheme } = useSiteData();
@@ -78,6 +86,29 @@ const StudentPortal = () => {
 
   // Active View Tab: 'overview' | 'attendance' | 'assignments' | 'fees' | 'reportCard' | 'transit' | 'doubts' | 'timetable' | 'notices'
   const [activeTab, setActiveTab] = useState('overview');
+
+  // Multi-Term Examination Results & Behavioral Trends
+  const [selectedTermId, setSelectedTermId] = useState('term-2083-1');
+  const [reportSubTab, setReportSubTab] = useState('marksheet'); // 'marksheet' | 'trends' | 'behavior'
+  const [resultsSyncKey, setResultsSyncKey] = useState(0);
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      setResultsSyncKey((k) => k + 1);
+    };
+    window.addEventListener('alchemist_exam_results_updated', handleUpdate);
+    return () => window.removeEventListener('alchemist_exam_results_updated', handleUpdate);
+  }, []);
+
+  const multiTermResults = useMemo(() => {
+    return generateStudentMultiTermResults(student);
+  }, [student, resultsSyncKey]);
+
+  const activeTermResult = multiTermResults.terms[selectedTermId] || multiTermResults.terms['term-2083-1'];
+
+  const studentBehaviorHistory = useMemo(() => {
+    return generateStudentBehaviorHistory(student);
+  }, [student]);
 
   // Role Persona: 'student' | 'parent'
   const [userRole, setUserRole] = useState('student');
@@ -500,7 +531,7 @@ const StudentPortal = () => {
             { id: 'attendance', label: 'Attendance', icon: Clock },
             { id: 'assignments', label: 'Assignments', icon: FileText, badge: assignments.filter((a) => a.status === 'pending').length },
             { id: 'fees', label: 'Fees & Invoices', icon: CreditCard, alert: bills.outstandingDues > 0 },
-            { id: 'reportCard', label: 'Report Card', icon: Award },
+            { id: 'reportCard', label: 'Results & Trends', icon: Award },
             { id: 'transit', label: 'Campus Bus GPS', icon: Bus },
             { id: 'doubts', label: 'Teacher Doubts Desk', icon: MessageSquare },
             { id: 'timetable', label: 'Class Timetable', icon: Calendar },
@@ -1099,104 +1130,526 @@ const StudentPortal = () => {
           </div>
         )}
 
-        {/* ================= 5. REPORT CARD ================= */}
+        {/* ================= 5. EXAM RESULTS, PERFORMANCE TRENDS & BEHAVIOR DOSSIER ================= */}
         {activeTab === 'reportCard' && (
           <div className="space-y-6">
             <div
-              className={`p-6 sm:p-8 rounded-3xl border shadow-sm ${
+              className={`p-6 sm:p-8 rounded-3xl border shadow-sm transition-all ${
                 isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
               }`}
             >
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-100 dark:border-slate-800">
+              {/* Header with Term Selector & Actions */}
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-6 border-b border-slate-100 dark:border-slate-800">
                 <div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-xs font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/30">
-                      Official Marksheet
+                      Official Terminal Evaluation
                     </span>
-                    <span className="text-xs text-slate-400">{reportCard.session}</span>
+                    <span className="text-xs text-slate-400 font-mono">{activeTermResult?.session || 'Academic Year 2083 BS'}</span>
+                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+                      {activeTermResult?.resultStatus || 'Promoted with Distinction'}
+                    </span>
                   </div>
-                  <h3 className="text-2xl font-bold mt-1 text-slate-800 dark:text-slate-100">
-                    {reportCard.examName}
+
+                  <h3 className="text-2xl font-bold mt-1.5 text-slate-800 dark:text-slate-100">
+                    {activeTermResult?.termName || 'First Terminal Examination 2083'}
                   </h3>
+
                   <p className="text-xs text-slate-400 mt-0.5">
-                    Student: <strong className="text-slate-700 dark:text-slate-200">{student.name}</strong> • Roll No: #{student.rollNo} • Class Rank: <strong className="text-amber-500">{reportCard.rank}</strong> out of {reportCard.classTotalStudents}
+                    Student: <strong className="text-slate-700 dark:text-slate-200">{student.name}</strong> • Roll No: #{student.rollNo} • Class Rank: <strong className="text-amber-500 font-bold">#{activeTermResult?.rank || 1}</strong> out of {activeTermResult?.classTotal || 36} students
                   </p>
                 </div>
 
+                <div className="flex items-center gap-2.5 self-start lg:self-auto flex-wrap">
+                  <button
+                    type="button"
+                    onClick={() => setShowPrintReportModal(true)}
+                    className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs uppercase tracking-wider shadow-sm flex items-center gap-2 cursor-pointer transition-all"
+                  >
+                    <Printer className="w-4 h-4" />
+                    <span>Print Official Grade Sheet</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Term Selection Bar */}
+              <div className="flex items-center justify-between gap-3 my-5 overflow-x-auto no-scrollbar pb-1">
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider mr-1 hidden sm:inline">Evaluation Cycle:</span>
+                  {EXAM_TERMS.slice(0, 4).map((term) => {
+                    const isSelected = selectedTermId === term.id;
+                    const termResult = multiTermResults.terms[term.id];
+                    const isPub = termResult?.isPublished;
+                    return (
+                      <button
+                        key={term.id}
+                        type="button"
+                        onClick={() => setSelectedTermId(term.id)}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
+                          isSelected
+                            ? 'bg-amber-500 text-white shadow-md'
+                            : isDark
+                            ? 'bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700'
+                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        }`}
+                      >
+                        <span>{term.shortName || term.name}</span>
+                        <span
+                          className={`w-2 h-2 rounded-full ${isPub ? 'bg-emerald-400' : 'bg-amber-400'}`}
+                          title={isPub ? 'Official Result Released' : 'Grading in Progress'}
+                        />
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Trajectory Delta Pill */}
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="text-xs text-slate-400 hidden sm:inline">Historical Growth:</span>
+                  <span
+                    className={`inline-flex items-center gap-1 font-bold text-xs px-2.5 py-1 rounded-xl ${
+                      multiTermResults.gpaDelta >= 0
+                        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
+                        : 'bg-rose-500/10 text-rose-400 border border-rose-500/30'
+                    }`}
+                  >
+                    <TrendingUp className="w-3.5 h-3.5" />
+                    <span>
+                      {multiTermResults.gpaDelta >= 0 ? '+' : ''}
+                      {multiTermResults.gpaDelta} GPA Trend
+                    </span>
+                  </span>
+                </div>
+              </div>
+
+              {/* Preliminary Draft Notice if Term Not Released */}
+              {!activeTermResult?.isPublished && (
+                <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-500 mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-fadeIn">
+                  <div className="flex items-center gap-3">
+                    <Clock className="w-5 h-5 text-amber-500 shrink-0" />
+                    <div>
+                      <h4 className="font-bold text-sm text-slate-900 dark:text-white">
+                        Evaluation in Progress • Awaiting Official Release
+                      </h4>
+                      <p className="text-xs text-slate-400 mt-0.5">
+                        Subject teachers are currently entering and verifying theory and practical assessments for <strong>{activeTermResult?.termName}</strong>. Official marksheets will appear once released by the school administration.
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-[11px] font-mono font-bold px-3 py-1 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 shrink-0">
+                    Draft Evaluation
+                  </span>
+                </div>
+              )}
+
+              {/* Top Level KPIs */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 my-5">
+                <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-center">
+                  <span className="text-xs text-slate-400 font-semibold">Cumulative Term GPA</span>
+                  <div className="text-2xl sm:text-3xl font-black text-amber-500 mt-0.5">
+                    {activeTermResult?.gpa?.toFixed(2) || '3.90'}
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-center">
+                  <span className="text-xs text-slate-400 font-semibold">Nepal CDC Grade</span>
+                  <div className="text-2xl sm:text-3xl font-black text-emerald-500 mt-0.5">
+                    {activeTermResult?.overallGrade || 'A+'}
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-blue-500/10 border border-blue-500/30 text-center">
+                  <span className="text-xs text-slate-400 font-semibold">Total Score</span>
+                  <div className="text-2xl sm:text-3xl font-black text-blue-500 mt-0.5 font-mono">
+                    {activeTermResult?.totalObtained || 638} / {activeTermResult?.totalMax || 700}
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-purple-500/10 border border-purple-500/30 text-center">
+                  <span className="text-xs text-slate-400 font-semibold">Percentage Rate</span>
+                  <div className="text-2xl sm:text-3xl font-black text-purple-500 mt-0.5 font-mono">
+                    {activeTermResult?.percentage || 91.1}%
+                  </div>
+                </div>
+              </div>
+
+              {/* View Switcher: Marksheet Breakdown vs Trends Graph vs Behavior Dossier */}
+              <div
+                className={`flex items-center gap-1 p-1 rounded-2xl border mb-6 ${
+                  isDark ? 'bg-slate-950/70 border-slate-800' : 'bg-slate-100 border-slate-200'
+                }`}
+              >
                 <button
                   type="button"
-                  onClick={() => setShowPrintReportModal(true)}
-                  className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs uppercase tracking-wider shadow-sm flex items-center gap-2 cursor-pointer self-start sm:self-auto"
+                  onClick={() => setReportSubTab('marksheet')}
+                  className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                    reportSubTab === 'marksheet'
+                      ? 'bg-amber-500 text-white shadow-sm'
+                      : isDark
+                      ? 'text-slate-400 hover:text-slate-200'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
                 >
-                  <Printer className="w-4 h-4" />
-                  <span>Print Official Grade Sheet</span>
+                  <FileText className="w-3.5 h-3.5" />
+                  <span>Terminal Marksheet Breakdown</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setReportSubTab('trends')}
+                  className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                    reportSubTab === 'trends'
+                      ? 'bg-amber-500 text-white shadow-sm'
+                      : isDark
+                      ? 'text-slate-400 hover:text-slate-200'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <LineChart className="w-3.5 h-3.5" />
+                  <span>Historical Performance Trends Graph</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setReportSubTab('behavior')}
+                  className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                    reportSubTab === 'behavior'
+                      ? 'bg-amber-500 text-white shadow-sm'
+                      : isDark
+                      ? 'text-slate-400 hover:text-slate-200'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  <span>Conduct & Merits (Since Joined)</span>
+                  <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-400 font-mono font-bold">
+                    +{studentBehaviorHistory.netPoints} pts
+                  </span>
                 </button>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 my-6">
-                <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-center">
-                  <span className="text-xs text-slate-400">Cumulative GPA</span>
-                  <div className="text-2xl font-bold text-amber-500 mt-0.5">{reportCard.gpa}</div>
-                </div>
-                <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-center">
-                  <span className="text-xs text-slate-400">Overall Grade</span>
-                  <div className="text-2xl font-bold text-emerald-500 mt-0.5">{reportCard.overallGrade}</div>
-                </div>
-                <div className="p-4 rounded-2xl bg-blue-500/10 border border-blue-500/30 text-center">
-                  <span className="text-xs text-slate-400">Total Marks</span>
-                  <div className="text-2xl font-bold text-blue-500 mt-0.5">{reportCard.totalMarksObtained} / {reportCard.maximumMarks}</div>
-                </div>
-                <div className="p-4 rounded-2xl bg-purple-500/10 border border-purple-500/30 text-center">
-                  <span className="text-xs text-slate-400">Percentage</span>
-                  <div className="text-2xl font-bold text-purple-500 mt-0.5">{reportCard.percentage}</div>
-                </div>
-              </div>
-
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs sm:text-sm">
-                  <thead>
-                    <tr
-                      className={`border-b text-slate-400 uppercase text-[11px] tracking-wider ${
-                        isDark ? 'border-slate-800 bg-slate-950/40' : 'border-slate-200 bg-slate-50'
-                      }`}
-                    >
-                      <th className="py-3 px-4">Subject</th>
-                      <th className="py-3 px-3 text-center">Theory (75)</th>
-                      <th className="py-3 px-3 text-center">Practical (25)</th>
-                      <th className="py-3 px-3 text-center">Total (100)</th>
-                      <th className="py-3 px-3 text-center">Grade</th>
-                      <th className="py-3 px-3 text-center">GPA</th>
-                      <th className="py-3 px-4">Remarks</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                    {reportCard.subjects.map((sub) => (
-                      <tr key={sub.code} className="hover:bg-slate-500/5 transition-colors">
-                        <td className="py-3.5 px-4 font-semibold text-slate-800 dark:text-slate-100">
-                          {sub.name}
-                          <span className="block text-[10px] font-mono text-slate-400 font-normal">
-                            {sub.code}
-                          </span>
-                        </td>
-                        <td className="py-3.5 px-3 text-center font-mono">{sub.theoryObtained}</td>
-                        <td className="py-3.5 px-3 text-center font-mono">{sub.practicalObtained}</td>
-                        <td className="py-3.5 px-3 text-center font-mono font-bold text-amber-500">
-                          {sub.totalObtained}
-                        </td>
-                        <td className="py-3.5 px-3 text-center">
-                          <span className="px-2 py-0.5 rounded-md font-bold text-xs bg-emerald-500/10 text-emerald-500">
-                            {sub.grade}
-                          </span>
-                        </td>
-                        <td className="py-3.5 px-3 text-center font-mono font-semibold">{sub.gpa.toFixed(1)}</td>
-                        <td className="py-3.5 px-4 text-xs text-slate-500 dark:text-slate-400 italic">
-                          {sub.remarks}
-                        </td>
+              {/* 1. Marksheet Breakdown View */}
+              {reportSubTab === 'marksheet' && (
+                <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800">
+                  <table className="w-full text-left text-xs sm:text-sm">
+                    <thead>
+                      <tr
+                        className={`border-b text-slate-400 uppercase text-[11px] tracking-wider ${
+                          isDark ? 'border-slate-800 bg-slate-950/40' : 'border-slate-200 bg-slate-50'
+                        }`}
+                      >
+                        <th className="py-3 px-4">Subject</th>
+                        <th className="py-3 px-3 text-center">Theory (75)</th>
+                        <th className="py-3 px-3 text-center">Practical (25)</th>
+                        <th className="py-3 px-3 text-center">Total (100)</th>
+                        <th className="py-3 px-3 text-center">Grade</th>
+                        <th className="py-3 px-3 text-center">GPA</th>
+                        <th className="py-3 px-4">Remarks</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                      {(activeTermResult?.subjects || reportCard.subjects).map((sub) => (
+                        <tr key={sub.code} className="hover:bg-slate-500/5 transition-colors">
+                          <td className="py-3.5 px-4 font-semibold text-slate-800 dark:text-slate-100">
+                            {sub.name}
+                            <span className="block text-[10px] font-mono text-slate-400 font-normal">
+                              {sub.code}
+                            </span>
+                          </td>
+                          <td className="py-3.5 px-3 text-center font-mono">{sub.th ?? sub.theoryObtained}</td>
+                          <td className="py-3.5 px-3 text-center font-mono">{sub.pr ?? sub.practicalObtained}</td>
+                          <td className="py-3.5 px-3 text-center font-mono font-bold text-amber-500">
+                            {sub.total ?? sub.totalObtained}
+                          </td>
+                          <td className="py-3.5 px-3 text-center">
+                            <span
+                              className={`px-2 py-0.5 rounded-md font-bold text-xs ${
+                                sub.grade.startsWith('A')
+                                  ? 'bg-emerald-500/10 text-emerald-500'
+                                  : 'bg-blue-500/10 text-blue-500'
+                              }`}
+                            >
+                              {sub.grade}
+                            </span>
+                          </td>
+                          <td className="py-3.5 px-3 text-center font-mono font-semibold">
+                            {Number(sub.gpa).toFixed(1)}
+                          </td>
+                          <td className="py-3.5 px-4 text-xs text-slate-500 dark:text-slate-400 italic">
+                            {sub.remarks}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {/* 2. Historical Performance Trends Graph View */}
+              {reportSubTab === 'trends' && (
+                <div className="space-y-6 animate-in fade-in">
+                  <div
+                    className={`p-5 rounded-2xl border ${
+                      isDark ? 'bg-slate-950/80 border-slate-800' : 'bg-slate-50 border-slate-200'
+                    }`}
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <LineChart className="w-4 h-4 text-amber-500" />
+                          <h4 className="font-bold text-sm text-slate-800 dark:text-slate-200">
+                            Terminal GPA & Percentage Progression
+                          </h4>
+                        </div>
+                        <p className="text-xs text-slate-400 mt-0.5">
+                          Consistent evaluation analytics across all semesters at Alchemist Academy
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-4 text-xs font-mono">
+                        <div className="flex items-center gap-1.5">
+                          <span className="w-3 h-3 rounded bg-amber-500" />
+                          <span className="text-slate-400">Terminal GPA</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="w-3 h-3 rounded bg-blue-500" />
+                          <span className="text-slate-400">Percentage %</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Interactive SVG Bar & Curve Graph */}
+                    <div className="h-44 sm:h-52 w-full flex items-end justify-between gap-3 sm:gap-6 px-4 sm:px-10 border-b border-slate-700/60 pb-3 relative">
+                      {/* Grid background */}
+                      <div className="absolute inset-0 flex flex-col justify-between pointer-events-none opacity-15">
+                        <div className="border-b border-dashed border-slate-500 w-full" />
+                        <div className="border-b border-dashed border-slate-500 w-full" />
+                        <div className="border-b border-dashed border-slate-500 w-full" />
+                      </div>
+
+                      {multiTermResults.trendPoints.map((pt) => {
+                        const isSelected = pt.termKey === selectedTermId;
+                        const heightPercent = Math.max(25, Math.min(100, (pt.gpa / 4.0) * 100));
+
+                        return (
+                          <div
+                            key={pt.termKey}
+                            onClick={() => setSelectedTermId(pt.termKey)}
+                            className="flex-1 flex flex-col items-center justify-end h-full group cursor-pointer relative z-10"
+                          >
+                            {/* Score Tooltip Badge */}
+                            <div
+                              className={`mb-2 px-2.5 py-1 rounded-xl font-mono text-[11px] font-bold shadow-md transition-all ${
+                                isSelected
+                                  ? 'bg-amber-500 text-white scale-110 ring-2 ring-amber-400/50'
+                                  : isDark
+                                  ? 'bg-slate-800 text-slate-300 group-hover:scale-105'
+                                  : 'bg-white text-slate-700 border border-slate-200 group-hover:scale-105'
+                              }`}
+                            >
+                              GPA {pt.gpa.toFixed(2)} ({pt.percentage}%)
+                            </div>
+
+                            {/* Bar Visual */}
+                            <div
+                              className={`w-12 sm:w-20 rounded-t-2xl transition-all duration-300 ${
+                                isSelected
+                                  ? 'bg-gradient-to-t from-amber-600 via-amber-500 to-amber-400 shadow-lg shadow-amber-500/25 ring-2 ring-amber-300'
+                                  : isDark
+                                  ? 'bg-slate-800 hover:bg-slate-700'
+                                  : 'bg-slate-200 hover:bg-slate-300'
+                              }`}
+                              style={{ height: `${heightPercent}%` }}
+                            />
+
+                            {/* Label */}
+                            <span
+                              className={`text-[11px] font-semibold mt-2.5 text-center truncate max-w-full ${
+                                isSelected ? 'text-amber-500 font-bold' : 'text-slate-400'
+                              }`}
+                            >
+                              {pt.termLabel}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Cycle Cards */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-5">
+                      {multiTermResults.trendPoints.map((pt, idx) => {
+                        const isSelected = pt.termKey === selectedTermId;
+                        return (
+                          <div
+                            key={pt.termKey}
+                            onClick={() => setSelectedTermId(pt.termKey)}
+                            className={`p-3.5 rounded-xl border text-center cursor-pointer transition-all ${
+                              isSelected
+                                ? 'bg-amber-500/10 border-amber-500/40 ring-1 ring-amber-500'
+                                : isDark
+                                ? 'bg-slate-900 border-slate-800 hover:border-slate-700'
+                                : 'bg-white border-slate-200 hover:border-slate-300'
+                            }`}
+                          >
+                            <span className="text-[10px] uppercase font-bold text-slate-400 block truncate">
+                              {pt.termLabel}
+                            </span>
+                            <div className="text-lg font-black text-amber-500 mt-0.5">
+                              {pt.gpa.toFixed(2)} <span className="text-xs font-semibold text-slate-400">GPA</span>
+                            </div>
+                            <span className="text-[11px] font-mono text-slate-400 block">
+                              Score: {pt.percentage}%
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* 3. Conduct & Merits (Since Joined) View */}
+              {reportSubTab === 'behavior' && (
+                <div className="space-y-6 animate-in fade-in">
+                  {/* Cumulative Conduct Summary */}
+                  <div
+                    className={`p-5 sm:p-6 rounded-2xl border ${
+                      isDark ? 'bg-slate-950/80 border-slate-800' : 'bg-slate-50 border-slate-200'
+                    }`}
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-500 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30">
+                            Permanent Conduct Record
+                          </span>
+                          <span className="text-xs text-slate-400 font-mono">Official SMS Dossier</span>
+                        </div>
+                        <h4 className="text-lg font-bold mt-1.5 text-slate-800 dark:text-slate-100">
+                          Student Achievements & Conduct Record Since Admission
+                        </h4>
+                        <p className="text-xs text-slate-400 mt-0.5">
+                          Enrolled: <strong className="text-emerald-500">{studentBehaviorHistory.joiningDate}</strong> • Total Campus Tenure: {studentBehaviorHistory.tenure}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`p-3 rounded-2xl border text-center ${
+                            isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
+                          }`}
+                        >
+                          <span className="text-[10px] uppercase font-bold text-slate-400 block">Merit Score</span>
+                          <span className="text-xl font-black font-mono text-emerald-500">
+                            +{studentBehaviorHistory.netPoints}
+                          </span>
+                        </div>
+
+                        <div
+                          className={`p-3 rounded-2xl border text-center ${
+                            isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
+                          }`}
+                        >
+                          <span className="text-[10px] uppercase font-bold text-slate-400 block">Conduct Grade</span>
+                          <span className="text-xl font-black text-blue-500">
+                            {studentBehaviorHistory.conductGrade}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Badges Showcase */}
+                    <div className="mt-5 pt-4 border-t border-slate-200 dark:border-slate-800">
+                      <span className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-2.5 flex items-center gap-1.5">
+                        <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                        <span>Honors & Merit Badges Awarded:</span>
+                      </span>
+
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {studentBehaviorHistory.badges.map((badge, idx) => (
+                          <span
+                            key={idx}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-500 text-xs font-bold"
+                          >
+                            <Medal className="w-3.5 h-3.5 text-amber-400" />
+                            <span>{badge}</span>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Chronological Timeline */}
+                  <div className="space-y-3">
+                    <h4 className="font-bold text-xs uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                      <Clock className="w-3.5 h-3.5 text-blue-400" />
+                      <span>Complete Chronological Timeline (Since Enrollment in Baisakh 2081)</span>
+                    </h4>
+
+                    <div className="space-y-3">
+                      {studentBehaviorHistory.timeline.map((entry) => {
+                        const isPositive = entry.type === 'positive';
+                        return (
+                          <div
+                            key={entry.id}
+                            className={`p-4 rounded-2xl border transition-all text-xs ${
+                              isPositive
+                                ? isDark
+                                  ? 'bg-slate-900/90 border-slate-800 hover:border-emerald-500/40'
+                                  : 'bg-white border-slate-200 hover:border-emerald-500/40 shadow-xs'
+                                : isDark
+                                ? 'bg-amber-950/20 border-amber-500/30'
+                                : 'bg-amber-50/50 border-amber-200'
+                            }`}
+                          >
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span
+                                  className={`px-2 py-0.5 rounded font-mono font-bold text-[10px] ${
+                                    isPositive
+                                      ? 'bg-emerald-500/20 text-emerald-500 dark:text-emerald-400 border border-emerald-500/30'
+                                      : 'bg-amber-500/20 text-amber-500 dark:text-amber-400 border border-amber-500/30'
+                                  }`}
+                                >
+                                  {isPositive ? `+${entry.points} Points` : `${entry.points} Points`}
+                                </span>
+                                <span className={`font-bold text-sm ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                                  {entry.title}
+                                </span>
+                                <span className="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-400 font-semibold">
+                                  {entry.category}
+                                </span>
+                              </div>
+
+                              <div className="flex items-center gap-2 text-slate-400 text-[11px] font-mono shrink-0">
+                                <Calendar className="w-3 h-3 text-slate-500" />
+                                <span>{entry.date} ({entry.dateBs} BS)</span>
+                              </div>
+                            </div>
+
+                            <p className={`mt-2 leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+                              {entry.description}
+                            </p>
+
+                            <div
+                              className={`mt-3 pt-2.5 border-t flex items-center justify-between text-[11px] ${
+                                isDark ? 'border-slate-800 text-slate-400' : 'border-slate-100 text-slate-500'
+                              }`}
+                            >
+                              <span>
+                                Awarded By: <strong className={isDark ? 'text-slate-300' : 'text-slate-800'}>{entry.awardedBy}</strong>
+                              </span>
+                              <span className="font-semibold text-emerald-500">
+                                ✓ {entry.status}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -1619,7 +2072,7 @@ const StudentPortal = () => {
               <h2 className="text-xl font-bold font-serif-brand tracking-wider">{branding.name}</h2>
               <p className="text-xs text-slate-400">Jorpati Oralo, Gokarneshwor-05, Kathmandu, Nepal</p>
               <div className="inline-block mt-2 px-3 py-1 rounded-full bg-amber-500/10 text-amber-500 font-bold text-xs uppercase tracking-wider border border-amber-500/30">
-                Official Academic Grade Sheet • {reportCard.examName}
+                Official Academic Grade Sheet • {activeTermResult?.termName || reportCard.examName}
               </div>
             </div>
 
@@ -1648,20 +2101,20 @@ const StudentPortal = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
-                {reportCard.subjects.map((s) => (
+                {(activeTermResult?.subjects || reportCard.subjects).map((s) => (
                   <tr key={s.code}>
                     <td className="p-2 font-medium">{s.name}</td>
-                    <td className="p-2 text-center font-mono font-bold">{s.totalObtained}</td>
+                    <td className="p-2 text-center font-mono font-bold">{s.total ?? s.totalObtained}</td>
                     <td className="p-2 text-center font-bold text-emerald-500">{s.grade}</td>
-                    <td className="p-2 text-center font-mono">{s.gpa.toFixed(1)}</td>
+                    <td className="p-2 text-center font-mono">{Number(s.gpa).toFixed(1)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
 
             <div className="flex items-center justify-between p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs font-bold mb-6">
-              <span>Overall GPA: {reportCard.gpa} ({reportCard.overallGrade})</span>
-              <span>Class Rank: {reportCard.rank}</span>
+              <span>Overall GPA: {activeTermResult?.gpa?.toFixed(2) || reportCard.gpa} ({activeTermResult?.overallGrade || reportCard.overallGrade})</span>
+              <span>Class Rank: #{activeTermResult?.rank || reportCard.rank} of {activeTermResult?.classTotal || 36}</span>
             </div>
 
             <div className="flex items-center gap-3">

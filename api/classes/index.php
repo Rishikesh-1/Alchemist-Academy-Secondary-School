@@ -302,6 +302,105 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             jsonResponse(true, "Section {$sectionName} added to class.");
         }
 
+        if ($action === 'delete_section') {
+            $sectionId = (int)($input['id'] ?? 0);
+            $classId   = (int)($input['class_id'] ?? 0);
+
+            if ($sectionId <= 0 && $classId <= 0) {
+                jsonResponse(false, 'Valid section ID or class ID required.', null, 400);
+            }
+
+            // Check how many sections exist for this class
+            if ($classId > 0) {
+                $countStmt = $pdo->prepare("SELECT COUNT(*) FROM sections WHERE class_id = :cid AND school_id = :sid");
+                $countStmt->execute([':cid' => $classId, ':sid' => $schoolId]);
+                $secCount = (int)$countStmt->fetchColumn();
+                if ($secCount <= 1) {
+                    jsonResponse(false, 'Cannot delete the only remaining section. A class must have at least one section.', null, 400);
+                }
+            }
+
+            // Find section to be deleted
+            $secStmt = $pdo->prepare("SELECT * FROM sections WHERE id = :id AND school_id = :sid LIMIT 1");
+            $secStmt->execute([':id' => $sectionId, ':sid' => $schoolId]);
+            $sec = $secStmt->fetch();
+
+            if ($sec) {
+                // Find fallback section for reassigning students if any
+                $fallbackStmt = $pdo->prepare("SELECT name FROM sections WHERE class_id = :cid AND id != :id AND school_id = :sid ORDER BY id ASC LIMIT 1");
+                $fallbackStmt->execute([':cid' => $sec['class_id'], ':id' => $sectionId, ':sid' => $schoolId]);
+                $fallbackSecName = (string)$fallbackStmt->fetchColumn() ?: 'Section A';
+
+                // Reassign any students with this section name
+                $updStmt = $pdo->prepare("UPDATE students SET section = :new_sec WHERE class_id = :cid AND section = :old_sec AND school_id = :sid");
+                $updStmt->execute([
+                    ':new_sec' => $fallbackSecName,
+                    ':cid'     => $sec['class_id'],
+                    ':old_sec' => $sec['name'],
+                    ':sid'     => $schoolId,
+                ]);
+
+                // Delete section
+                $delStmt = $pdo->prepare("DELETE FROM sections WHERE id = :id AND school_id = :sid");
+                $delStmt->execute([':id' => $sectionId, ':sid' => $schoolId]);
+            }
+
+            jsonResponse(true, 'Section deleted successfully.');
+        }
+
+        if ($action === 'update_section') {
+            $sectionId      = (int)($input['id'] ?? 0);
+            $newName        = trim((string)($input['name'] ?? ''));
+            $roomNo         = trim((string)($input['room_no'] ?? ''));
+            $capacity       = max(10, (int)($input['capacity'] ?? 40));
+            $classTeacherId = !empty($input['class_teacher_id']) && (int)$input['class_teacher_id'] > 0 ? (int)$input['class_teacher_id'] : null;
+
+            if ($sectionId <= 0 || empty($newName)) {
+                jsonResponse(false, 'Valid section ID and name are required.', null, 400);
+            }
+
+            // Get current section details
+            $secStmt = $pdo->prepare("SELECT * FROM sections WHERE id = :id AND school_id = :sid LIMIT 1");
+            $secStmt->execute([':id' => $sectionId, ':sid' => $schoolId]);
+            $currentSec = $secStmt->fetch();
+
+            if (!$currentSec) {
+                jsonResponse(false, 'Section not found.', null, 404);
+            }
+
+            // If name changed, update students assigned to old section
+            if ($currentSec['name'] !== $newName) {
+                $updStudents = $pdo->prepare("
+                    UPDATE students 
+                    SET section = :new_name 
+                    WHERE class_id = :cid AND section = :old_name AND school_id = :sid
+                ");
+                $updStudents->execute([
+                    ':new_name' => $newName,
+                    ':cid'      => $currentSec['class_id'],
+                    ':old_name' => $currentSec['name'],
+                    ':sid'      => $schoolId,
+                ]);
+            }
+
+            // Update section
+            $updSec = $pdo->prepare("
+                UPDATE sections 
+                SET name = :name, room_no = :room_no, capacity = :capacity, class_teacher_id = :teacher_id 
+                WHERE id = :id AND school_id = :sid
+            ");
+            $updSec->execute([
+                ':name'       => $newName,
+                ':room_no'    => $roomNo,
+                ':capacity'   => $capacity,
+                ':teacher_id' => $classTeacherId,
+                ':id'         => $sectionId,
+                ':sid'        => $schoolId,
+            ]);
+
+            jsonResponse(true, "Section {$newName} updated successfully.");
+        }
+
         jsonResponse(false, 'Invalid action specified.', null, 400);
     } catch (PDOException $e) {
         jsonResponse(false, 'Database operation error: ' . $e->getMessage(), null, 500);

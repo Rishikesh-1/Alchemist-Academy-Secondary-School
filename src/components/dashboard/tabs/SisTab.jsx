@@ -40,6 +40,8 @@ import {
   createAcademicClass,
   updateAcademicClass,
   addClassSection,
+  updateClassSection,
+  deleteClassSection,
   deleteAcademicClass,
 } from '../../../services/api';
 import { formatDualDate, toNepaliNumerals } from '../../../utils/nepaliCalendar';
@@ -47,6 +49,7 @@ import { getTranslation } from '../../../utils/translations';
 import { useAuth } from '../../../context/AuthContext';
 import ImageFieldWithPicker from '../../ImageFieldWithPicker';
 import MediaPickerModal from '../../MediaPickerModal';
+import { generateDefaultSchoolStudents, DEFAULT_GRADE_10_STUDENTS } from '../../../data/mockStudentDirectory';
 
 const SisTab = ({ isDark, onSelectStudentForID, classRoster = [] }) => {
   const { lang, currentBranch } = useAuth();
@@ -58,6 +61,7 @@ const SisTab = ({ isDark, onSelectStudentForID, classRoster = [] }) => {
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [selectedClass, setSelectedClass] = useState('all');
+  const [selectedSection, setSelectedSection] = useState('all');
 
   // Modals state
   const [showAddModal, setShowAddModal] = useState(false);
@@ -74,6 +78,7 @@ const SisTab = ({ isDark, onSelectStudentForID, classRoster = [] }) => {
   const [showAddClassModal, setShowAddClassModal] = useState(false);
   const [showEditClassModal, setShowEditClassModal] = useState(false);
   const [showAddSectionModal, setShowAddSectionModal] = useState(false);
+  const [showEditSectionModal, setShowEditSectionModal] = useState(false);
 
   const [classForm, setClassForm] = useState({
     id: null,
@@ -95,11 +100,23 @@ const SisTab = ({ isDark, onSelectStudentForID, classRoster = [] }) => {
     capacity: 40,
   });
 
+  const [sectionEditForm, setSectionEditForm] = useState({
+    id: null,
+    class_id: null,
+    class_name: '',
+    name: '',
+    old_name: '',
+    room_no: '',
+    class_teacher_id: '',
+    capacity: 40,
+  });
+
   // Forms
   const [addForm, setAddForm] = useState({
     first_name: '',
     last_name: '',
     class_id: '',
+    section: 'Section A',
     roll_no: '',
     admission_no: '',
     gender: 'male',
@@ -117,6 +134,7 @@ const SisTab = ({ isDark, onSelectStudentForID, classRoster = [] }) => {
     first_name: '',
     last_name: '',
     class_id: '',
+    section: 'Section A',
     roll_no: '',
     admission_no: '',
     gender: 'male',
@@ -127,7 +145,6 @@ const SisTab = ({ isDark, onSelectStudentForID, classRoster = [] }) => {
     guardian_email: '',
     address: 'Kathmandu, Nepal',
     photo_url: '',
-    status: 'active',
   });
 
   const [csvText, setCsvText] = useState(
@@ -148,6 +165,51 @@ const SisTab = ({ isDark, onSelectStudentForID, classRoster = [] }) => {
 
   const CLASSES_STORAGE_KEY = 'alchemist_sms_classes_cache_v1';
   const STUDENTS_STORAGE_KEY = 'alchemist_sms_students_cache_v1';
+  const HR_STORAGE_KEY = 'alchemist_sms_hr_data_cache_v1';
+
+  const defaultTeachers = [
+    { id: 1, name: 'RJ Rana', email: 'rj.rana@alchemist.edu.np', department: 'Mathematics' },
+    { id: 2, name: 'Dr. K. Acharya', email: 'k.acharya@alchemist.edu.np', department: 'Science' },
+    { id: 3, name: 'Suman Shrestha', email: 'suman@alchemist.edu.np', department: 'English' },
+    { id: 4, name: 'Pooja Thapa', email: 'pooja@alchemist.edu.np', department: 'Computer Science' },
+    { id: 5, name: 'Bikram Karki', email: 'bikram.k@alchemist.edu.np', department: 'Social Studies & Civics' },
+  ];
+
+  const getStoredHrTeachers = () => {
+    try {
+      const raw = localStorage.getItem(HR_STORAGE_KEY);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      const list = parsed.staff_directory || [];
+      return list
+        .filter((m) => {
+          const role = (m.role_name || '').toLowerCase();
+          const dept = (m.department || '').toLowerCase();
+          return role === 'teacher' || role === 'principal' || dept.includes('teach') || dept.includes('academic');
+        })
+        .map((m) => ({
+          id: m.id,
+          name: m.name,
+          email: m.email,
+          department: m.department || (m.role_name === 'principal' ? 'Administration' : 'Academics & Teaching'),
+        }));
+    } catch (e) {
+      return [];
+    }
+  };
+
+  const refreshTeachersList = (extraTeachers = []) => {
+    const hrTeachers = getStoredHrTeachers();
+    const map = new Map();
+
+    defaultTeachers.forEach((t) => map.set(String(t.name).trim().toLowerCase(), t));
+    hrTeachers.forEach((t) => map.set(String(t.name).trim().toLowerCase(), t));
+    extraTeachers.forEach((t) => map.set(String(t.name).trim().toLowerCase(), t));
+
+    const merged = Array.from(map.values());
+    setTeachersList(merged);
+    return merged;
+  };
 
   const getStoredClasses = () => {
     try {
@@ -202,11 +264,35 @@ const SisTab = ({ isDark, onSelectStudentForID, classRoster = [] }) => {
       console.warn('Backend students unavailable, using local defaults:', e);
     }
 
-    if (cachedStudents && cachedStudents.length > 0) {
-      setStudents(cachedStudents);
+    // Verify that cached students exist and include the complete Grade 10 roster (36 students)
+    const grade10StudentsCount = (cachedStudents || []).filter(
+      (s) => String(s.class_id) === '1' || (s.class_name && s.class_name.toLowerCase().includes('10')) || (s.grade && s.grade.toLowerCase().includes('10'))
+    ).length;
+
+    if (cachedStudents && cachedStudents.length >= 36 && grade10StudentsCount >= 36) {
+      // Ensure all records have normalized fields for class_id, class_name, section, photo_url
+      const normalized = cachedStudents.map((s, idx) => ({
+        ...s,
+        id: s.id || idx + 1,
+        class_id: s.class_id || (s.class_name?.includes('10') ? 1 : s.class_name?.includes('9') ? 2 : 1),
+        class_name: s.class_name || (String(s.class_id) === '1' ? 'Grade 10' : String(s.class_id) === '2' ? 'Grade 9' : 'Grade 10'),
+        grade: s.grade || s.class_name || (String(s.class_id) === '1' ? 'Grade 10' : 'Grade 10'),
+        section: s.section || s.section_name || 'Section A',
+        section_name: s.section_name || s.section || 'Section A',
+        roll_no: s.roll_no || s.rollNo || idx + 1,
+        photo_url: s.photo_url || s.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(s.name || s.first_name || 'Student')}&background=0D9488&color=fff&size=250&bold=true`,
+      }));
+      setStudents(normalized);
+      saveStudentsToStorage(normalized);
     } else {
-      setStudents(classRoster || []);
-      saveStudentsToStorage(classRoster || []);
+      const defaultRoster = generateDefaultSchoolStudents();
+      // Keep any user-added students
+      const userAdded = (cachedStudents || []).filter(
+        (s) => s.is_user_added || (s.id && !defaultRoster.some((d) => String(d.id) === String(s.id) || String(d.admission_no) === String(s.admission_no)))
+      );
+      const combined = [...defaultRoster, ...userAdded];
+      setStudents(combined);
+      saveStudentsToStorage(combined);
     }
     setLoading(false);
   };
@@ -265,22 +351,17 @@ const SisTab = ({ isDark, onSelectStudentForID, classRoster = [] }) => {
       },
     ];
 
-    const defaultTeachers = [
-      { id: 1, name: 'RJ Rana', email: 'rj.rana@alchemist.edu.np', department: 'Mathematics' },
-      { id: 2, name: 'Dr. K. Acharya', email: 'k.acharya@alchemist.edu.np', department: 'Science' },
-      { id: 3, name: 'Suman Shrestha', email: 'suman@alchemist.edu.np', department: 'English' },
-      { id: 4, name: 'Pooja Thapa', email: 'pooja@alchemist.edu.np', department: 'Computer Science' },
-    ];
-
     const cachedClasses = getStoredClasses();
+    let backendTeachers = [];
 
     try {
       const res = await fetchClassesOverview(currentBranch?.id || 1);
       if (res && res.success && res.data?.classes && res.data.classes.length > 0) {
         setClassesOverview(res.data.classes);
         saveClassesToStorage(res.data.classes);
-        if (res.data.teachers) setTeachersList(res.data.teachers);
+        if (res.data.teachers) backendTeachers = res.data.teachers;
         setClasses(res.data.classes);
+        refreshTeachersList(backendTeachers);
         return;
       }
     } catch (e) {
@@ -295,12 +376,22 @@ const SisTab = ({ isDark, onSelectStudentForID, classRoster = [] }) => {
       setClasses(defaultClasses);
       saveClassesToStorage(defaultClasses);
     }
-    setTeachersList(defaultTeachers);
+    refreshTeachersList(backendTeachers);
   };
 
   useEffect(() => {
     loadData();
     loadClassesData();
+
+    const handleStaffUpdate = () => {
+      refreshTeachersList();
+    };
+    window.addEventListener('storage', handleStaffUpdate);
+    window.addEventListener('alchemist_sms_staff_updated', handleStaffUpdate);
+    return () => {
+      window.removeEventListener('storage', handleStaffUpdate);
+      window.removeEventListener('alchemist_sms_staff_updated', handleStaffUpdate);
+    };
   }, [currentBranch?.id, selectedClass]);
 
   const handleSearchSubmit = (e) => {
@@ -322,7 +413,8 @@ const SisTab = ({ isDark, onSelectStudentForID, classRoster = [] }) => {
     }
 
     const newStudentId = `STU-2026-${1000 + students.length + 1}`;
-    const selectedCls = classes.find((c) => String(c.id) === String(addForm.class_id));
+    const selectedCls = classesOverview.find((c) => String(c.id) === String(addForm.class_id)) ||
+                        classes.find((c) => String(c.id) === String(addForm.class_id));
     const newStudent = {
       id: newStudentId,
       name: `${addForm.first_name} ${addForm.last_name}`.trim(),
@@ -331,7 +423,7 @@ const SisTab = ({ isDark, onSelectStudentForID, classRoster = [] }) => {
       class_id: addForm.class_id,
       class_name: selectedCls ? selectedCls.name : 'Grade 10',
       grade: selectedCls ? selectedCls.name : 'Grade 10',
-      section: 'Section A',
+      section: addForm.section || 'Section A',
       roll_no: parseInt(addForm.roll_no) || (students.length + 1),
       rollNo: parseInt(addForm.roll_no) || (students.length + 1),
       admission_no: addForm.admission_no || `AA-2026-${1000 + students.length + 1}`,
@@ -352,11 +444,54 @@ const SisTab = ({ isDark, onSelectStudentForID, classRoster = [] }) => {
     const updatedStudents = [newStudent, ...students];
     setStudents(updatedStudents);
     saveStudentsToStorage(updatedStudents);
+
+    // Keep class card student count in sync in classesOverview and storage
+    if (selectedCls) {
+      const updatedOverview = classesOverview.map((c) => {
+        if (String(c.id) === String(selectedCls.id)) {
+          return {
+            ...c,
+            student_count: (parseInt(c.student_count) || 0) + 1,
+          };
+        }
+        return c;
+      });
+      setClassesOverview(updatedOverview);
+      setClasses(updatedOverview);
+      saveClassesToStorage(updatedOverview);
+    }
+
     setShowAddModal(false);
     setActionMessage({
       type: 'success',
-      text: `Student "${newStudent.name}" enrolled successfully!${backendSuccess ? '' : ' (Saved locally)'}`,
+      text: `Student "${newStudent.name}" enrolled in ${selectedCls ? selectedCls.name : 'class'} (${newStudent.section}) successfully!${backendSuccess ? '' : ' (Saved locally)'}`,
     });
+  };
+
+  const handleOpenAddModal = () => {
+    const defaultClassId = selectedClass !== 'all' ? selectedClass : (classes[0]?.id || '');
+    const selCls = classesOverview.find((c) => String(c.id) === String(defaultClassId));
+    const defaultSection = selectedSection !== 'all'
+      ? selectedSection
+      : (selCls?.sections?.[0]?.name || 'Section A');
+
+    setAddForm({
+      first_name: '',
+      last_name: '',
+      class_id: defaultClassId,
+      section: defaultSection,
+      roll_no: '',
+      admission_no: `AA-2026-${1000 + students.length + 1}`,
+      gender: 'male',
+      dob_ad: '2010-05-15',
+      dob_bs: '2067-02-01',
+      guardian_name: '',
+      guardian_phone: '',
+      guardian_email: '',
+      address: 'Kathmandu, Nepal',
+      photo_url: '',
+    });
+    setShowAddModal(true);
   };
 
   // Open Edit Modal with Pre-filled Student Details
@@ -368,6 +503,7 @@ const SisTab = ({ isDark, onSelectStudentForID, classRoster = [] }) => {
       first_name: st.first_name || nameParts[0] || '',
       last_name: st.last_name || nameParts.slice(1).join(' ') || '',
       class_id: st.class_id || (classes[0]?.id || 1),
+      section: st.section || st.section_name || 'Section A',
       roll_no: st.roll_no || st.rollNo || 1,
       admission_no: st.admission_no || st.admissionNo || '',
       gender: st.gender || 'male',
@@ -396,15 +532,18 @@ const SisTab = ({ isDark, onSelectStudentForID, classRoster = [] }) => {
       console.warn('Backend updateStudent unavailable, using local store:', err);
     }
 
-    const selectedCls = classes.find((c) => String(c.id) === String(editForm.class_id));
+    const selectedCls = classesOverview.find((c) => String(c.id) === String(editForm.class_id)) ||
+                        classes.find((c) => String(c.id) === String(editForm.class_id));
     const updatedStudents = students.map((s) => {
       if (s.id === editForm.id) {
         return {
           ...s,
           ...editForm,
           name: `${editForm.first_name} ${editForm.last_name}`.trim(),
+          class_id: editForm.class_id,
           class_name: selectedCls ? selectedCls.name : s.class_name,
           grade: selectedCls ? selectedCls.name : s.grade,
+          section: editForm.section || s.section || 'Section A',
         };
       }
       return s;
@@ -414,7 +553,13 @@ const SisTab = ({ isDark, onSelectStudentForID, classRoster = [] }) => {
     saveStudentsToStorage(updatedStudents);
     setShowEditModal(false);
     if (selectedProfile && selectedProfile.id === editForm.id) {
-      setSelectedProfile({ ...selectedProfile, ...editForm, name: `${editForm.first_name} ${editForm.last_name}`.trim() });
+      setSelectedProfile({
+        ...selectedProfile,
+        ...editForm,
+        name: `${editForm.first_name} ${editForm.last_name}`.trim(),
+        class_name: selectedCls ? selectedCls.name : selectedProfile.class_name,
+        section: editForm.section || selectedProfile.section || 'Section A',
+      });
     }
     setActionMessage({
       type: 'success',
@@ -557,6 +702,7 @@ const SisTab = ({ isDark, onSelectStudentForID, classRoster = [] }) => {
   };
 
   const handleOpenEditClass = (cls) => {
+    refreshTeachersList();
     setClassForm({
       id: cls.id,
       name: cls.name || '',
@@ -619,6 +765,7 @@ const SisTab = ({ isDark, onSelectStudentForID, classRoster = [] }) => {
   };
 
   const handleOpenAddSection = (cls) => {
+    refreshTeachersList();
     const secCount = cls.sections ? cls.sections.length : 0;
     const nextLetter = String.fromCharCode(65 + secCount);
     setSectionForm({
@@ -673,6 +820,179 @@ const SisTab = ({ isDark, onSelectStudentForID, classRoster = [] }) => {
     });
   };
 
+  const handleOpenEditSection = (cls, sec) => {
+    refreshTeachersList();
+    const teacherObj = teachersList.find(
+      (t) => t.name === sec.class_teacher_name || String(t.id) === String(sec.class_teacher_id)
+    );
+    setSectionEditForm({
+      id: sec.id,
+      class_id: cls.id,
+      class_name: cls.name,
+      name: sec.name || '',
+      old_name: sec.name || '',
+      room_no: sec.room_no || '',
+      class_teacher_id: teacherObj ? teacherObj.id : (sec.class_teacher_id || ''),
+      capacity: sec.capacity || 40,
+    });
+    setShowEditSectionModal(true);
+  };
+
+  const handleSaveEditSection = async (e) => {
+    e.preventDefault();
+    let backendSuccess = false;
+    try {
+      const res = await updateClassSection(sectionEditForm);
+      if (res && res.success) {
+        backendSuccess = true;
+      }
+    } catch (err) {
+      console.warn('Backend API updateClassSection failed, updating local store:', err);
+    }
+
+    const teacherObj = teachersList.find((t) => String(t.id) === String(sectionEditForm.class_teacher_id));
+    const newName = sectionEditForm.name.trim();
+    const oldName = sectionEditForm.old_name.trim();
+
+    // 1. Update section in classesOverview & storage
+    const updatedClasses = classesOverview.map((cls) => {
+      if (cls.id === sectionEditForm.class_id) {
+        const updatedSections = (cls.sections || []).map((sec) => {
+          if (sec.id === sectionEditForm.id || sec.name === oldName) {
+            return {
+              ...sec,
+              name: newName,
+              room_no: sectionEditForm.room_no,
+              capacity: parseInt(sectionEditForm.capacity) || 40,
+              class_teacher_name: teacherObj ? teacherObj.name : (sec.class_teacher_name || 'Unassigned'),
+              class_teacher_id: teacherObj ? teacherObj.id : null,
+            };
+          }
+          return sec;
+        });
+        const newCap = updatedSections.reduce((sum, s) => sum + (parseInt(s.capacity) || 40), 0);
+        return {
+          ...cls,
+          sections: updatedSections,
+          total_capacity: newCap,
+        };
+      }
+      return cls;
+    });
+
+    setClassesOverview(updatedClasses);
+    setClasses(updatedClasses);
+    saveClassesToStorage(updatedClasses);
+
+    // 2. If name changed, update any students currently assigned to this section
+    if (newName !== oldName) {
+      const updatedStudents = students.map((s) => {
+        const matchId = String(s.class_id) === String(sectionEditForm.class_id);
+        const matchName =
+          (s.class_name || s.grade || '').trim().toLowerCase() === (sectionEditForm.class_name || '').trim().toLowerCase();
+        const stSec = (s.section || s.section_name || 'Section A').trim().toLowerCase();
+        if ((matchId || matchName) && stSec === oldName.toLowerCase()) {
+          return {
+            ...s,
+            section: newName,
+          };
+        }
+        return s;
+      });
+      setStudents(updatedStudents);
+      saveStudentsToStorage(updatedStudents);
+
+      // Also update selectedSection if it was the old section name
+      if (selectedSection.trim().toLowerCase() === oldName.toLowerCase()) {
+        setSelectedSection(newName);
+      }
+    }
+
+    setShowEditSectionModal(false);
+    setActionMessage({
+      type: 'success',
+      text: `Section "${newName}" in ${sectionEditForm.class_name} updated successfully!${backendSuccess ? '' : ' (Saved to local workspace)'}`,
+    });
+  };
+
+  const handleDeleteSection = async (cls, sec) => {
+    if (!cls || !sec) return;
+
+    if (!cls.sections || cls.sections.length <= 1) {
+      alert(`Cannot delete "${sec.name}". A class must maintain at least one active section.`);
+      return;
+    }
+
+    // Count students enrolled in this section
+    const affectedStudents = students.filter((s) => {
+      const matchId = String(s.class_id) === String(cls.id);
+      const matchName = (s.class_name || s.grade || '').trim().toLowerCase() === cls.name.trim().toLowerCase();
+      const stSec = (s.section || s.section_name || 'Section A').trim().toLowerCase();
+      return (matchId || matchName) && stSec === sec.name.trim().toLowerCase();
+    });
+
+    const fallbackSection = cls.sections.find((s) => s.id !== sec.id && s.name !== sec.name) || { name: 'Section A' };
+
+    const confirmMsg = affectedStudents.length > 0
+      ? `Are you sure you want to delete "${sec.name}" from ${cls.name}?\n\n${affectedStudents.length} student(s) currently enrolled in this section will be automatically reassigned to "${fallbackSection.name}".`
+      : `Are you sure you want to delete "${sec.name}" from ${cls.name}?`;
+
+    if (!window.confirm(confirmMsg)) {
+      return;
+    }
+
+    try {
+      await deleteClassSection(sec.id, cls.id);
+    } catch (err) {
+      console.warn('Backend API deleteClassSection failed, updating local store:', err);
+    }
+
+    // 1. Remove section from class in classesOverview & storage
+    const updatedClasses = classesOverview.map((c) => {
+      if (c.id === cls.id) {
+        const remainingSections = (c.sections || []).filter((s) => s.id !== sec.id && s.name !== sec.name);
+        const newCap = remainingSections.reduce((sum, s) => sum + (parseInt(s.capacity) || 40), 0);
+        return {
+          ...c,
+          sections: remainingSections,
+          total_capacity: newCap > 0 ? newCap : 40,
+        };
+      }
+      return c;
+    });
+    setClassesOverview(updatedClasses);
+    setClasses(updatedClasses);
+    saveClassesToStorage(updatedClasses);
+
+    // 2. Reassign affected students to fallback section
+    if (affectedStudents.length > 0) {
+      const updatedStudents = students.map((s) => {
+        const matchId = String(s.class_id) === String(cls.id);
+        const matchName = (s.class_name || s.grade || '').trim().toLowerCase() === cls.name.trim().toLowerCase();
+        const stSec = (s.section || s.section_name || 'Section A').trim().toLowerCase();
+        if ((matchId || matchName) && stSec === sec.name.trim().toLowerCase()) {
+          return {
+            ...s,
+            section: fallbackSection.name,
+          };
+        }
+        return s;
+      });
+      setStudents(updatedStudents);
+      saveStudentsToStorage(updatedStudents);
+    }
+
+    // 3. Reset selectedSection if currently selected
+    if (selectedSection.trim().toLowerCase() === sec.name.trim().toLowerCase()) {
+      setSelectedSection('all');
+    }
+
+    setActionMessage({
+      type: 'success',
+      text: `Section "${sec.name}" removed from ${cls.name}.${affectedStudents.length > 0 ? ` ${affectedStudents.length} student(s) moved to ${fallbackSection.name}.` : ''}`,
+    });
+  };
+
   const handleDeleteClass = async (classId, className) => {
     if (!window.confirm(`Are you sure you want to remove "${className}"? If there are active students enrolled, they must be reassigned first.`)) {
       return;
@@ -715,10 +1035,59 @@ const SisTab = ({ isDark, onSelectStudentForID, classRoster = [] }) => {
     }
   };
 
-  const handleViewStudentsForClass = (classId) => {
+  const handleViewStudentsForClass = (classId, sectionName = 'all') => {
     setSelectedClass(String(classId));
+    setSelectedSection(sectionName);
     setActiveSubView('students');
   };
+
+  // Dynamic Filtered Students for the directory table
+  const filteredStudents = students.filter((st) => {
+    // 1. Class filter
+    if (selectedClass !== 'all') {
+      const targetClass = classesOverview.find((c) => String(c.id) === String(selectedClass)) ||
+                          classes.find((c) => String(c.id) === String(selectedClass));
+      const matchId = String(st.class_id) === String(selectedClass);
+      const targetName = (targetClass?.name || '').trim().toLowerCase();
+      const stClassName = (st.class_name || '').trim().toLowerCase();
+      const stGrade = (st.grade || '').trim().toLowerCase();
+      const matchName = targetName && (
+        stClassName === targetName ||
+        stGrade === targetName ||
+        stClassName.includes(targetName) ||
+        targetName.includes(stClassName)
+      );
+      const matchNumber =
+        (String(selectedClass) === '1' && (stClassName.includes('10') || stGrade.includes('10') || String(st.class_id) === '1')) ||
+        (String(selectedClass) === '2' && (stClassName.includes('9') || stGrade.includes('9') || String(st.class_id) === '2')) ||
+        (String(selectedClass) === '3' && (stClassName.includes('11') || stGrade.includes('11') || String(st.class_id) === '3')) ||
+        (String(selectedClass) === '4' && (stClassName.includes('12') || stGrade.includes('12') || String(st.class_id) === '4'));
+
+      if (!matchId && !matchName && !matchNumber) return false;
+    }
+
+    // 2. Section filter
+    if (selectedSection !== 'all') {
+      const stSec = (st.section || st.section_name || 'Section A').trim().toLowerCase();
+      const selSec = selectedSection.trim().toLowerCase();
+      const matchExact = stSec === selSec;
+      const cleanStSec = stSec.replace(/[^a-z0-9]/g, '');
+      const cleanSelSec = selSec.replace(/[^a-z0-9]/g, '');
+      const matchClean = cleanStSec === cleanSelSec || stSec.includes(cleanSelSec) || selSec.includes(cleanStSec);
+      if (!matchExact && !matchClean) return false;
+    }
+
+    // 3. Search query
+    if (search.trim()) {
+      const q = search.trim().toLowerCase();
+      const name = (st.first_name ? `${st.first_name} ${st.last_name || ''}` : st.name || '').toLowerCase();
+      const roll = String(st.roll_no || st.rollNumber || '');
+      const adm = String(st.admission_no || st.studentId || '').toLowerCase();
+      if (!name.includes(q) && !roll.includes(q) && !adm.includes(q)) return false;
+    }
+
+    return true;
+  });
 
   return (
     <div className="space-y-6">
@@ -793,6 +1162,7 @@ const SisTab = ({ isDark, onSelectStudentForID, classRoster = [] }) => {
           <button
             type="button"
             onClick={() => {
+              const freshTeachers = refreshTeachersList();
               setClassForm({
                 id: null,
                 name: '',
@@ -800,7 +1170,7 @@ const SisTab = ({ isDark, onSelectStudentForID, classRoster = [] }) => {
                 order_index: (classesOverview.length || 0) + 1,
                 section_name: 'Section A',
                 room_no: `Room ${100 + ((classesOverview.length || 0) + 1) * 2}`,
-                class_teacher_id: teachersList[0]?.id || '',
+                class_teacher_id: freshTeachers[0]?.id || '',
                 capacity: 40,
               });
               setShowAddClassModal(true);
@@ -839,7 +1209,7 @@ const SisTab = ({ isDark, onSelectStudentForID, classRoster = [] }) => {
             <div className={`p-4 rounded-2xl border ${isDark ? 'bg-slate-900/60 border-slate-800' : 'bg-white border-slate-200 shadow-sm'}`}>
               <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">{lang === 'ne' ? 'भर्ना भएका विद्यार्थी' : 'Total Enrolled'}</div>
               <div className="text-2xl font-black text-indigo-500 mt-1">
-                {classesOverview.reduce((sum, c) => sum + (parseInt(c.student_count) || 0), 0) || students.length}
+                {students.length > 0 ? students.length : classesOverview.reduce((sum, c) => sum + (parseInt(c.student_count) || 0), 0)}
               </div>
               <div className="text-[10px] text-indigo-600 dark:text-indigo-300 mt-1 flex items-center gap-1 font-medium">
                 <Users className="w-3 h-3" /> Active students
@@ -850,7 +1220,7 @@ const SisTab = ({ isDark, onSelectStudentForID, classRoster = [] }) => {
               <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">{lang === 'ne' ? 'औसत क्षमता' : 'Avg Capacity'}</div>
               <div className="text-2xl font-black text-amber-500 mt-1">
                 {(() => {
-                  const totalStudents = classesOverview.reduce((sum, c) => sum + (parseInt(c.student_count) || 0), 0);
+                  const totalStudents = students.length > 0 ? students.length : classesOverview.reduce((sum, c) => sum + (parseInt(c.student_count) || 0), 0);
                   const totalCap = classesOverview.reduce((sum, c) => sum + (parseInt(c.total_capacity) || 40), 0);
                   return totalCap > 0 ? `${Math.round((totalStudents / totalCap) * 100)}%` : '0%';
                 })()}
@@ -880,7 +1250,13 @@ const SisTab = ({ isDark, onSelectStudentForID, classRoster = [] }) => {
               </div>
             ) : (
               classesOverview.map((cls) => {
-                const studentCount = parseInt(cls.student_count) || 0;
+                const enrolledList = students.filter((s) =>
+                  String(s.class_id) === String(cls.id) ||
+                  (s.class_name && cls.name && s.class_name.trim().toLowerCase() === cls.name.trim().toLowerCase()) ||
+                  (s.grade && cls.name && s.grade.trim().toLowerCase() === cls.name.trim().toLowerCase())
+                );
+                const dynamicCount = enrolledList.length;
+                const studentCount = dynamicCount > 0 ? dynamicCount : (parseInt(cls.student_count) || 0);
                 const capacity = parseInt(cls.total_capacity) || 40;
                 const pct = Math.min(100, Math.round((studentCount / capacity) * 100));
                 const barColor = pct >= 90 ? 'bg-rose-500' : pct >= 75 ? 'bg-amber-500' : 'bg-emerald-500';
@@ -1012,21 +1388,73 @@ const SisTab = ({ isDark, onSelectStudentForID, classRoster = [] }) => {
 
                         <div className="flex flex-wrap gap-1.5">
                           {cls.sections && cls.sections.length > 0 ? (
-                            cls.sections.map((sec) => (
-                              <div
-                                key={sec.id}
-                                className={`px-2.5 py-1 rounded-xl border text-[11px] flex items-center gap-1.5 ${
-                                  isDark ? 'bg-slate-950 border-slate-800/80 text-slate-300' : 'bg-slate-100 border-slate-200 text-slate-700'
-                                }`}
-                              >
-                                <span className={`font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{sec.name}</span>
-                                <span className={`text-[10px] font-mono ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-                                  {sec.room_no || 'TBD'}
-                                </span>
-                              </div>
-                            ))
+                            cls.sections.map((sec) => {
+                              const secCount = enrolledList.filter(
+                                (s) => (s.section || s.section_name || 'Section A').trim().toLowerCase() === sec.name.trim().toLowerCase()
+                              ).length;
+                              return (
+                                <div
+                                  key={sec.id || sec.name}
+                                  className={`px-2.5 py-1 rounded-xl border text-[11px] flex items-center gap-1.5 transition-all ${
+                                    isDark
+                                      ? 'bg-slate-950 border-slate-800/80 text-slate-300'
+                                      : 'bg-slate-100 border-slate-200 text-slate-700'
+                                  }`}
+                                >
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleViewStudentsForClass(cls.id, sec.name);
+                                    }}
+                                    className="flex items-center gap-1.5 hover:text-emerald-500 cursor-pointer"
+                                    title={`Click to view students in ${cls.name} - ${sec.name}`}
+                                  >
+                                    <span className={`font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{sec.name}</span>
+                                    <span className="text-[10px] font-mono text-teal-500 font-bold">({secCount})</span>
+                                    <span className={`text-[9px] font-mono ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                                      {sec.room_no || 'TBD'}
+                                    </span>
+                                  </button>
+
+                                  <div className="flex items-center gap-0.5 ml-1">
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleOpenEditSection(cls, sec);
+                                      }}
+                                      className="p-0.5 rounded text-slate-400 hover:text-amber-400 hover:bg-amber-500/10 cursor-pointer transition-colors"
+                                      title={`Edit / Rename ${sec.name}`}
+                                    >
+                                      <Edit2 className="w-3 h-3" />
+                                    </button>
+
+                                    {cls.sections.length > 1 && (
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleDeleteSection(cls, sec);
+                                        }}
+                                        className="p-0.5 rounded text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 cursor-pointer transition-colors"
+                                        title={`Delete ${sec.name} from ${cls.name}`}
+                                      >
+                                        <Trash2 className="w-3 h-3" />
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })
                           ) : (
-                            <span className="text-[11px] text-slate-400 italic">Section A (Default)</span>
+                            <button
+                              type="button"
+                              onClick={() => handleViewStudentsForClass(cls.id, 'all')}
+                              className="text-[11px] text-teal-400 hover:underline cursor-pointer"
+                            >
+                              Section A (Default) ({studentCount})
+                            </button>
                           )}
                         </div>
                       </div>
@@ -1038,7 +1466,7 @@ const SisTab = ({ isDark, onSelectStudentForID, classRoster = [] }) => {
                     }`}>
                       <button
                         type="button"
-                        onClick={() => handleViewStudentsForClass(cls.id)}
+                        onClick={() => handleViewStudentsForClass(cls.id, 'all')}
                         className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-all shadow cursor-pointer"
                       >
                         <Users className="w-3.5 h-3.5" />
@@ -1086,7 +1514,10 @@ const SisTab = ({ isDark, onSelectStudentForID, classRoster = [] }) => {
 
               <select
                 value={selectedClass}
-                onChange={(e) => setSelectedClass(e.target.value)}
+                onChange={(e) => {
+                  setSelectedClass(e.target.value);
+                  setSelectedSection('all');
+                }}
                 className={`px-3 py-2 rounded-xl text-xs border focus:outline-none focus:border-emerald-500 ${
                   isDark ? 'bg-slate-900 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-800'
                 }`}
@@ -1102,7 +1533,10 @@ const SisTab = ({ isDark, onSelectStudentForID, classRoster = [] }) => {
               {selectedClass !== 'all' && (
                 <button
                   type="button"
-                  onClick={() => setSelectedClass('all')}
+                  onClick={() => {
+                    setSelectedClass('all');
+                    setSelectedSection('all');
+                  }}
                   className="px-2.5 py-1.5 rounded-xl bg-slate-800 text-slate-300 text-xs hover:text-white cursor-pointer"
                 >
                   Clear Filter
@@ -1114,7 +1548,7 @@ const SisTab = ({ isDark, onSelectStudentForID, classRoster = [] }) => {
             <div className="flex items-center gap-2 flex-wrap">
               <button
                 type="button"
-                onClick={() => setShowAddModal(true)}
+                onClick={handleOpenAddModal}
                 className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition-all shadow-sm cursor-pointer"
               >
                 <Plus className="w-4 h-4" />
@@ -1141,6 +1575,104 @@ const SisTab = ({ isDark, onSelectStudentForID, classRoster = [] }) => {
             </div>
           </div>
 
+          {/* Section Filter Pills Bar when a Class is Selected */}
+          {selectedClass !== 'all' && (
+            <div className={`p-3 rounded-2xl border flex flex-wrap items-center gap-2 ${
+              isDark ? 'bg-slate-900/60 border-slate-800' : 'bg-slate-50 border-slate-200'
+            }`}>
+              <div className="flex items-center gap-1.5 text-xs font-bold text-slate-400 mr-2">
+                <Layers className="w-3.5 h-3.5 text-teal-500" />
+                <span>
+                  {(() => {
+                    const target = classesOverview.find((c) => String(c.id) === String(selectedClass)) ||
+                                   classes.find((c) => String(c.id) === String(selectedClass));
+                    return target ? `${target.name} Sections:` : 'Sections:';
+                  })()}
+                </span>
+              </div>
+
+              {/* All Sections Pill */}
+              <button
+                type="button"
+                onClick={() => setSelectedSection('all')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                  selectedSection === 'all'
+                    ? 'bg-emerald-600 text-white shadow-md'
+                    : isDark
+                    ? 'bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700'
+                    : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
+                }`}
+              >
+                <span>All Sections</span>
+                <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
+                  selectedSection === 'all'
+                    ? 'bg-emerald-800 text-white'
+                    : isDark ? 'bg-slate-950 text-slate-400' : 'bg-slate-100 text-slate-600'
+                }`}>
+                  {(() => {
+                    const target = classesOverview.find((c) => String(c.id) === String(selectedClass)) ||
+                                   classes.find((c) => String(c.id) === String(selectedClass));
+                    return students.filter((st) => {
+                      const matchId = String(st.class_id) === String(selectedClass);
+                      const matchName = target && (
+                        (st.class_name || '').trim().toLowerCase() === target.name.trim().toLowerCase() ||
+                        (st.grade || '').trim().toLowerCase() === target.name.trim().toLowerCase()
+                      );
+                      return matchId || matchName;
+                    }).length;
+                  })()}
+                </span>
+              </button>
+
+              {/* Individual Section Pills */}
+              {(() => {
+                const target = classesOverview.find((c) => String(c.id) === String(selectedClass)) ||
+                               classes.find((c) => String(c.id) === String(selectedClass));
+                const secList = (target && target.sections && target.sections.length > 0)
+                  ? target.sections
+                  : [{ id: 'sec-a', name: 'Section A' }];
+
+                return secList.map((sec) => {
+                  const secCount = students.filter((st) => {
+                    const matchId = String(st.class_id) === String(selectedClass);
+                    const matchName = target && (
+                      (st.class_name || '').trim().toLowerCase() === target.name.trim().toLowerCase() ||
+                      (st.grade || '').trim().toLowerCase() === target.name.trim().toLowerCase()
+                    );
+                    const stSec = (st.section || st.section_name || 'Section A').trim().toLowerCase();
+                    return (matchId || matchName) && stSec === sec.name.trim().toLowerCase();
+                  }).length;
+
+                  const isSelected = selectedSection.trim().toLowerCase() === sec.name.trim().toLowerCase();
+
+                  return (
+                    <button
+                      key={sec.id || sec.name}
+                      type="button"
+                      onClick={() => setSelectedSection(sec.name)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                        isSelected
+                          ? 'bg-teal-600 text-white shadow-md'
+                          : isDark
+                          ? 'bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700'
+                          : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
+                      }`}
+                    >
+                      <span>{sec.name}</span>
+                      <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
+                        isSelected
+                          ? 'bg-teal-800 text-white'
+                          : isDark ? 'bg-slate-950 text-slate-400' : 'bg-slate-100 text-slate-600'
+                      }`}>
+                        {secCount}
+                      </span>
+                    </button>
+                  );
+                });
+              })()}
+            </div>
+          )}
+
           {/* Students Table */}
           <div className={`rounded-2xl border overflow-hidden transition-colors ${
             isDark ? 'bg-slate-950 border-slate-800' : 'bg-white border-slate-200 shadow-sm'
@@ -1152,7 +1684,7 @@ const SisTab = ({ isDark, onSelectStudentForID, classRoster = [] }) => {
                     isDark ? 'bg-slate-900/80 text-slate-400 border-slate-800' : 'bg-slate-50 text-slate-600 border-slate-200'
                   }`}>
                     <th className="py-3 px-4">{lang === 'ne' ? 'विद्यार्थी / रोल' : 'Student & Roll'}</th>
-                    <th className="py-3 px-4">{lang === 'ne' ? 'कक्षा / भर्ना नं.' : 'Class & Adm #'}</th>
+                    <th className="py-3 px-4">{lang === 'ne' ? 'कक्षा / सेक्सन / भर्ना नं.' : 'Class, Section & Adm #'}</th>
                     <th className="py-3 px-4">{lang === 'ne' ? 'अभिभावक विवरण' : 'Guardian Details'}</th>
                     <th className="py-3 px-4">{lang === 'ne' ? 'जन्ममिति (AD/BS)' : 'DOB (AD / BS)'}</th>
                     <th className="py-3 px-4">{lang === 'ne' ? 'अवस्था' : 'Status'}</th>
@@ -1160,14 +1692,14 @@ const SisTab = ({ isDark, onSelectStudentForID, classRoster = [] }) => {
                   </tr>
                 </thead>
                 <tbody className={`divide-y ${isDark ? 'divide-slate-800/40' : 'divide-slate-200'}`}>
-                  {students.length === 0 ? (
+                  {filteredStudents.length === 0 ? (
                     <tr>
                       <td colSpan="6" className="py-8 text-center text-slate-400">
-                        {loading ? 'Fetching student records...' : 'No students found.'}
+                        {loading ? 'Fetching student records...' : 'No students found matching your criteria.'}
                       </td>
                     </tr>
                   ) : (
-                    students.map((st) => {
+                    filteredStudents.map((st) => {
                       const studentName = st.first_name ? `${st.first_name} ${st.last_name || ''}` : st.name;
                       const roll = st.roll_no || st.rollNumber || '—';
                       const admNo = st.admission_no || st.studentId || 'ADM-2026';
@@ -1201,7 +1733,16 @@ const SisTab = ({ isDark, onSelectStudentForID, classRoster = [] }) => {
 
                           <td className="py-3 px-4">
                             <div className="font-semibold text-emerald-500">{className}</div>
-                            <div className="text-[10px] text-slate-400 font-mono">{admNo}</div>
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md border ${
+                                isDark
+                                  ? 'bg-teal-950/60 text-teal-300 border-teal-800/60'
+                                  : 'bg-teal-50 text-teal-700 border-teal-200'
+                              }`}>
+                                {st.section || st.section_name || 'Section A'}
+                              </span>
+                              <span className="text-[10px] text-slate-400 font-mono">{admNo}</span>
+                            </div>
                           </td>
 
                           <td className="py-3 px-4">
@@ -1326,13 +1867,18 @@ const SisTab = ({ isDark, onSelectStudentForID, classRoster = [] }) => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-3 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-slate-300 mb-1">Class / Grade *</label>
                   <select
                     required
                     value={addForm.class_id}
-                    onChange={(e) => setAddForm({ ...addForm, class_id: e.target.value })}
+                    onChange={(e) => {
+                      const newClassId = e.target.value;
+                      const selCls = classesOverview.find((c) => String(c.id) === String(newClassId));
+                      const firstSec = selCls?.sections?.[0]?.name || 'Section A';
+                      setAddForm({ ...addForm, class_id: newClassId, section: firstSec });
+                    }}
                     className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white"
                   >
                     <option value="">Select Grade</option>
@@ -1341,6 +1887,24 @@ const SisTab = ({ isDark, onSelectStudentForID, classRoster = [] }) => {
                         {c.name}
                       </option>
                     ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">Section</label>
+                  <select
+                    value={addForm.section}
+                    onChange={(e) => setAddForm({ ...addForm, section: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white"
+                  >
+                    {(() => {
+                      const selCls = classesOverview.find((c) => String(c.id) === String(addForm.class_id));
+                      const secList = (selCls && selCls.sections && selCls.sections.length > 0)
+                        ? selCls.sections.map((s) => s.name)
+                        : ['Section A', 'Section B', 'Section C'];
+                      return secList.map((sec) => (
+                        <option key={sec} value={sec}>{sec}</option>
+                      ));
+                    })()}
                   </select>
                 </div>
                 <div>
@@ -1825,13 +2389,18 @@ const SisTab = ({ isDark, onSelectStudentForID, classRoster = [] }) => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-slate-300 mb-1">Class / Grade *</label>
                   <select
                     required
                     value={editForm.class_id}
-                    onChange={(e) => setEditForm({ ...editForm, class_id: Number(e.target.value) })}
+                    onChange={(e) => {
+                      const newClassId = e.target.value;
+                      const selCls = classesOverview.find((c) => String(c.id) === String(newClassId));
+                      const firstSec = selCls?.sections?.[0]?.name || 'Section A';
+                      setEditForm({ ...editForm, class_id: newClassId, section: firstSec });
+                    }}
                     className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
                   >
                     {classes.map((c) => (
@@ -1839,6 +2408,24 @@ const SisTab = ({ isDark, onSelectStudentForID, classRoster = [] }) => {
                         {c.name}
                       </option>
                     ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">Section</label>
+                  <select
+                    value={editForm.section}
+                    onChange={(e) => setEditForm({ ...editForm, section: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
+                  >
+                    {(() => {
+                      const selCls = classesOverview.find((c) => String(c.id) === String(editForm.class_id));
+                      const secList = (selCls && selCls.sections && selCls.sections.length > 0)
+                        ? selCls.sections.map((s) => s.name)
+                        : ['Section A', 'Section B', 'Section C'];
+                      return secList.map((sec) => (
+                        <option key={sec} value={sec}>{sec}</option>
+                      ));
+                    })()}
                   </select>
                 </div>
                 <div>
@@ -2085,7 +2672,7 @@ const SisTab = ({ isDark, onSelectStudentForID, classRoster = [] }) => {
                     <option value="">-- Select Teacher --</option>
                     {teachersList.map((t) => (
                       <option key={t.id} value={t.id}>
-                        {t.name} ({t.email})
+                        {t.name} {t.department ? `(${t.department})` : t.email ? `(${t.email})` : ''}
                       </option>
                     ))}
                   </select>
@@ -2206,10 +2793,72 @@ const SisTab = ({ isDark, onSelectStudentForID, classRoster = [] }) => {
                     <option value="">-- Select Teacher --</option>
                     {teachersList.map((t) => (
                       <option key={t.id} value={t.id}>
-                        {t.name} ({t.email})
+                        {t.name} {t.department ? `(${t.department})` : t.email ? `(${t.email})` : ''}
                       </option>
                     ))}
                   </select>
+                </div>
+              </div>
+
+              {/* Manage Class Sections inside Edit Class modal */}
+              <div className="pt-2 border-t border-slate-800">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                    <Layers className="w-3.5 h-3.5 text-teal-400" />
+                    <span>Manage Cohort Sections</span>
+                  </label>
+                  <span className="text-[10px] text-slate-400">At least 1 section required</span>
+                </div>
+                <div className="space-y-1.5 max-h-40 overflow-y-auto">
+                  {(() => {
+                    const currentCls = classesOverview.find((c) => c.id === classForm.id);
+                    const sections = currentCls?.sections || [];
+                    if (sections.length === 0) {
+                      return <div className="text-xs text-slate-400 italic py-1">Section A (Default)</div>;
+                    }
+                    return sections.map((sec) => (
+                      <div
+                        key={sec.id || sec.name}
+                        className="flex items-center justify-between p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-white">{sec.name}</span>
+                          <span className="text-slate-400 text-[11px]">• {sec.room_no || 'Room TBD'}</span>
+                          <span className="text-teal-400 text-[11px] font-mono">• Cap: {sec.capacity || 40}</span>
+                          {sec.class_teacher_name && (
+                            <span className="text-emerald-400 text-[11px]">({sec.class_teacher_name})</span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowEditClassModal(false);
+                              handleOpenEditSection(currentCls, sec);
+                            }}
+                            className="p-1.5 rounded-lg text-amber-400 hover:bg-amber-500/20 hover:text-amber-300 transition-colors cursor-pointer"
+                            title={`Rename / Edit ${sec.name}`}
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </button>
+                          {sections.length > 1 ? (
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteSection(currentCls, sec)}
+                              className="p-1.5 rounded-lg text-rose-400 hover:bg-rose-500/20 hover:text-rose-300 transition-colors cursor-pointer"
+                              title={`Delete ${sec.name}`}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          ) : (
+                            <span className="text-[10px] text-slate-500 font-mono px-2 py-0.5 rounded bg-slate-900 border border-slate-800">
+                              Primary
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ));
+                  })()}
                 </div>
               </div>
 
@@ -2303,7 +2952,7 @@ const SisTab = ({ isDark, onSelectStudentForID, classRoster = [] }) => {
                   <option value="">-- Select Teacher --</option>
                   {teachersList.map((t) => (
                     <option key={t.id} value={t.id}>
-                      {t.name} ({t.email})
+                      {t.name} {t.department ? `(${t.department})` : t.email ? `(${t.email})` : ''}
                     </option>
                   ))}
                 </select>
@@ -2322,6 +2971,105 @@ const SisTab = ({ isDark, onSelectStudentForID, classRoster = [] }) => {
                   className="px-5 py-2 rounded-xl text-xs font-bold bg-teal-600 hover:bg-teal-500 text-white cursor-pointer shadow-md"
                 >
                   Add Section
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 9: EDIT / RENAME SECTION */}
+      {showEditSectionModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+          <div className="bg-slate-900 border border-slate-700 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl relative max-h-[90vh] overflow-y-auto">
+            <button
+              onClick={() => setShowEditSectionModal(false)}
+              className="absolute top-5 right-5 text-slate-400 hover:text-white cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2.5 rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                <Edit2 className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-white">Edit / Rename Section</h3>
+                <p className="text-xs text-slate-400">
+                  Updating section cohort in <span className="text-emerald-400 font-bold">{sectionEditForm.class_name}</span>
+                </p>
+              </div>
+            </div>
+
+            <form onSubmit={handleSaveEditSection} className="space-y-4 mt-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">Section Name / Identifier *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Section A, Section B (Bio-Math)"
+                  value={sectionEditForm.name}
+                  onChange={(e) => setSectionEditForm({ ...sectionEditForm, name: e.target.value })}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500"
+                />
+                <p className="text-[10px] text-slate-400 mt-1">
+                  Renaming this section will automatically update all enrolled student records in this section.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">Room Number</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Room 205"
+                    value={sectionEditForm.room_no}
+                    onChange={(e) => setSectionEditForm({ ...sectionEditForm, room_no: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">Section Capacity</label>
+                  <input
+                    type="number"
+                    min="10"
+                    max="100"
+                    value={sectionEditForm.capacity}
+                    onChange={(e) => setSectionEditForm({ ...sectionEditForm, capacity: parseInt(e.target.value) || 40 })}
+                    className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">Section Class Teacher</label>
+                <select
+                  value={sectionEditForm.class_teacher_id}
+                  onChange={(e) => setSectionEditForm({ ...sectionEditForm, class_teacher_id: e.target.value })}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500"
+                >
+                  <option value="">-- Select Teacher --</option>
+                  {teachersList.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.name} {t.department ? `(${t.department})` : t.email ? `(${t.email})` : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-3 border-t border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setShowEditSectionModal(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-xl text-xs font-bold bg-amber-600 hover:bg-amber-500 text-white cursor-pointer shadow-md"
+                >
+                  Save Section Changes
                 </button>
               </div>
             </form>

@@ -9,6 +9,8 @@ import {
   Phone,
   MapPin,
   Check,
+  User,
+  Camera,
 } from 'lucide-react';
 import { useSiteData } from '../../context/SiteContext';
 
@@ -16,6 +18,60 @@ const DigitalStudentIDModal = ({ student, onClose }) => {
   const { siteData, isDark } = useSiteData();
   const { branding, footer } = siteData;
   const [isFlipped, setIsFlipped] = useState(false);
+  const [imgError, setImgError] = useState(false);
+  const [customPhotoUrl, setCustomPhotoUrl] = useState(null);
+
+  const studentData = student || {};
+  const studentName =
+    studentData.name ||
+    `${studentData.first_name || ''} ${studentData.last_name || ''}`.trim() ||
+    'Student Name';
+  const grade = studentData.grade || studentData.class_name || 'Grade 10';
+  const section = studentData.section || studentData.section_name || 'Section A';
+  const rollNo = studentData.rollNo || studentData.roll_no || 1;
+  const registrationNo =
+    studentData.registrationNo ||
+    studentData.admission_no ||
+    studentData.admissionNo ||
+    studentData.studentId ||
+    studentData.id ||
+    'AA-2026-1001';
+  const bloodGroup = studentData.bloodGroup || studentData.blood_group || 'O+';
+  const guardianPhone =
+    studentData.guardianPhone ||
+    studentData.guardian_phone ||
+    studentData.phone ||
+    studentData.contact ||
+    '+977 9841234567';
+
+  // Multi-tier photo resolver with reliable fallback
+  const fallbackAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+    studentName
+  )}&background=0D9488&color=fff&size=250&bold=true`;
+
+  const getEffectivePhoto = () => {
+    if (customPhotoUrl) return customPhotoUrl;
+    if (imgError) return fallbackAvatar;
+    const raw = studentData.photo_url || studentData.avatar || studentData.photo || studentData.image;
+    if (raw && typeof raw === 'string' && raw.trim().length > 5) {
+      return raw.trim();
+    }
+    return fallbackAvatar;
+  };
+
+  const photoSrc = getEffectivePhoto();
+
+  const handlePhotoUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setCustomPhotoUrl(event.target.result);
+        setImgError(false);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md">
@@ -68,19 +124,33 @@ const DigitalStudentIDModal = ({ student, onClose }) => {
 
                 {/* Photo & Identity */}
                 <div className="text-center my-3">
-                  <div className="w-28 h-28 mx-auto rounded-2xl overflow-hidden ring-4 ring-white/80 shadow-2xl relative">
+                  <div className="w-28 h-28 mx-auto rounded-2xl overflow-hidden ring-4 ring-white/80 shadow-2xl relative bg-slate-800 group">
                     <img
-                      src={student.avatar}
-                      alt={student.name}
+                      src={photoSrc}
+                      alt={studentName}
+                      onError={() => setImgError(true)}
                       className="w-full h-full object-cover"
+                      loading="eager"
                     />
+                    <label
+                      className="absolute bottom-1 right-1 p-1.5 rounded-full bg-black/70 hover:bg-black text-white cursor-pointer shadow-md transition-all opacity-80 group-hover:opacity-100"
+                      title="Upload or Change Photo"
+                    >
+                      <Camera className="w-3.5 h-3.5" />
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handlePhotoUpload}
+                        className="hidden"
+                      />
+                    </label>
                   </div>
-                  <h4 className="font-bold text-xl mt-3 drop-shadow-sm">{student.name}</h4>
+                  <h4 className="font-bold text-xl mt-3 drop-shadow-sm">{studentName}</h4>
                   <div className="text-xs font-semibold text-amber-100 mt-0.5">
-                    {student.grade} • {student.section}
+                    {grade} • {section}
                   </div>
                   <div className="inline-block mt-1 font-mono text-xs px-2.5 py-0.5 rounded-full bg-black/30 text-amber-200">
-                    Roll: #{student.rollNo} • ID: {student.registrationNo}
+                    Roll: #{rollNo} • ID: {registrationNo}
                   </div>
                 </div>
 
@@ -88,7 +158,7 @@ const DigitalStudentIDModal = ({ student, onClose }) => {
                 <div className="bg-white/10 backdrop-blur-md rounded-2xl p-3 text-[11px] grid grid-cols-2 gap-2 border border-white/20">
                   <div>
                     <span className="text-amber-200/80 block text-[9px] uppercase">Blood Group</span>
-                    <strong className="text-white text-xs">{student.bloodGroup}</strong>
+                    <strong className="text-white text-xs">{bloodGroup}</strong>
                   </div>
                   <div>
                     <span className="text-amber-200/80 block text-[9px] uppercase">Validity</span>
@@ -96,7 +166,7 @@ const DigitalStudentIDModal = ({ student, onClose }) => {
                   </div>
                   <div className="col-span-2 truncate">
                     <span className="text-amber-200/80 block text-[9px] uppercase">Emergency Phone</span>
-                    <strong className="text-white text-xs font-mono">{student.guardianPhone}</strong>
+                    <strong className="text-white text-xs font-mono">{guardianPhone}</strong>
                   </div>
                 </div>
 
@@ -175,4 +245,3 @@ const DigitalStudentIDModal = ({ student, onClose }) => {
 };
 
 export default DigitalStudentIDModal;
-

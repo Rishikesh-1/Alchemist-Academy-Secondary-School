@@ -244,6 +244,20 @@ export async function deleteAcademicClass(classId) {
   });
 }
 
+export async function deleteClassSection(sectionId, classId = null) {
+  return fetchWithAuth(`${API_BASE_URL}/classes/index.php`, {
+    method: 'POST',
+    body: JSON.stringify({ action: 'delete_section', id: sectionId, class_id: classId }),
+  });
+}
+
+export async function updateClassSection(sectionData) {
+  return fetchWithAuth(`${API_BASE_URL}/classes/index.php`, {
+    method: 'POST',
+    body: JSON.stringify({ action: 'update_section', ...sectionData }),
+  });
+}
+
 // -------------------------------------------------------------
 // 9. Student Profiles, CSV Bulk Import, Promotions & TC
 // -------------------------------------------------------------

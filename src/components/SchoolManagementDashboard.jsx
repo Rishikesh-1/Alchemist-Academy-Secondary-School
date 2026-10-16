@@ -236,6 +236,17 @@ const SchoolManagementDashboard = () => {
             </span>
           </div>
 
+          {/* Teacher Cockpit Quick Launch */}
+          <button
+            type="button"
+            onClick={() => navigateTo('teacher-portal')}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs transition-all shadow-sm cursor-pointer"
+            title="Open Teacher Cockpit & Attendance Workspace"
+          >
+            <BookOpen className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">{lang === 'ne' ? 'शिक्षक ककपिट' : 'Teacher Cockpit'}</span>
+          </button>
+
           {/* Website CMS */}
           <button
             type="button"
