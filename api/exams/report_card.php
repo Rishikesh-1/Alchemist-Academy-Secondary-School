@@ -114,7 +114,7 @@ $attStmt = $pdo->prepare("
         SUM(CASE WHEN status = 'present' THEN 1 ELSE 0 END) as present_days,
         SUM(CASE WHEN status = 'absent' THEN 1 ELSE 0 END) as absent_days
     FROM attendance_records
-    WHERE student_id = :student_id AND attendance_type = 'daily'
+    WHERE student_id = :student_id AND type = 'daily'
 ");
 $attStmt->execute([':student_id' => $studentId]);
 $attendance = $attStmt->fetch() ?: ['total_days' => 120, 'present_days' => 114, 'absent_days' => 6];

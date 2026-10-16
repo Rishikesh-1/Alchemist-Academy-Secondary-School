@@ -33,6 +33,7 @@ import {
 } from 'lucide-react';
 import { useSiteData } from '../context/SiteContext';
 import { useSchoolData } from '../context/SchoolDataContext';
+import { saveAttendance } from '../services/api';
 import TeacherLoginScreen from './portal/TeacherLoginScreen';
 
 const TeacherPortal = () => {
@@ -134,9 +135,20 @@ const TeacherPortal = () => {
     setRoster(updated);
   };
 
-  const handleSubmitAttendance = (e) => {
+  const handleSubmitAttendance = async (e) => {
     e.preventDefault();
     submitTeacherRollCall(roster, attendanceDate);
+    // Persist to central database so SMS Attendance tab and administrator see it live
+    try {
+      const records = roster.map((s) => ({
+        student_id: s.id || s.rollNo,
+        status: s.attendanceStatus || 'present',
+        remarks: s.attendanceNote || '',
+      }));
+      await saveAttendance(1, attendanceDate, 'daily', records);
+    } catch (err) {
+      console.warn('Backend attendance sync:', err);
+    }
     setAttendanceSubmittedNotice(true);
     setTimeout(() => setAttendanceSubmittedNotice(false), 4000);
   };

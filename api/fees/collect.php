@@ -23,11 +23,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             s.admission_no,
             s.guardian_name,
             c.name as class_name,
-            u.name as cashier_name
+            fr.cashier_name
         FROM fee_receipts fr
         JOIN students s ON fr.student_id = s.id
         LEFT JOIN classes c ON s.class_id = c.id
-        LEFT JOIN users u ON fr.collected_by_user_id = u.id
         WHERE fr.school_id = :school_id
     ";
     $params = [':school_id' => $schoolId];
@@ -43,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     }
 
     if ($date) {
-        $sql .= " AND DATE(fr.payment_date) = :p_date";
+        $sql .= " AND fr.payment_date_ad = :p_date";
         $params[':p_date'] = $date;
     }
 
@@ -65,10 +64,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $input = getJsonInput();
     $studentId = !empty($input['student_id']) ? (int)$input['student_id'] : null;
     $invoiceId = !empty($input['invoice_id']) ? (int)$input['invoice_id'] : null;
-    $amount = (float)($input['amount'] ?? 0);
-    $paymentMode = strtolower(trim((string)($input['payment_mode'] ?? 'cash'))); // cash, qr, cheque, bank_transfer
-    $transactionRef = trim((string)($input['transaction_reference'] ?? ''));
-    $remarks = trim((string)($input['remarks'] ?? 'Tuition & Academic Term Fee'));
+    $amount = (float)($input['amount'] ?? $input['amount_paid'] ?? 0);
+    $rawMode = strtolower(trim((string)($input['payment_mode'] ?? $input['payment_method'] ?? 'cash')));
+    $validMethods = ['cash', 'esewa', 'khalti', 'fonepay', 'bank_transfer', 'cheque'];
+    if (!in_array($rawMode, $validMethods, true)) {
+        if ($rawMode === 'qr') {
+            $paymentMethod = 'fonepay';
+        } else {
+            $paymentMethod = 'cash';
+        }
+    } else {
+        $paymentMethod = $rawMode;
+    }
+    $paymentMode = $paymentMethod;
+    $transactionRef = trim((string)($input['transaction_reference'] ?? $input['transaction_ref'] ?? ''));
+    $remarks = trim((string)($input['remarks'] ?? $input['notes'] ?? 'Tuition & Academic Term Fee'));
+    $dateAd = trim((string)($input['payment_date_ad'] ?? $input['date'] ?? date('Y-m-d')));
+    $dateBs = trim((string)($input['payment_date_bs'] ?? '2083-06-30'));
 
     if (!$studentId || $amount <= 0) {
         jsonResponse(false, 'Valid student_id and amount (> 0) are required.', null, 400);
@@ -89,9 +101,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         $insert = $pdo->prepare("
             INSERT INTO fee_receipts 
-            (school_id, branch_id, student_id, invoice_id, receipt_no, amount_paid, payment_mode, transaction_reference, payment_date, collected_by_user_id, remarks)
+            (school_id, branch_id, student_id, invoice_id, receipt_no, amount_paid, payment_method, transaction_ref, payment_date_ad, payment_date_bs, cashier_id, cashier_name, notes, status)
             VALUES 
-            (:school_id, :branch_id, :student_id, :invoice_id, :receipt_no, :amount, :mode, :ref, NOW(), :collected_by, :remarks)
+            (:school_id, :branch_id, :student_id, :invoice_id, :receipt_no, :amount, :method, :ref, :date_ad, :date_bs, :cashier_id, :cashier_name, :notes, 'cleared')
         ");
 
         $insert->execute([
@@ -101,10 +113,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ':invoice_id'    => $invoiceId,
             ':receipt_no'    => $receiptNo,
             ':amount'        => $amount,
-            ':mode'          => $paymentMode,
-            ':ref'           => $transactionRef,
-            ':collected_by'  => (int)$user['id'],
-            ':remarks'       => $remarks,
+            ':method'        => $paymentMethod,
+            ':ref'           => $transactionRef ?: null,
+            ':date_ad'       => $dateAd,
+            ':date_bs'       => $dateBs,
+            ':cashier_id'    => (int)$user['id'],
+            ':cashier_name'  => $user['name'] ?? 'Counter Cashier',
+            ':notes'         => $remarks,
         ]);
 
         $receiptId = (int)$pdo->lastInsertId();

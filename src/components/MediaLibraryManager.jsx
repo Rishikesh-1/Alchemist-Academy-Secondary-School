@@ -35,7 +35,7 @@ const CATEGORIES = [
   'Custom Uploads',
 ];
 
-const MediaLibraryManager = () => {
+const MediaLibraryManager = ({ isDark = true }) => {
   const [mediaList, setMediaList] = useState(loadStoredMedia);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -205,11 +205,13 @@ const MediaLibraryManager = () => {
       {/* Top Banner & Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold font-serif-brand text-white flex items-center gap-2.5">
-            <FolderOpen className="w-6 h-6 text-amber-400" />
+          <h2 className={`text-2xl font-bold font-serif-brand flex items-center gap-2.5 ${
+            isDark ? 'text-white' : 'text-slate-900'
+          }`}>
+            <FolderOpen className="w-6 h-6 text-amber-500" />
             <span>Central Media Library & SEO Assets</span>
           </h2>
-          <p className="text-sm text-slate-400 mt-1">
+          <p className={`text-sm mt-1 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
             Store, rename, organize, and optimize image SEO Alt text for higher Google Image rankings and accessibility.
           </p>
         </div>
@@ -230,20 +232,25 @@ const MediaLibraryManager = () => {
             accept="image/*"
             className="hidden"
           />
-
         </div>
       </div>
 
       {/* Notice Banner */}
       {notice && (
-        <div className="p-3 bg-emerald-950/80 border border-emerald-800/80 rounded-2xl text-emerald-300 text-xs font-semibold flex items-center gap-2 animate-pulse">
+        <div className={`p-3 rounded-2xl text-xs font-semibold flex items-center gap-2 animate-pulse border ${
+          isDark
+            ? 'bg-emerald-950/80 border-emerald-800/80 text-emerald-300'
+            : 'bg-emerald-50 border-emerald-300 text-emerald-800'
+        }`}>
           <Check className="w-4 h-4" />
           <span>{notice}</span>
         </div>
       )}
 
       {/* Toolbar: Search & Categories */}
-      <div className="bg-slate-950/80 border border-slate-800 rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className={`rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 border ${
+        isDark ? 'bg-slate-950/80 border-slate-800' : 'bg-white border-slate-200 shadow-sm'
+      }`}>
         {/* Search */}
         <div className="relative w-full md:w-80">
           <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -252,7 +259,9 @@ const MediaLibraryManager = () => {
             placeholder="Search by title, alt text, or tags..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-slate-900 border border-slate-700 rounded-xl pl-9 pr-3 py-2 text-xs text-white focus:outline-none focus:border-amber-400"
+            className={`w-full rounded-xl pl-9 pr-3 py-2 text-xs border focus:outline-none focus:border-amber-400 ${
+              isDark ? 'bg-slate-900 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'
+            }`}
           />
         </div>
 
@@ -266,7 +275,9 @@ const MediaLibraryManager = () => {
               className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
                 selectedCategory === cat
                   ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
-                  : 'bg-slate-900 text-slate-400 hover:text-slate-200 hover:bg-slate-800 border border-slate-800'
+                  : isDark
+                  ? 'bg-slate-900 text-slate-400 hover:text-slate-200 hover:bg-slate-800 border border-slate-800'
+                  : 'bg-slate-100 text-slate-600 hover:text-slate-900 hover:bg-slate-200 border border-slate-200'
               }`}
             >
               {cat}
@@ -276,21 +287,29 @@ const MediaLibraryManager = () => {
       </div>
 
       {/* Media Grid */}
-      <div className="bg-slate-950/80 border border-slate-800 rounded-3xl p-6">
+      <div className={`rounded-3xl p-6 border ${
+        isDark ? 'bg-slate-950/80 border-slate-800' : 'bg-white border-slate-200 shadow-sm'
+      }`}>
         <div className="flex items-center justify-between mb-4">
-          <span className="text-xs uppercase font-bold text-slate-400 tracking-wider">
+          <span className={`text-xs uppercase font-bold tracking-wider ${
+            isDark ? 'text-slate-400' : 'text-slate-500'
+          }`}>
             Assets Catalog ({filtered.length})
           </span>
-          <span className="text-xs text-slate-500 hidden sm:inline">
-            Click the <strong className="text-slate-400">Pencil</strong> icon on any image to rename or set SEO Alt Text.
+          <span className={`text-xs hidden sm:inline ${
+            isDark ? 'text-slate-500' : 'text-slate-400'
+          }`}>
+            Click the <strong className={isDark ? 'text-slate-300' : 'text-slate-700'}>Pencil</strong> icon on any image to rename or set SEO Alt Text.
           </span>
         </div>
 
         {filtered.length === 0 ? (
-          <div className="h-64 flex flex-col items-center justify-center text-center p-8 border-2 border-dashed border-slate-800 rounded-2xl">
-            <ImageIcon className="w-12 h-12 text-slate-600 mb-2" />
-            <h4 className="text-sm font-bold text-slate-300">No assets in this category</h4>
-            <p className="text-xs text-slate-500 max-w-sm mt-1">
+          <div className={`h-64 flex flex-col items-center justify-center text-center p-8 border-2 border-dashed rounded-2xl ${
+            isDark ? 'border-slate-800' : 'border-slate-200 bg-slate-50'
+          }`}>
+            <ImageIcon className="w-12 h-12 text-slate-400 mb-2" />
+            <h4 className={`text-sm font-bold ${isDark ? 'text-slate-300' : 'text-slate-800'}`}>No assets in this category</h4>
+            <p className="text-xs text-slate-400 max-w-sm mt-1">
               Upload an image from your device or switch category filters.
             </p>
           </div>
@@ -303,10 +322,16 @@ const MediaLibraryManager = () => {
               return (
                 <div
                   key={item.id}
-                  className="group bg-slate-900 border border-slate-800 hover:border-amber-500/50 rounded-2xl overflow-hidden flex flex-col transition-all shadow hover:shadow-lg hover:shadow-amber-500/10"
+                  className={`group rounded-2xl overflow-hidden flex flex-col transition-all border shadow hover:shadow-lg hover:shadow-amber-500/10 ${
+                    isDark
+                      ? 'bg-slate-900 border-slate-800 hover:border-amber-500/50'
+                      : 'bg-white border-slate-200 hover:border-amber-500/50 shadow-sm'
+                  }`}
                 >
                   {/* Thumbnail */}
-                  <div className="relative aspect-video w-full bg-slate-950 overflow-hidden flex items-center justify-center">
+                  <div className={`relative aspect-video w-full overflow-hidden flex items-center justify-center ${
+                    isDark ? 'bg-slate-950' : 'bg-slate-100'
+                  }`}>
                     <img
                       src={item.url}
                       alt={item.altText || item.title}
@@ -338,7 +363,7 @@ const MediaLibraryManager = () => {
                         className="p-2 rounded-xl bg-slate-800 text-white hover:bg-slate-700 transition-colors shadow cursor-pointer"
                         title="Copy Image URL"
                       >
-                        {isCopied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                        {isCopied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4 text-white" />}
                       </button>
                       {!item.isDefault && (
                         <button
@@ -353,7 +378,11 @@ const MediaLibraryManager = () => {
                     </div>
 
                     {/* Tag badge */}
-                    <div className="absolute bottom-2 left-2 text-[9px] font-semibold bg-slate-950/80 backdrop-blur-xs border border-slate-800 text-slate-300 px-2 py-0.5 rounded-md">
+                    <div className={`absolute bottom-2 left-2 text-[9px] font-semibold backdrop-blur-xs border px-2 py-0.5 rounded-md ${
+                      isDark
+                        ? 'bg-slate-950/80 border-slate-800 text-slate-300'
+                        : 'bg-white/90 border-slate-200 text-slate-700 shadow-xs'
+                    }`}>
                       {item.category}
                     </div>
                   </div>
@@ -362,13 +391,19 @@ const MediaLibraryManager = () => {
                   <div className="p-3 flex-1 flex flex-col justify-between space-y-2">
                     <div>
                       <div className="flex items-start justify-between gap-1">
-                        <h5 className="text-xs font-bold text-white group-hover:text-amber-400 transition-colors line-clamp-1">
+                        <h5 className={`text-xs font-bold transition-colors line-clamp-1 ${
+                          isDark
+                            ? 'text-white group-hover:text-amber-400'
+                            : 'text-slate-900 group-hover:text-amber-600'
+                        }`}>
                           {item.title}
                         </h5>
                         <button
                           type="button"
                           onClick={() => startEditing(item)}
-                          className="text-slate-400 hover:text-amber-400 p-0.5 cursor-pointer shrink-0"
+                          className={`p-0.5 cursor-pointer shrink-0 ${
+                            isDark ? 'text-slate-400 hover:text-amber-400' : 'text-slate-500 hover:text-amber-600'
+                          }`}
                           title="Edit SEO Alt Text"
                         >
                           <Edit3 className="w-3 h-3" />
@@ -378,7 +413,11 @@ const MediaLibraryManager = () => {
                       {/* SEO Alt Text Pill Indicator */}
                       <div className="mt-1.5">
                         {hasAlt ? (
-                          <div className="flex items-center gap-1 text-[10px] text-emerald-400 bg-emerald-950/50 border border-emerald-800/40 px-2 py-0.5 rounded-md">
+                          <div className={`flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-md border ${
+                            isDark
+                              ? 'text-emerald-400 bg-emerald-950/50 border-emerald-800/40'
+                              : 'text-emerald-800 bg-emerald-50 border-emerald-200'
+                          }`}>
                             <Tag className="w-2.5 h-2.5 shrink-0" />
                             <span className="truncate" title={item.altText}>
                               Alt: {item.altText}
@@ -388,7 +427,11 @@ const MediaLibraryManager = () => {
                           <button
                             type="button"
                             onClick={() => startEditing(item)}
-                            className="flex items-center gap-1 text-[10px] text-amber-400 bg-amber-950/50 border border-amber-800/40 px-2 py-0.5 rounded-md hover:bg-amber-900/50 cursor-pointer"
+                            className={`flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-md border cursor-pointer ${
+                              isDark
+                                ? 'text-amber-400 bg-amber-950/50 border-amber-800/40 hover:bg-amber-900/50'
+                                : 'text-amber-800 bg-amber-50 border-amber-200 hover:bg-amber-100'
+                            }`}
                           >
                             <Info className="w-2.5 h-2.5" />
                             <span>Add SEO Alt Text</span>
@@ -397,17 +440,21 @@ const MediaLibraryManager = () => {
                       </div>
                     </div>
 
-                    <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-[10px]">
-                      <span className="text-slate-500">{item.dateAdded}</span>
+                    <div className={`pt-2 border-t flex items-center justify-between text-[10px] ${
+                      isDark ? 'border-slate-800 text-slate-500' : 'border-slate-100 text-slate-400'
+                    }`}>
+                      <span>{item.dateAdded}</span>
                       <button
                         type="button"
                         onClick={() => handleCopyUrl(item)}
-                        className="text-amber-400 hover:text-amber-300 font-semibold flex items-center gap-1 cursor-pointer"
+                        className={`font-semibold flex items-center gap-1 cursor-pointer ${
+                          isDark ? 'text-amber-400 hover:text-amber-300' : 'text-amber-600 hover:text-amber-700'
+                        }`}
                       >
                         {isCopied ? (
                           <>
-                            <Check className="w-3 h-3 text-emerald-400" />
-                            <span className="text-emerald-400">Copied!</span>
+                            <Check className="w-3 h-3 text-emerald-500" />
+                            <span className="text-emerald-500">Copied!</span>
                           </>
                         ) : (
                           <>
@@ -433,29 +480,39 @@ const MediaLibraryManager = () => {
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="bg-slate-900 border border-slate-700 rounded-3xl max-w-2xl w-full p-6 sm:p-8 space-y-6 shadow-2xl my-8 cursor-default"
+            className={`border rounded-3xl max-w-2xl w-full p-6 sm:p-8 space-y-6 shadow-2xl my-8 cursor-default ${
+              isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200 shadow-xl'
+            }`}
           >
-            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+            <div className={`flex items-center justify-between border-b pb-4 ${
+              isDark ? 'border-slate-800' : 'border-slate-200'
+            }`}>
               <div>
-                <span className="text-[11px] font-bold uppercase tracking-wider text-amber-400">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-amber-500">
                   SEO & Media Optimization
                 </span>
-                <h3 className="font-bold text-lg text-white mt-0.5">
+                <h3 className={`font-bold text-lg mt-0.5 ${isDark ? 'text-white' : 'text-slate-900'}`}>
                   Edit Asset Name & SEO Alt Text
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setEditingItem(null)}
-                className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 cursor-pointer"
+                className={`p-1.5 rounded-lg cursor-pointer ${
+                  isDark ? 'text-slate-400 hover:text-white hover:bg-slate-800' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
+                }`}
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Asset Visual Preview & URL */}
-            <div className="flex items-center gap-4 p-3 bg-slate-950 rounded-2xl border border-slate-800">
-              <div className="w-20 h-16 rounded-xl overflow-hidden bg-slate-900 shrink-0 border border-slate-800 flex items-center justify-center">
+            <div className={`flex items-center gap-4 p-3 rounded-2xl border ${
+              isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'
+            }`}>
+              <div className={`w-20 h-16 rounded-xl overflow-hidden shrink-0 border flex items-center justify-center ${
+                isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
+              }`}>
                 <img
                   src={editingItem.url}
                   alt={editingItem.title}
@@ -463,9 +520,11 @@ const MediaLibraryManager = () => {
                 />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-bold text-white truncate">{editingItem.title}</p>
-                <p className="text-[10px] text-slate-500 font-mono truncate mt-0.5">{editingItem.url}</p>
-                <span className="inline-block mt-1 text-[9px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded">
+                <p className={`text-xs font-bold truncate ${isDark ? 'text-white' : 'text-slate-900'}`}>{editingItem.title}</p>
+                <p className={`text-[10px] font-mono truncate mt-0.5 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{editingItem.url}</p>
+                <span className={`inline-block mt-1 text-[9px] px-2 py-0.5 rounded ${
+                  isDark ? 'bg-slate-800 text-slate-400' : 'bg-slate-200 text-slate-700'
+                }`}>
                   {editingItem.category} • Added {editingItem.dateAdded}
                 </span>
               </div>
@@ -474,7 +533,9 @@ const MediaLibraryManager = () => {
             <form onSubmit={handleSaveEdit} className="space-y-4">
               {/* Title / Name */}
               <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+                <label className={`block text-xs font-semibold uppercase tracking-wider mb-1.5 ${
+                  isDark ? 'text-slate-300' : 'text-slate-700'
+                }`}>
                   Asset Title / Filename Label *
                 </label>
                 <input
@@ -483,9 +544,11 @@ const MediaLibraryManager = () => {
                   value={editFormData.title}
                   onChange={(e) => setEditFormData({ ...editFormData, title: e.target.value })}
                   placeholder="e.g. Annual Cultural Showcase & Traditional Dance Program"
-                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-400"
+                  className={`w-full rounded-xl px-4 py-2.5 text-sm border focus:outline-none focus:border-amber-400 ${
+                    isDark ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'
+                  }`}
                 />
-                <span className="text-[11px] text-slate-500 mt-1 block">
+                <span className="text-[11px] text-slate-400 mt-1 block">
                   Displayed in media pickers, dashboard lists, and internal references.
                 </span>
               </div>
@@ -493,14 +556,16 @@ const MediaLibraryManager = () => {
               {/* SEO Alt Text */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-                    <Globe className="w-3.5 h-3.5 text-amber-400" />
+                  <label className={`text-xs font-semibold uppercase tracking-wider flex items-center gap-1.5 ${
+                    isDark ? 'text-slate-300' : 'text-slate-700'
+                  }`}>
+                    <Globe className="w-3.5 h-3.5 text-amber-500" />
                     <span>SEO Image Alt Text (High Priority)</span>
                   </label>
                   <button
                     type="button"
                     onClick={generateSeoAltText}
-                    className="text-[11px] font-bold text-amber-400 hover:text-amber-300 inline-flex items-center gap-1 cursor-pointer transition-colors"
+                    className="text-[11px] font-bold text-amber-500 hover:text-amber-600 inline-flex items-center gap-1 cursor-pointer transition-colors"
                   >
                     <Sparkles className="w-3 h-3" />
                     <span>✨ Suggest SEO Alt Text</span>
@@ -512,14 +577,18 @@ const MediaLibraryManager = () => {
                   value={editFormData.altText}
                   onChange={(e) => setEditFormData({ ...editFormData, altText: e.target.value })}
                   placeholder="Describe the image content with relevant school and location keywords..."
-                  className="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-amber-400 font-sans"
+                  className={`w-full rounded-xl p-3 text-xs border focus:outline-none focus:border-amber-400 font-sans ${
+                    isDark ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'
+                  }`}
                 />
 
-                <div className="flex items-center justify-between text-[11px] text-slate-400">
+                <div className={`flex items-center justify-between text-[11px] ${
+                  isDark ? 'text-slate-400' : 'text-slate-500'
+                }`}>
                   <span>
                     Indexed by Google Images and read by accessibility screen readers (a11y).
                   </span>
-                  <span className="font-mono text-slate-500">
+                  <span className="font-mono text-slate-400">
                     {editFormData.altText.length} chars
                   </span>
                 </div>
@@ -528,13 +597,17 @@ const MediaLibraryManager = () => {
               {/* Category & Tags */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+                  <label className={`block text-xs font-semibold uppercase tracking-wider mb-1.5 ${
+                    isDark ? 'text-slate-300' : 'text-slate-700'
+                  }`}>
                     Category
                   </label>
                   <select
                     value={editFormData.category}
                     onChange={(e) => setEditFormData({ ...editFormData, category: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-amber-400"
+                    className={`w-full rounded-xl px-4 py-2.5 text-xs border focus:outline-none focus:border-amber-400 ${
+                      isDark ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'
+                    }`}
                   >
                     {CATEGORIES.filter((c) => c !== 'All').map((cat) => (
                       <option key={cat} value={cat}>
@@ -545,7 +618,9 @@ const MediaLibraryManager = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+                  <label className={`block text-xs font-semibold uppercase tracking-wider mb-1.5 ${
+                    isDark ? 'text-slate-300' : 'text-slate-700'
+                  }`}>
                     Search Tags & Keywords
                   </label>
                   <input
@@ -553,14 +628,18 @@ const MediaLibraryManager = () => {
                     value={editFormData.tags}
                     onChange={(e) => setEditFormData({ ...editFormData, tags: e.target.value })}
                     placeholder="e.g. science, lab, students, jorpati, kathmandu"
-                    className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-amber-400"
+                    className={`w-full rounded-xl px-4 py-2.5 text-xs border focus:outline-none focus:border-amber-400 ${
+                      isDark ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'
+                    }`}
                   />
                 </div>
               </div>
 
               {/* Description / Caption */}
               <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+                <label className={`block text-xs font-semibold uppercase tracking-wider mb-1.5 ${
+                  isDark ? 'text-slate-300' : 'text-slate-700'
+                }`}>
                   Editorial Caption / Internal Description
                 </label>
                 <textarea
@@ -568,16 +647,22 @@ const MediaLibraryManager = () => {
                   value={editFormData.description}
                   onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
                   placeholder="Optional notes or editorial caption regarding where and when this photo was taken..."
-                  className="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-amber-400"
+                  className={`w-full rounded-xl p-3 text-xs border focus:outline-none focus:border-amber-400 ${
+                    isDark ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'
+                  }`}
                 />
               </div>
 
               {/* Modal Actions */}
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+              <div className={`flex items-center justify-end gap-3 pt-3 border-t ${
+                isDark ? 'border-slate-800' : 'border-slate-200'
+              }`}>
                 <button
                   type="button"
                   onClick={() => setEditingItem(null)}
-                  className="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold cursor-pointer transition-colors"
+                  className={`px-5 py-2.5 rounded-xl text-xs font-semibold cursor-pointer transition-colors ${
+                    isDark ? 'bg-slate-800 hover:bg-slate-700 text-slate-300' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                  }`}
                 >
                   Cancel
                 </button>
@@ -601,23 +686,31 @@ const MediaLibraryManager = () => {
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="bg-slate-900 border border-slate-700 rounded-3xl max-w-3xl w-full p-6 space-y-4 shadow-2xl"
+            className={`border rounded-3xl max-w-3xl w-full p-6 space-y-4 shadow-2xl ${
+              isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200 shadow-xl'
+            }`}
           >
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div className={`flex items-center justify-between border-b pb-3 ${
+              isDark ? 'border-slate-800' : 'border-slate-200'
+            }`}>
               <div>
-                <h4 className="font-bold text-base text-white">{previewItem.title}</h4>
-                <p className="text-xs text-slate-400">{previewItem.category} • {previewItem.dateAdded}</p>
+                <h4 className={`font-bold text-base ${isDark ? 'text-white' : 'text-slate-900'}`}>{previewItem.title}</h4>
+                <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{previewItem.category} • {previewItem.dateAdded}</p>
               </div>
               <button
                 type="button"
                 onClick={() => setPreviewItem(null)}
-                className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 cursor-pointer"
+                className={`p-1.5 rounded-lg cursor-pointer ${
+                  isDark ? 'text-slate-400 hover:text-white hover:bg-slate-800' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
+                }`}
               >
                 ✕
               </button>
             </div>
 
-            <div className="rounded-2xl overflow-hidden bg-slate-950 border border-slate-800 max-h-[55vh] flex items-center justify-center p-2">
+            <div className={`rounded-2xl overflow-hidden border max-h-[55vh] flex items-center justify-center p-2 ${
+              isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-100 border-slate-200'
+            }`}>
               <img
                 src={previewItem.url}
                 alt={previewItem.altText || previewItem.title}
@@ -626,9 +719,11 @@ const MediaLibraryManager = () => {
             </div>
 
             {/* SEO Alt Text Detail */}
-            <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl space-y-1">
+            <div className={`p-3 border rounded-xl space-y-1 ${
+              isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'
+            }`}>
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-amber-500">
                   SEO Alt Text
                 </span>
                 <button
@@ -638,25 +733,29 @@ const MediaLibraryManager = () => {
                     setPreviewItem(null);
                     startEditing(item);
                   }}
-                  className="text-[11px] text-amber-400 hover:underline flex items-center gap-1 cursor-pointer"
+                  className="text-[11px] text-amber-500 hover:underline flex items-center gap-1 cursor-pointer font-medium"
                 >
                   <Edit3 className="w-3 h-3" />
                   <span>Edit Alt Text</span>
                 </button>
               </div>
-              <p className="text-xs text-slate-300 font-sans">
+              <p className={`text-xs font-sans ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
                 {previewItem.altText || previewItem.title || 'No alt text set.'}
               </p>
             </div>
 
             <div className="space-y-1">
-              <label className="text-[10px] uppercase font-bold text-slate-400">Direct Resource URL</label>
-              <div className="p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs font-mono text-amber-300 break-all select-all max-h-24 overflow-y-auto">
+              <label className={`text-[10px] uppercase font-bold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Direct Resource URL</label>
+              <div className={`p-2.5 border rounded-xl text-xs font-mono break-all select-all max-h-24 overflow-y-auto ${
+                isDark ? 'bg-slate-950 border-slate-800 text-amber-300' : 'bg-slate-50 border-slate-200 text-amber-700'
+              }`}>
                 {previewItem.url}
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
+            <div className={`flex items-center justify-end gap-2 pt-2 border-t ${
+              isDark ? 'border-slate-800' : 'border-slate-200'
+            }`}>
               <button
                 type="button"
                 onClick={() => handleCopyUrl(previewItem)}

@@ -208,6 +208,43 @@ export async function fetchBranches(schoolId = CURRENT_SCHOOL_ID) {
 }
 
 // -------------------------------------------------------------
+// 8.1 Classes & Sections Academic Hub
+// -------------------------------------------------------------
+export async function fetchClassesOverview(branchId = null) {
+  let url = `${API_BASE_URL}/classes/index.php`;
+  if (branchId) url += `?branch_id=${branchId}`;
+  return fetchWithAuth(url);
+}
+
+export async function createAcademicClass(classData) {
+  return fetchWithAuth(`${API_BASE_URL}/classes/index.php`, {
+    method: 'POST',
+    body: JSON.stringify({ action: 'create_class', ...classData }),
+  });
+}
+
+export async function updateAcademicClass(classData) {
+  return fetchWithAuth(`${API_BASE_URL}/classes/index.php`, {
+    method: 'POST',
+    body: JSON.stringify({ action: 'update_class', ...classData }),
+  });
+}
+
+export async function addClassSection(sectionData) {
+  return fetchWithAuth(`${API_BASE_URL}/classes/index.php`, {
+    method: 'POST',
+    body: JSON.stringify({ action: 'add_section', ...sectionData }),
+  });
+}
+
+export async function deleteAcademicClass(classId) {
+  return fetchWithAuth(`${API_BASE_URL}/classes/index.php`, {
+    method: 'POST',
+    body: JSON.stringify({ action: 'delete_class', id: classId }),
+  });
+}
+
+// -------------------------------------------------------------
 // 9. Student Profiles, CSV Bulk Import, Promotions & TC
 // -------------------------------------------------------------
 export async function fetchStudents(params = {}) {
@@ -219,6 +256,13 @@ export async function registerStudent(studentData) {
   return fetchWithAuth(`${API_BASE_URL}/students/index.php`, {
     method: 'POST',
     body: JSON.stringify(studentData),
+  });
+}
+
+export async function updateStudent(studentData) {
+  return fetchWithAuth(`${API_BASE_URL}/students/index.php`, {
+    method: 'POST',
+    body: JSON.stringify({ action: 'update', ...studentData }),
   });
 }
 
@@ -408,4 +452,199 @@ export async function fetchAuditLogs(params = {}) {
 export async function fetchNotifications() {
   return fetchWithAuth(`${API_BASE_URL}/notifications/index.php`);
 }
+
+// -------------------------------------------------------------
+// 17. Front Office Management (Visitors & Calls)
+// -------------------------------------------------------------
+export async function fetchFrontOfficeVisitors() {
+  return fetchWithAuth(`${API_BASE_URL}/front_office/index.php?type=visitors`);
+}
+
+export async function fetchFrontOfficeCalls() {
+  return fetchWithAuth(`${API_BASE_URL}/front_office/index.php?type=calls`);
+}
+
+export async function addFrontOfficeVisitor(visitorData) {
+  return fetchWithAuth(`${API_BASE_URL}/front_office/index.php`, {
+    method: 'POST',
+    body: JSON.stringify({ action: 'add_visitor', ...visitorData }),
+  });
+}
+
+export async function checkoutFrontOfficeVisitor(passNo) {
+  return fetchWithAuth(`${API_BASE_URL}/front_office/index.php`, {
+    method: 'POST',
+    body: JSON.stringify({ action: 'checkout_visitor', pass_no: passNo }),
+  });
+}
+
+export async function logFrontOfficeCall(callData) {
+  return fetchWithAuth(`${API_BASE_URL}/front_office/index.php`, {
+    method: 'POST',
+    body: JSON.stringify({ action: 'log_call', ...callData }),
+  });
+}
+
+// -------------------------------------------------------------
+// 18. E-Learning & Online Live Virtual Classes
+// -------------------------------------------------------------
+export async function fetchElearningCourses() {
+  return fetchWithAuth(`${API_BASE_URL}/elearning/index.php?type=courses`);
+}
+
+export async function fetchLiveClasses() {
+  return fetchWithAuth(`${API_BASE_URL}/elearning/index.php?type=live_classes`);
+}
+
+export async function createElearningCourse(courseData) {
+  return fetchWithAuth(`${API_BASE_URL}/elearning/index.php`, {
+    method: 'POST',
+    body: JSON.stringify({ action: 'create_course', ...courseData }),
+  });
+}
+
+export async function scheduleLiveClass(classData) {
+  return fetchWithAuth(`${API_BASE_URL}/elearning/index.php`, {
+    method: 'POST',
+    body: JSON.stringify({ action: 'schedule_live_class', ...classData }),
+  });
+}
+
+// -------------------------------------------------------------
+// 19. Student Behavior & Conduct Tracking
+// -------------------------------------------------------------
+export async function fetchBehaviorRecords(studentId = null) {
+  let url = `${API_BASE_URL}/behavior/index.php`;
+  if (studentId) url += `?student_id=${studentId}`;
+  return fetchWithAuth(url);
+}
+
+export async function recordBehaviorIncident(incidentData) {
+  return fetchWithAuth(`${API_BASE_URL}/behavior/index.php`, {
+    method: 'POST',
+    body: JSON.stringify(incidentData),
+  });
+}
+
+// -------------------------------------------------------------
+// 20. Income & Expense / Financial Accounting
+// -------------------------------------------------------------
+export async function fetchFinancialOverview() {
+  return fetchWithAuth(`${API_BASE_URL}/finance/index.php`);
+}
+
+export async function recordExpenseVoucher(expenseData) {
+  return fetchWithAuth(`${API_BASE_URL}/finance/index.php`, {
+    method: 'POST',
+    body: JSON.stringify(expenseData),
+  });
+}
+
+// -------------------------------------------------------------
+// 21. Multi-System Examinations & Online CBT
+// -------------------------------------------------------------
+export async function fetchOnlineAssessments(system = null) {
+  let url = `${API_BASE_URL}/assessments/index.php`;
+  if (system) url += `?system=${system}`;
+  return fetchWithAuth(url);
+}
+
+export async function createOnlineAssessment(assessmentData) {
+  return fetchWithAuth(`${API_BASE_URL}/assessments/index.php`, {
+    method: 'POST',
+    body: JSON.stringify(assessmentData),
+  });
+}
+
+// -------------------------------------------------------------
+// 22. Human Resources (Staff Directory, Attendance & Leaves)
+// -------------------------------------------------------------
+export async function fetchHrData(date = null) {
+  let url = `${API_BASE_URL}/hr/index.php`;
+  if (date) url += `?date=${date}`;
+  return fetchWithAuth(url);
+}
+
+export async function markStaffAttendance(attendanceData) {
+  return fetchWithAuth(`${API_BASE_URL}/hr/index.php`, {
+    method: 'POST',
+    body: JSON.stringify({ action: 'mark_attendance', ...attendanceData }),
+  });
+}
+
+export async function applyStaffLeave(leaveData) {
+  return fetchWithAuth(`${API_BASE_URL}/hr/index.php`, {
+    method: 'POST',
+    body: JSON.stringify({ action: 'apply_leave', ...leaveData }),
+  });
+}
+
+export async function updateStaffLeaveStatus(leaveId, status, decisionNotes = '') {
+  return fetchWithAuth(`${API_BASE_URL}/hr/index.php`, {
+    method: 'POST',
+    body: JSON.stringify({ action: 'update_leave_status', leave_id: leaveId, status, decision_notes: decisionNotes }),
+  });
+}
+
+export async function createStaff(staffData) {
+  return fetchWithAuth(`${API_BASE_URL}/hr/index.php`, {
+    method: 'POST',
+    body: JSON.stringify({ action: 'create_staff', ...staffData }),
+  });
+}
+
+export async function updateStaff(staffData) {
+  return fetchWithAuth(`${API_BASE_URL}/hr/index.php`, {
+    method: 'POST',
+    body: JSON.stringify({ action: 'update_staff', ...staffData }),
+  });
+}
+
+// -------------------------------------------------------------
+// 23. Academics & Lesson Plans
+// -------------------------------------------------------------
+export async function fetchLessonPlans(classId = null, subjectId = null) {
+  let url = `${API_BASE_URL}/academics/lesson_plans.php?`;
+  if (classId) url += `class_id=${classId}&`;
+  if (subjectId) url += `subject_id=${subjectId}`;
+  return fetchWithAuth(url);
+}
+
+export async function createLessonPlan(planData) {
+  return fetchWithAuth(`${API_BASE_URL}/academics/lesson_plans.php`, {
+    method: 'POST',
+    body: JSON.stringify({ action: 'add_plan', ...planData }),
+  });
+}
+
+export async function updateLessonProgress(id, status, percentage) {
+  return fetchWithAuth(`${API_BASE_URL}/academics/lesson_plans.php`, {
+    method: 'POST',
+    body: JSON.stringify({ action: 'update_progress', id, completion_status: status, completion_percentage: percentage }),
+  });
+}
+
+// -------------------------------------------------------------
+// 24. Communication Notices & Internal Circulars
+// -------------------------------------------------------------
+export async function fetchCommunicationNotices(audience = null) {
+  let url = `${API_BASE_URL}/communication/index.php`;
+  if (audience) url += `?audience=${audience}`;
+  return fetchWithAuth(url);
+}
+
+export async function publishCommunicationNotice(noticeData) {
+  return fetchWithAuth(`${API_BASE_URL}/communication/index.php`, {
+    method: 'POST',
+    body: JSON.stringify({ action: 'publish_notice', ...noticeData }),
+  });
+}
+
+export async function toggleNoticeStatus(id, isPublished) {
+  return fetchWithAuth(`${API_BASE_URL}/communication/index.php`, {
+    method: 'POST',
+    body: JSON.stringify({ action: 'toggle_status', id, is_published: isPublished }),
+  });
+}
+
 

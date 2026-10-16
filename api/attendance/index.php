@@ -32,8 +32,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         FROM students s
         LEFT JOIN classes c ON s.class_id = c.id
         LEFT JOIN attendance_records ar ON ar.student_id = s.id 
-            AND ar.attendance_date = :att_date 
-            AND ar.attendance_type = :att_type
+            AND ar.date_ad = :att_date 
+            AND ar.type = :att_type
         WHERE s.school_id = :school_id AND s.status = 'active'
     ";
 
@@ -53,7 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $params[':class_id'] = $classId;
     }
 
-    $sql .= " ORDER BY c.display_order ASC, s.roll_no ASC, s.first_name ASC";
+    $sql .= " ORDER BY c.order_index ASC, s.roll_no ASC, s.first_name ASC";
 
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params);
@@ -91,8 +91,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $input = getJsonInput();
     $date = trim((string)($input['date'] ?? date('Y-m-d')));
-    $type = trim((string)($input['attendance_type'] ?? 'daily'));
+    $type = trim((string)($input['attendance_type'] ?? $input['type'] ?? 'daily'));
+    $periodNo = !empty($input['period_no']) ? (int)$input['period_no'] : null;
     $records = $input['records'] ?? []; // array of { student_id, status, remarks }
+
+    if (empty($records) && !empty($input['student_id'])) {
+        $records = [$input];
+    }
 
     if (!is_array($records) || empty($records)) {
         jsonResponse(false, 'No attendance records provided to mark.', null, 400);
@@ -101,40 +106,67 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $pdo->beginTransaction();
 
     try {
+        $stuInfoStmt = $pdo->prepare("SELECT class_id, section_id, branch_id FROM students WHERE id = :id");
+
         $upsert = $pdo->prepare("
             INSERT INTO attendance_records 
-            (school_id, branch_id, student_id, attendance_date, attendance_type, status, remarks, marked_by_user_id)
+            (school_id, branch_id, class_id, section_id, student_id, type, period_no, date_ad, date_bs, status, remarks, marked_by)
             VALUES 
-            (:school_id, :branch_id, :student_id, :att_date, :att_type, :status, :remarks, :marked_by)
+            (:school_id, :branch_id, :class_id, :section_id, :student_id, :type, :period_no, :date_ad, :date_bs, :status, :remarks, :marked_by)
             ON DUPLICATE KEY UPDATE 
                 status = VALUES(status),
                 remarks = VALUES(remarks),
-                marked_by_user_id = VALUES(marked_by_user_id),
-                marked_at = CURRENT_TIMESTAMP
+                marked_by = VALUES(marked_by),
+                updated_at = CURRENT_TIMESTAMP
         ");
 
         $marked = 0;
         foreach ($records as $r) {
             $studentId = (int)($r['student_id'] ?? 0);
+            if ($studentId <= 0) continue;
+
             $status = strtolower(trim((string)($r['status'] ?? 'present')));
             if (!in_array($status, ['present', 'absent', 'late', 'half_day', 'excused'], true)) {
                 $status = 'present';
             }
             $remarks = trim((string)($r['remarks'] ?? ''));
 
-            if ($studentId > 0) {
-                $upsert->execute([
-                    ':school_id'  => $schoolId,
-                    ':branch_id'  => $branchId,
-                    ':student_id' => $studentId,
-                    ':att_date'   => $date,
-                    ':att_type'   => $type,
-                    ':status'     => $status,
-                    ':remarks'    => $remarks,
-                    ':marked_by'  => (int)$user['id'],
-                ]);
-                $marked++;
+            $recClassId = !empty($r['class_id']) ? (int)$r['class_id'] : null;
+            $recSectionId = !empty($r['section_id']) ? (int)$r['section_id'] : null;
+            $recBranchId = !empty($r['branch_id']) ? (int)$r['branch_id'] : $branchId;
+
+            if (!$recClassId || !$recSectionId) {
+                $stuInfoStmt->execute([':id' => $studentId]);
+                $sInfo = $stuInfoStmt->fetch();
+                if ($sInfo) {
+                    $recClassId = $recClassId ?: (int)($sInfo['class_id'] ?? 1);
+                    $recSectionId = $recSectionId ?: (int)($sInfo['section_id'] ?? 1);
+                    $recBranchId = $recBranchId ?: (!empty($sInfo['branch_id']) ? (int)$sInfo['branch_id'] : 1);
+                }
             }
+
+            // Fallback for non-null FKs if unassigned
+            $recClassId = $recClassId ?: 1;
+            $recSectionId = $recSectionId ?: 1;
+            $recBranchId = $recBranchId ?: 1;
+
+            $recDateBs = trim((string)($r['date_bs'] ?? $input['date_bs'] ?? '2083-06-30'));
+
+            $upsert->execute([
+                ':school_id'  => $schoolId,
+                ':branch_id'  => $recBranchId,
+                ':class_id'   => $recClassId,
+                ':section_id' => $recSectionId,
+                ':student_id' => $studentId,
+                ':type'       => $type === 'period' ? 'period' : 'daily',
+                ':period_no'  => $periodNo ?: (!empty($r['period_no']) ? (int)$r['period_no'] : null),
+                ':date_ad'    => $date,
+                ':date_bs'    => $recDateBs,
+                ':status'     => $status,
+                ':remarks'    => $remarks,
+                ':marked_by'  => (int)$user['id'],
+            ]);
+            $marked++;
         }
 
         $pdo->commit();

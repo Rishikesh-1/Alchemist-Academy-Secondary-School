@@ -31,6 +31,7 @@ config.local.*
 # Database dumps, exports & local backups
 *.sql
 !schema.sql
+!api/migrations/*.sql
 *.sqlite
 *.sqlite3
 *.dump

@@ -17,23 +17,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
     // Fetch Branches
     $branchStmt = $pdo->prepare("
-        SELECT id, name, code, address, phone, email, is_main_branch, status, created_at 
+        SELECT id, name, code, address, contact_phone as phone, contact_email as email, is_main as is_main_branch, is_main, status, created_at 
         FROM branches 
         WHERE school_id = :school_id 
-        ORDER BY is_main_branch DESC, name ASC
+        ORDER BY is_main DESC, name ASC
     ");
     $branchStmt->execute([':school_id' => $schoolId]);
     $branches = $branchStmt->fetchAll();
 
     // Fetch Academic Years
-    $yearStmt = $pdo->prepare("
-        SELECT id, name, bs_year, is_current, start_date, end_date 
-        FROM academic_years 
-        WHERE school_id = :school_id 
-        ORDER BY is_current DESC, name DESC
-    ");
-    $yearStmt->execute([':school_id' => $schoolId]);
-    $academicYears = $yearStmt->fetchAll();
+    try {
+        $yearStmt = $pdo->prepare("
+            SELECT id, year_bs, year_ad, is_current, start_date_ad, end_date_ad 
+            FROM academic_years 
+            WHERE school_id = :school_id 
+            ORDER BY is_current DESC, id DESC
+        ");
+        $yearStmt->execute([':school_id' => $schoolId]);
+        $academicYears = $yearStmt->fetchAll();
+    } catch (PDOException $e) {
+        $academicYears = [];
+    }
 
     jsonResponse(true, 'School branches fetched successfully.', [
         'school'        => $school,

@@ -12,12 +12,12 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://alchemistacademy.edu.np',
+        target: 'http://localhost/Alchemist%20Academy',
         changeOrigin: true,
         secure: false,
       },
       '/uploads': {
-        target: 'https://alchemistacademy.edu.np',
+        target: 'http://localhost/Alchemist%20Academy',
         changeOrigin: true,
         secure: false,
       },

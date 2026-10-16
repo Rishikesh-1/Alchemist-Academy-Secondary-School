@@ -112,8 +112,9 @@ const INITIAL_TRANSACTIONS = [
   },
 ];
 
-const CashierFeeCollector = () => {
-  const { siteData, isDark } = useSiteData();
+const CashierFeeCollector = ({ isDark: propIsDark }) => {
+  const { siteData, isDark: contextIsDark } = useSiteData();
+  const isDark = propIsDark !== undefined ? propIsDark : contextIsDark;
   const { branding, footer } = siteData;
 
   // Search & Selected Student

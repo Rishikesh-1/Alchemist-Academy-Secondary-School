@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         FROM transfer_certificates tc
         JOIN students s ON tc.student_id = s.id
         LEFT JOIN classes c ON s.class_id = c.id
-        LEFT JOIN users u ON tc.issued_by_user_id = u.id
+        LEFT JOIN users u ON tc.issued_by = u.id
         WHERE tc.school_id = :school_id
     ";
     $params = [':school_id' => $schoolId];
@@ -63,8 +63,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $input = getJsonInput();
     $studentId = !empty($input['student_id']) ? (int)$input['student_id'] : null;
     $reasonForLeaving = trim((string)($input['reason_for_leaving'] ?? 'Parent relocation / higher studies'));
-    $conduct = trim((string)($input['conduct'] ?? 'Good'));
+    $rawConduct = ucfirst(strtolower(trim((string)($input['conduct'] ?? $input['conduct_grade'] ?? 'Good'))));
+    $conductGrade = in_array($rawConduct, ['Exemplary', 'Good', 'Satisfactory'], true) ? $rawConduct : 'Good';
     $remarks = trim((string)($input['remarks'] ?? 'Cleared all institutional dues. Character certificate issued.'));
+    $issueBs = trim((string)($input['date_of_issue_bs'] ?? '2083-06-30'));
 
     if (!$studentId) {
         jsonResponse(false, 'student_id is required.', null, 400);
@@ -80,29 +82,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $tcNumber = 'TC-' . date('Y') . '-' . str_pad((string)$studentId, 5, '0', STR_PAD_LEFT);
     $verificationToken = bin2hex(random_bytes(16));
+    $tcBranchId = !empty($student['branch_id']) ? (int)$student['branch_id'] : ($branchId ?: 1);
 
     $pdo->beginTransaction();
 
     try {
         $insert = $pdo->prepare("
             INSERT INTO transfer_certificates 
-            (school_id, student_id, tc_number, issue_date, reason_for_leaving, conduct, remarks, verification_token, issued_by_user_id)
+            (school_id, branch_id, student_id, tc_number, date_of_issue_ad, date_of_issue_bs, reason_for_leaving, conduct_grade, dues_cleared, remarks, issued_by)
             VALUES 
-            (:school_id, :student_id, :tc_number, CURDATE(), :reason, :conduct, :remarks, :v_token, :issued_by)
+            (:school_id, :branch_id, :student_id, :tc_number, CURDATE(), :issue_bs, :reason, :conduct, 1, :remarks, :issued_by)
             ON DUPLICATE KEY UPDATE 
                 reason_for_leaving = VALUES(reason_for_leaving),
-                conduct = VALUES(conduct),
+                conduct_grade = VALUES(conduct_grade),
                 remarks = VALUES(remarks)
         ");
 
         $insert->execute([
             ':school_id'  => $schoolId,
+            ':branch_id'  => $tcBranchId,
             ':student_id' => $studentId,
             ':tc_number'  => $tcNumber,
+            ':issue_bs'   => $issueBs,
             ':reason'     => $reasonForLeaving,
-            ':conduct'    => $conduct,
+            ':conduct'    => $conductGrade,
             ':remarks'    => $remarks,
-            ':v_token'    => $verificationToken,
             ':issued_by'  => (int)$user['id'],
         ]);
 

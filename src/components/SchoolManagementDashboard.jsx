@@ -18,21 +18,36 @@ import {
   ExternalLink,
   LayoutDashboard,
   UserCheck,
+  ShieldCheck,
+  Video,
+  Building2,
+  Bell,
+  HeartHandshake,
+  FolderOpen,
 } from 'lucide-react';
 import { useSiteData } from '../context/SiteContext';
 import { useAuth } from '../context/AuthContext';
 import { useSchoolData } from '../context/SchoolDataContext';
 
-// Modular Tabs
+// Modular Tabs (12 Core Modules + Operations & Audit)
 import BranchSwitcher from './dashboard/tabs/BranchSwitcher';
 import LanguageToggle from './dashboard/tabs/LanguageToggle';
+import SchoolOverviewTab from './dashboard/tabs/SchoolOverviewTab';
+import FrontOfficeTab from './dashboard/tabs/FrontOfficeTab';
 import SisTab from './dashboard/tabs/SisTab';
-import AttendanceTimetableTab from './dashboard/tabs/AttendanceTimetableTab';
-import CashierFeesTab from './dashboard/tabs/CashierFeesTab';
-import CdcGradingTab from './dashboard/tabs/CdcGradingTab';
+import ElearningLiveTab from './dashboard/tabs/ElearningLiveTab';
+import MultiBranchTab from './dashboard/tabs/MultiBranchTab';
+import BehaviorRecordsTab from './dashboard/tabs/BehaviorRecordsTab';
+import FinanceFeesTab from './dashboard/tabs/FinanceFeesTab';
+import ExaminationsTab from './dashboard/tabs/ExaminationsTab';
+import AttendanceTab from './dashboard/tabs/AttendanceTab';
+import AcademicsLessonPlanTab from './dashboard/tabs/AcademicsLessonPlanTab';
+import HumanResourceTab from './dashboard/tabs/HumanResourceTab';
+import CommunicateTab from './dashboard/tabs/CommunicateTab';
 import AdmissionsMeritTab from './dashboard/tabs/AdmissionsMeritTab';
 import OperationsTab from './dashboard/tabs/OperationsTab';
 import AuditTrailTab from './dashboard/tabs/AuditTrailTab';
+import MediaLibraryManager from './MediaLibraryManager';
 
 import DigitalStudentIDModal from './portal/DigitalStudentIDModal';
 import SMSLoginScreen from './portal/SMSLoginScreen';
@@ -46,8 +61,8 @@ const SchoolManagementDashboard = () => {
   const { schoolData } = useSchoolData();
   const { classRoster = [] } = schoolData || {};
 
-  // Active Tab: 'crm' | 'sis' | 'attendance' | 'cashier' | 'cdc-grading' | 'operations' | 'audit-trail'
-  const [activeTab, setActiveTab] = useState('sis');
+  // Active Tab: default 'overview'
+  const [activeTab, setActiveTab] = useState('overview');
   const [selectedStudentForID, setSelectedStudentForID] = useState(null);
 
   // If user not authenticated, show SMS Login Screen
@@ -55,43 +70,91 @@ const SchoolManagementDashboard = () => {
     return <SMSLoginScreen onLoginSuccess={() => {}} />;
   }
 
-  // Navigation Items with RBAC Mapping
+  // Navigation Items with RBAC Mapping: 12 Enterprise Modules
   const allNavItems = [
     {
-      id: 'crm',
-      label: getTranslation('crm', lang),
-      icon: UserPlus,
-      roles: ['superadmin', 'admin', 'principal'],
+      id: 'overview',
+      label: getTranslation('overview', lang),
+      icon: LayoutDashboard,
+      roles: ['superadmin', 'admin', 'principal', 'teacher', 'accountant'],
     },
     {
-      id: 'sis',
-      label: getTranslation('sis', lang),
+      id: 'front-office',
+      label: getTranslation('front_office', lang),
+      icon: ShieldCheck,
+      roles: ['superadmin', 'admin', 'principal', 'teacher'],
+    },
+    {
+      id: 'student-info',
+      label: getTranslation('student_info', lang),
       icon: Users,
       roles: ['superadmin', 'admin', 'principal', 'teacher', 'librarian', 'parent', 'student'],
     },
     {
-      id: 'attendance',
-      label: getTranslation('attendance', lang),
-      icon: Calendar,
-      roles: ['superadmin', 'admin', 'principal', 'teacher', 'parent', 'student'],
+      id: 'elearning',
+      label: getTranslation('elearning', lang),
+      icon: Video,
+      roles: ['superadmin', 'admin', 'principal', 'teacher', 'student'],
     },
     {
-      id: 'cashier',
-      label: getTranslation('cashier', lang),
+      id: 'multi-branch',
+      label: getTranslation('multi_branch', lang),
+      icon: Building2,
+      roles: ['superadmin', 'admin', 'principal'],
+    },
+    {
+      id: 'behavior',
+      label: getTranslation('behavior', lang),
+      icon: Award,
+      roles: ['superadmin', 'admin', 'principal', 'teacher', 'parent'],
+    },
+    {
+      id: 'finance-fees',
+      label: getTranslation('finance_fees', lang),
       icon: CreditCard,
       roles: ['superadmin', 'admin', 'principal', 'accountant', 'parent'],
     },
     {
-      id: 'cdc-grading',
-      label: getTranslation('grading', lang),
-      icon: Award,
+      id: 'examinations',
+      label: getTranslation('examinations', lang),
+      icon: FileCheck,
+      roles: ['superadmin', 'admin', 'principal', 'teacher', 'parent', 'student'],
+    },
+    {
+      id: 'attendance',
+      label: getTranslation('attendance_all', lang),
+      icon: Calendar,
+      roles: ['superadmin', 'admin', 'principal', 'teacher', 'parent', 'student'],
+    },
+    {
+      id: 'academics',
+      label: getTranslation('academics', lang),
+      icon: BookOpen,
+      roles: ['superadmin', 'admin', 'principal', 'teacher', 'student'],
+    },
+    {
+      id: 'hr',
+      label: getTranslation('hr', lang),
+      icon: UserCheck,
+      roles: ['superadmin', 'admin', 'principal', 'accountant'],
+    },
+    {
+      id: 'communicate',
+      label: getTranslation('communicate', lang),
+      icon: Bell,
       roles: ['superadmin', 'admin', 'principal', 'teacher', 'parent', 'student'],
     },
     {
       id: 'operations',
-      label: lang === 'ne' ? 'पुस्तकालय, यातायात तथा तलब' : 'Library, Transport & Payroll',
+      label: lang === 'ne' ? 'पुस्तकालय तथा यातायात' : 'Library & Transit',
       icon: Layers,
       roles: ['superadmin', 'admin', 'principal', 'librarian', 'accountant', 'student'],
+    },
+    {
+      id: 'media',
+      label: lang === 'ne' ? 'मिडिया लाइब्रेरी' : 'Media Library',
+      icon: FolderOpen,
+      roles: ['superadmin', 'admin', 'principal', 'teacher'],
     },
     {
       id: 'audit-trail',
@@ -281,9 +344,13 @@ const SchoolManagementDashboard = () => {
             isDark ? 'bg-slate-900' : 'bg-slate-100/70'
           }`}
         >
-          {activeTab === 'crm' && <AdmissionsMeritTab isDark={isDark} />}
+          {activeTab === 'overview' && (
+            <SchoolOverviewTab isDark={isDark} onNavigateTab={(t) => setActiveTab(t)} />
+          )}
 
-          {activeTab === 'sis' && (
+          {activeTab === 'front-office' && <FrontOfficeTab isDark={isDark} />}
+
+          {(activeTab === 'student-info' || activeTab === 'sis') && (
             <SisTab
               isDark={isDark}
               onSelectStudentForID={(st) => setSelectedStudentForID(st)}
@@ -291,13 +358,33 @@ const SchoolManagementDashboard = () => {
             />
           )}
 
-          {activeTab === 'attendance' && <AttendanceTimetableTab isDark={isDark} />}
+          {activeTab === 'elearning' && <ElearningLiveTab isDark={isDark} />}
 
-          {activeTab === 'cashier' && <CashierFeesTab isDark={isDark} />}
+          {activeTab === 'multi-branch' && <MultiBranchTab isDark={isDark} />}
 
-          {activeTab === 'cdc-grading' && <CdcGradingTab isDark={isDark} />}
+          {activeTab === 'behavior' && <BehaviorRecordsTab isDark={isDark} />}
+
+          {(activeTab === 'finance-fees' || activeTab === 'cashier') && (
+            <FinanceFeesTab isDark={isDark} />
+          )}
+
+          {(activeTab === 'examinations' || activeTab === 'cdc-grading') && (
+            <ExaminationsTab isDark={isDark} />
+          )}
+
+          {activeTab === 'attendance' && <AttendanceTab isDark={isDark} />}
+
+          {activeTab === 'academics' && <AcademicsLessonPlanTab isDark={isDark} />}
+
+          {activeTab === 'hr' && <HumanResourceTab isDark={isDark} />}
+
+          {activeTab === 'communicate' && <CommunicateTab isDark={isDark} />}
+
+          {activeTab === 'crm' && <AdmissionsMeritTab isDark={isDark} />}
 
           {activeTab === 'operations' && <OperationsTab isDark={isDark} />}
+
+          {activeTab === 'media' && <MediaLibraryManager isDark={isDark} />}
 
           {activeTab === 'audit-trail' && <AuditTrailTab isDark={isDark} />}
         </main>

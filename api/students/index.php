@@ -18,10 +18,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $sql = "
         SELECT 
             s.*,
+            s.permanent_address as address,
             c.name as class_name,
             sec.name as section_name,
             b.name as branch_name,
-            ay.name as academic_year_name
+            CONCAT(COALESCE(ay.year_bs, ''), ' (', COALESCE(ay.year_ad, ''), ')') as academic_year_name
         FROM students s
         LEFT JOIN classes c ON s.class_id = c.id
         LEFT JOIN sections sec ON s.section_id = sec.id
@@ -57,7 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $params[':s5'] = $wildcard;
     }
 
-    $sql .= " ORDER BY c.display_order ASC, s.roll_no ASC, s.first_name ASC";
+    $sql .= " ORDER BY c.order_index ASC, s.roll_no ASC, s.first_name ASC";
 
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params);
@@ -65,12 +66,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
     // Decode JSON documents field for each student
     foreach ($students as &$st) {
-        $st['documents'] = !empty($st['documents']) ? json_decode($st['documents'], true) : [];
+        $st['documents'] = !empty($st['documents_json']) ? json_decode($st['documents_json'], true) : [];
+        if (!isset($st['address'])) {
+            $st['address'] = $st['permanent_address'] ?? $st['current_address'] ?? '';
+        }
     }
     unset($st);
 
     // Also fetch classes and sections for filtering
-    $classStmt = $pdo->prepare("SELECT * FROM classes WHERE school_id = :school_id ORDER BY display_order ASC");
+    $classStmt = $pdo->prepare("SELECT * FROM classes WHERE school_id = :school_id ORDER BY order_index ASC");
     $classStmt->execute([':school_id' => $schoolId]);
     $classes = $classStmt->fetchAll();
 
@@ -82,10 +86,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Only Admin, Principal, or Academic can create students
-    requireAuth($pdo, ['superadmin', 'admin', 'principal', 'academic', 'admissions']);
+    // Only Admin, Principal, Teacher, or Academic can create or update students
+    requireAuth($pdo, ['superadmin', 'admin', 'principal', 'teacher', 'academic', 'admissions']);
 
     $input = getJsonInput();
+    $action = $input['action'] ?? (!empty($input['id']) ? 'update' : 'create');
+
+    $studentId   = !empty($input['id']) ? (int)$input['id'] : 0;
     $admissionNo = trim((string)($input['admission_no'] ?? 'ADM-' . date('Y') . '-' . rand(1000, 9999)));
     $firstName   = trim((string)($input['first_name'] ?? ''));
     $lastName    = trim((string)($input['last_name'] ?? ''));
@@ -101,10 +108,104 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $guardianEmail = trim((string)($input['guardian_email'] ?? ''));
     $address     = trim((string)($input['address'] ?? ''));
     $photoUrl    = trim((string)($input['photo_url'] ?? ''));
+    $status      = in_array($input['status'] ?? '', ['active', 'inactive', 'transferred', 'graduated'], true) ? $input['status'] : 'active';
     $targetBranchId = !empty($input['branch_id']) ? (int)$input['branch_id'] : $branchId;
+
+    if ($action === 'delete') {
+        $delId = (int)($input['id'] ?? 0);
+        if ($delId <= 0) {
+            jsonResponse(false, 'Valid student ID is required for deletion.', null, 400);
+        }
+        try {
+            $delStmt = $pdo->prepare("DELETE FROM students WHERE id = :id AND school_id = :school_id");
+            $delStmt->execute([':id' => $delId, ':school_id' => $schoolId]);
+            jsonResponse(true, "Student record deleted successfully.");
+        } catch (PDOException $e) {
+            jsonResponse(false, 'Failed to delete student: ' . $e->getMessage(), null, 500);
+        }
+    }
 
     if (empty($firstName) || empty($lastName)) {
         jsonResponse(false, 'Student first name and last name are required.', null, 400);
+    }
+
+    // Auto-resolve section_id if not explicitly provided
+    if (!$sectionId && $classId) {
+        $secStmt = $pdo->prepare("SELECT id FROM sections WHERE class_id = :cid ORDER BY id ASC LIMIT 1");
+        $secStmt->execute([':cid' => $classId]);
+        $sectionId = (int)$secStmt->fetchColumn() ?: null;
+        if (!$sectionId) {
+            $secCreate = $pdo->prepare("INSERT INTO sections (school_id, branch_id, class_id, name, room_no, capacity) VALUES (:s, :b, :c, 'Section A', 'Room 101', 40)");
+            $secCreate->execute([':s' => $schoolId, ':b' => $targetBranchId, ':c' => $classId]);
+            $sectionId = (int)$pdo->lastInsertId();
+        }
+    }
+
+    if ($action === 'update' && $studentId > 0) {
+        try {
+            $update = $pdo->prepare("
+                UPDATE students 
+                SET class_id = :class_id,
+                    section_id = :section_id,
+                    roll_no = :roll_no,
+                    first_name = :first_name,
+                    last_name = :last_name,
+                    gender = :gender,
+                    dob_ad = :dob_ad,
+                    dob_bs = :dob_bs,
+                    guardian_name = :guardian_name,
+                    guardian_relation = :guardian_relation,
+                    guardian_phone = :guardian_phone,
+                    guardian_email = :guardian_email,
+                    permanent_address = :perm_address,
+                    current_address = :curr_address,
+                    photo_url = :photo_url,
+                    status = :status
+                WHERE id = :id AND school_id = :school_id
+            ");
+
+            $update->execute([
+                ':class_id'         => $classId,
+                ':section_id'       => $sectionId,
+                ':roll_no'          => $rollNo,
+                ':first_name'       => $firstName,
+                ':last_name'        => $lastName,
+                ':gender'           => ucfirst(strtolower($gender)),
+                ':dob_ad'           => $dobAd,
+                ':dob_bs'           => $dobBs,
+                ':guardian_name'    => $guardianName,
+                ':guardian_relation'=> $guardianRelation,
+                ':guardian_phone'   => $guardianPhone,
+                ':guardian_email'   => $guardianEmail,
+                ':perm_address'     => $address,
+                ':curr_address'     => $address,
+                ':photo_url'        => $photoUrl,
+                ':status'           => $status,
+                ':id'               => $studentId,
+                ':school_id'        => $schoolId,
+            ]);
+
+            // Audit Log
+            logAuditAction(
+                $pdo,
+                $schoolId,
+                $targetBranchId,
+                (int)$user['id'],
+                $user['name'],
+                $user['role_slug'],
+                'STUDENT_UPDATE',
+                'students',
+                (string)$studentId,
+                null,
+                ['name' => "$firstName $lastName", 'class_id' => $classId, 'status' => $status]
+            );
+
+            jsonResponse(true, "Student {$firstName} {$lastName} updated successfully.", [
+                'student_id' => $studentId,
+            ]);
+        } catch (PDOException $e) {
+            jsonResponse(false, 'Failed to update student: ' . $e->getMessage(), null, 500);
+        }
     }
 
     // Resolve current academic year if not provided
@@ -115,55 +216,60 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $academicYearId = (int)$ayStmt->fetchColumn() ?: null;
     }
 
-    $insert = $pdo->prepare("
-        INSERT INTO students 
-        (school_id, branch_id, academic_year_id, class_id, section_id, admission_no, roll_no, first_name, last_name, gender, dob_ad, dob_bs, guardian_name, guardian_relation, guardian_phone, guardian_email, address, photo_url, status)
-        VALUES 
-        (:school_id, :branch_id, :academic_year_id, :class_id, :section_id, :admission_no, :roll_no, :first_name, :last_name, :gender, :dob_ad, :dob_bs, :guardian_name, :guardian_relation, :guardian_phone, :guardian_email, :address, :photo_url, 'active')
-    ");
+    try {
+        $insert = $pdo->prepare("
+            INSERT INTO students 
+            (school_id, branch_id, academic_year_id, class_id, section_id, admission_no, roll_no, first_name, last_name, gender, dob_ad, dob_bs, guardian_name, guardian_relation, guardian_phone, guardian_email, permanent_address, current_address, photo_url, status)
+            VALUES 
+            (:school_id, :branch_id, :academic_year_id, :class_id, :section_id, :admission_no, :roll_no, :first_name, :last_name, :gender, :dob_ad, :dob_bs, :guardian_name, :guardian_relation, :guardian_phone, :guardian_email, :perm_address, :curr_address, :photo_url, 'active')
+        ");
 
-    $insert->execute([
-        ':school_id'        => $schoolId,
-        ':branch_id'        => $targetBranchId,
-        ':academic_year_id' => $academicYearId,
-        ':class_id'         => $classId,
-        ':section_id'       => $sectionId,
-        ':admission_no'     => $admissionNo,
-        ':roll_no'          => $rollNo,
-        ':first_name'       => $firstName,
-        ':last_name'        => $lastName,
-        ':gender'           => $gender,
-        ':dob_ad'           => $dobAd,
-        ':dob_bs'           => $dobBs,
-        ':guardian_name'    => $guardianName,
-        ':guardian_relation'=> $guardianRelation,
-        ':guardian_phone'   => $guardianPhone,
-        ':guardian_email'   => $guardianEmail,
-        ':address'          => $address,
-        ':photo_url'        => $photoUrl,
-    ]);
+        $insert->execute([
+            ':school_id'        => $schoolId,
+            ':branch_id'        => $targetBranchId,
+            ':academic_year_id' => $academicYearId,
+            ':class_id'         => $classId,
+            ':section_id'       => $sectionId,
+            ':admission_no'     => $admissionNo,
+            ':roll_no'          => $rollNo,
+            ':first_name'       => $firstName,
+            ':last_name'        => $lastName,
+            ':gender'           => ucfirst(strtolower($gender)),
+            ':dob_ad'           => $dobAd,
+            ':dob_bs'           => $dobBs,
+            ':guardian_name'    => $guardianName,
+            ':guardian_relation'=> $guardianRelation,
+            ':guardian_phone'   => $guardianPhone,
+            ':guardian_email'   => $guardianEmail,
+            ':perm_address'     => $address,
+            ':curr_address'     => $address,
+            ':photo_url'        => $photoUrl,
+        ]);
 
-    $studentId = (int)$pdo->lastInsertId();
+        $studentId = (int)$pdo->lastInsertId();
 
-    // Audit Log
-    logAuditAction(
-        $pdo,
-        $schoolId,
-        $targetBranchId,
-        (int)$user['id'],
-        $user['name'],
-        $user['role_slug'],
-        'STUDENT_CREATE',
-        'students',
-        (string)$studentId,
-        null,
-        ['admission_no' => $admissionNo, 'name' => "$firstName $lastName", 'class_id' => $classId]
-    );
+        // Audit Log
+        logAuditAction(
+            $pdo,
+            $schoolId,
+            $targetBranchId,
+            (int)$user['id'],
+            $user['name'],
+            $user['role_slug'],
+            'STUDENT_CREATE',
+            'students',
+            (string)$studentId,
+            null,
+            ['admission_no' => $admissionNo, 'name' => "$firstName $lastName", 'class_id' => $classId]
+        );
 
-    jsonResponse(true, "Student {$firstName} {$lastName} registered successfully.", [
-        'student_id'   => $studentId,
-        'admission_no' => $admissionNo,
-    ]);
+        jsonResponse(true, "Student {$firstName} {$lastName} registered successfully.", [
+            'student_id'   => $studentId,
+            'admission_no' => $admissionNo,
+        ]);
+    } catch (PDOException $e) {
+        jsonResponse(false, 'Failed to register student: ' . $e->getMessage(), null, 500);
+    }
 }
 
 jsonResponse(false, 'Method not allowed.', null, 405);

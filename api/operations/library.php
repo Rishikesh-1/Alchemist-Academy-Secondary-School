@@ -28,13 +28,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             s.admission_no,
             s.guardian_phone,
             c.name as class_name,
-            DATEDIFF(CURDATE(), li.due_date) as overdue_days
+            DATEDIFF(CURDATE(), li.due_date_ad) as overdue_days
         FROM library_issues li
         JOIN library_books b ON li.book_id = b.id
         JOIN students s ON li.student_id = s.id
         LEFT JOIN classes c ON s.class_id = c.id
         WHERE li.school_id = :school_id
-        ORDER BY li.issue_date DESC LIMIT 100
+        ORDER BY li.issue_date_ad DESC LIMIT 100
     ");
     $issuesStmt->execute([':school_id' => $schoolId]);
     $issues = $issuesStmt->fetchAll();
@@ -56,29 +56,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $author = trim((string)($input['author'] ?? ''));
         $isbn = trim((string)($input['isbn'] ?? ''));
         $category = trim((string)($input['category'] ?? 'General'));
-        $copies = (int)($input['copies'] ?? 1);
-        $shelf = trim((string)($input['shelf_location'] ?? 'Stack A'));
+        $copies = (int)($input['copies'] ?? $input['total_copies'] ?? 1);
+        $rack = trim((string)($input['rack_no'] ?? $input['shelf_location'] ?? 'Stack A'));
+        $accessionNo = trim((string)($input['accession_no'] ?? 'LIB-' . rand(1000, 9999)));
 
         if (empty($title)) {
             jsonResponse(false, 'Book title is required.', null, 400);
         }
 
         $ins = $pdo->prepare("
-            INSERT INTO library_books (school_id, branch_id, title, author, isbn, category, total_copies, available_copies, shelf_location)
-            VALUES (:school_id, :branch_id, :title, :author, :isbn, :cat, :copies, :copies, :shelf)
+            INSERT INTO library_books (school_id, branch_id, accession_no, title, author, isbn, category, total_copies, available_copies, rack_no)
+            VALUES (:school_id, :branch_id, :acc, :title, :author, :isbn, :cat, :copies, :copies, :rack)
         ");
         $ins->execute([
             ':school_id' => $schoolId,
             ':branch_id' => $branchId,
+            ':acc'       => $accessionNo,
             ':title'     => $title,
-            ':author'    => $author,
-            ':isbn'      => $isbn,
+            ':author'    => $author ?: 'Unknown',
+            ':isbn'      => $isbn ?: null,
             ':cat'       => $category,
             ':copies'    => $copies,
-            ':shelf'     => $shelf,
+            ':rack'      => $rack,
         ]);
 
-        jsonResponse(true, "Book '{$title}' added to catalog.", ['book_id' => (int)$pdo->lastInsertId()]);
+        $bookId = (int)$pdo->lastInsertId();
+        jsonResponse(true, "Book '{$title}' added to catalog.", ['book_id' => $bookId, 'id' => $bookId]);
     }
 
     if ($action === 'issue_book') {
@@ -102,16 +105,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pdo->beginTransaction();
         try {
             $iss = $pdo->prepare("
-                INSERT INTO library_issues (school_id, book_id, student_id, issue_date, due_date, status, issued_by_user_id)
-                VALUES (:school_id, :book_id, :student_id, CURDATE(), DATE_ADD(CURDATE(), INTERVAL :days DAY), 'issued', :user_id)
+                INSERT INTO library_issues (school_id, branch_id, book_id, student_id, borrower_type, issue_date_ad, due_date_ad, status, issued_by)
+                VALUES (:school_id, :branch_id, :book_id, :student_id, 'student', CURDATE(), DATE_ADD(CURDATE(), INTERVAL :days DAY), 'issued', :user_id)
             ");
             $iss->execute([
                 ':school_id'  => $schoolId,
+                ':branch_id'  => $branchId,
                 ':book_id'    => $bookId,
                 ':student_id' => $studentId,
                 ':days'       => $dueDays,
                 ':user_id'    => (int)$user['id'],
             ]);
+
+            $newIssueId = (int)$pdo->lastInsertId();
 
             // Decrement available copies
             $pdo->prepare("UPDATE library_books SET available_copies = available_copies - 1 WHERE id = :id")
@@ -133,7 +139,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ['book_title' => $book['title'], 'student_id' => $studentId, 'due_days' => $dueDays]
             );
 
-            jsonResponse(true, "Book '{$book['title']}' issued successfully.");
+            jsonResponse(true, "Book '{$book['title']}' issued successfully.", [
+                'issue_id' => $newIssueId,
+                'id'       => $newIssueId,
+            ]);
         } catch (Exception $e) {
             $pdo->rollBack();
             jsonResponse(false, 'Failed to issue book: ' . $e->getMessage(), null, 500);
@@ -141,7 +150,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($action === 'return_book') {
-        $issueId = (int)($input['issue_id'] ?? 0);
+        $issueId = (int)($input['issue_id'] ?? $input['id'] ?? 0);
         $finePaid = (float)($input['fine_paid'] ?? 0);
 
         if (!$issueId) {
@@ -160,9 +169,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             $pdo->prepare("
                 UPDATE library_issues 
-                SET return_date = CURDATE(), status = 'returned', fine_amount = :fine, fine_paid = :fine 
-                WHERE id = :id
-            ")->execute([':fine' => $finePaid, ':id' => $issueId]);
+                SET return_date_ad = CURDATE(), status = 'returned', fine_amount = :fine, is_fine_paid = :is_paid 
+                WHERE id = :id AND school_id = :school_id
+            ")->execute([
+                ':fine'      => $finePaid,
+                ':is_paid'   => $finePaid > 0 ? 1 : 0,
+                ':id'        => $issueId,
+                ':school_id' => $schoolId,
+            ]);
 
             $pdo->prepare("UPDATE library_books SET available_copies = available_copies + 1 WHERE id = :id")
                 ->execute([':id' => $issRec['book_id']]);

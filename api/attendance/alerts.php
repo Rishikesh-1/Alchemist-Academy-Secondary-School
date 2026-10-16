@@ -31,12 +31,12 @@ $sql = "
         s.guardian_email,
         c.name as class_name,
         ar.id as attendance_record_id,
-        ar.attendance_type
+        ar.type as attendance_type
     FROM attendance_records ar
     JOIN students s ON ar.student_id = s.id
     LEFT JOIN classes c ON s.class_id = c.id
     WHERE ar.school_id = :school_id 
-      AND ar.attendance_date = :att_date 
+      AND ar.date_ad = :att_date 
       AND ar.status = 'absent'
 ";
 
@@ -66,9 +66,9 @@ $pdo->beginTransaction();
 try {
     $insertAlert = $pdo->prepare("
         INSERT INTO absence_alerts 
-        (school_id, student_id, attendance_record_id, alert_channel, recipient_phone, message_body, delivery_status)
+        (school_id, student_id, date_ad, guardian_phone, guardian_email, channel, message_body, status)
         VALUES 
-        (:school_id, :student_id, :rec_id, :channel, :phone, :body, 'sent')
+        (:school_id, :student_id, :date_ad, :phone, :email, :channel, :body, 'sent')
     ");
 
     $insertNotification = $pdo->prepare("
@@ -83,14 +83,16 @@ try {
     foreach ($absentees as $st) {
         $studentFullName = "{$st['first_name']} {$st['last_name']}";
         $guardianPhone = $st['guardian_phone'] ?: 'N/A';
+        $guardianEmail = $st['guardian_email'] ?: null;
         $messageText = "Dear Parent/Guardian, {$studentFullName} (Class: {$st['class_name']}, Roll/Adm: {$st['admission_no']}) was marked ABSENT today ({$date}). Please contact school administration if you did not authorize this absence.";
 
         $insertAlert->execute([
             ':school_id'   => $schoolId,
             ':student_id'  => (int)$st['student_id'],
-            ':rec_id'      => (int)$st['attendance_record_id'],
-            ':channel'     => $channel,
+            ':date_ad'     => $date,
             ':phone'       => $guardianPhone,
+            ':email'       => $guardianEmail,
+            ':channel'     => in_array($channel, ['sms', 'email', 'in_app', 'whatsapp']) ? $channel : 'sms',
             ':body'        => $messageText,
         ]);
 

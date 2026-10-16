@@ -36,6 +36,20 @@ export const TRANSLATIONS = {
     payroll: 'Staff Payroll',
     audit: 'Audit Trail Logs',
 
+    // 12 SMS Modules
+    overview: 'School Overview',
+    front_office: 'Front Office & Visitors',
+    student_info: 'Student Info & Records',
+    elearning: 'Online Courses & Live Classes',
+    multi_branch: 'Multi-Branch Campuses',
+    behavior: 'Behavior & Conduct Records',
+    finance_fees: 'Income, Expenses & Fees',
+    examinations: 'Examinations (CBSE/CBT)',
+    attendance_all: 'Student & Staff Attendance',
+    academics: 'Academics & Lesson Plans',
+    hr: 'Human Resources & Payroll',
+    communicate: 'Communicate & Circulars',
+
     // Actions & Buttons
     search: 'Search...',
     filter: 'Filter',
@@ -100,6 +114,20 @@ export const TRANSLATIONS = {
     transport: 'यातायात तथा बस सेवा',
     payroll: 'कर्मचारी तलब तथा भुक्तानी',
     audit: 'अपरिवर्तनीय अडिट लग',
+
+    // 12 SMS Modules
+    overview: 'विद्यालय अवलोकन',
+    front_office: 'फ्रन्ट अफिस तथा आगन्तुक व्यवस्थापन',
+    student_info: 'विद्यार्थी जानकारी तथा प्रोफाइल',
+    elearning: 'अनलाइन कोर्ष तथा प्रत्यक्ष कक्षा',
+    multi_branch: 'बहु-शाखा क्याम्पस व्यवस्थापन',
+    behavior: 'विद्यार्थी आचरण तथा अनुशासन',
+    finance_fees: 'आय, व्यय तथा शुल्क संकलन',
+    examinations: 'परीक्षा तथा अनलाइन मूल्याङ्कन',
+    attendance_all: 'विद्यार्थी तथा कर्मचारी हाजिरी',
+    academics: 'शैक्षिक योजना तथा पाठ योजना',
+    hr: 'मानव संसाधन तथा कर्मचारी',
+    communicate: 'सञ्चार तथा डिजिटल सूचना पाटी',
 
     // Actions & Buttons
     search: 'खोज्नुहोस्...',

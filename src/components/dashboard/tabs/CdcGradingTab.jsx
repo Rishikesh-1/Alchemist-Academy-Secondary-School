@@ -130,17 +130,21 @@ const CdcGradingTab = ({ isDark }) => {
   return (
     <div className="space-y-6">
       {/* Header controls */}
-      <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-2xl bg-slate-950 border border-slate-800">
+      <div className={`flex flex-wrap items-center justify-between gap-3 p-4 rounded-2xl border ${
+        isDark ? 'bg-slate-950 border-slate-800' : 'bg-white border-slate-200 shadow-sm'
+      }`}>
         <div className="flex items-center gap-3 flex-wrap">
           {/* Exam Selector */}
           <div>
-            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+            <label className={`block text-[10px] font-bold uppercase tracking-wider mb-1 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
               Examination Term
             </label>
             <select
               value={selectedExamId}
               onChange={(e) => setSelectedExamId(Number(e.target.value))}
-              className="bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white"
+              className={`border rounded-xl px-3 py-1.5 text-xs ${
+                isDark ? 'bg-slate-900 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'
+              }`}
             >
               <option value={1}>First Terminal Examination 2026</option>
               <option value={2}>Half Yearly Examination 2026</option>
@@ -150,13 +154,15 @@ const CdcGradingTab = ({ isDark }) => {
 
           {/* Class Selector */}
           <div>
-            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+            <label className={`block text-[10px] font-bold uppercase tracking-wider mb-1 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
               Class / Grade
             </label>
             <select
               value={selectedClassId}
               onChange={(e) => setSelectedClassId(Number(e.target.value))}
-              className="bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white"
+              className={`border rounded-xl px-3 py-1.5 text-xs ${
+                isDark ? 'bg-slate-900 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'
+              }`}
             >
               <option value={1}>Grade 10</option>
               <option value={2}>Grade 9</option>
@@ -166,13 +172,15 @@ const CdcGradingTab = ({ isDark }) => {
 
           {/* Subject Selector */}
           <div>
-            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+            <label className={`block text-[10px] font-bold uppercase tracking-wider mb-1 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
               Subject
             </label>
             <select
               value={selectedSubjectId}
               onChange={(e) => setSelectedSubjectId(Number(e.target.value))}
-              className="bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-emerald-400 font-bold"
+              className={`border rounded-xl px-3 py-1.5 text-xs font-bold ${
+                isDark ? 'bg-slate-900 border-slate-700 text-emerald-400' : 'bg-slate-50 border-slate-300 text-emerald-700'
+              }`}
             >
               {subjects.map((s) => (
                 <option key={s.id} value={s.id}>
@@ -214,11 +222,11 @@ const CdcGradingTab = ({ isDark }) => {
       )}
 
       {/* Marks Entry Table */}
-      <div className="rounded-2xl border border-slate-800 bg-slate-950 overflow-hidden">
+      <div className={`rounded-2xl border overflow-hidden ${isDark ? 'border-slate-800 bg-slate-950' : 'border-slate-200 bg-white shadow-sm'}`}>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b border-slate-800 bg-slate-900 text-slate-400 font-bold uppercase text-[10px]">
+              <tr className={`border-b font-bold uppercase text-[10px] ${isDark ? 'border-slate-800 bg-slate-900 text-slate-400' : 'border-slate-200 bg-slate-50 text-slate-700'}`}>
                 <th className="py-3 px-4">Roll</th>
                 <th className="py-3 px-4">Student</th>
                 <th className="py-3 px-4">Theory (75)</th>
@@ -229,22 +237,22 @@ const CdcGradingTab = ({ isDark }) => {
                 <th className="py-3 px-4 text-right">Report Card</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800">
+            <tbody className={`divide-y ${isDark ? 'divide-slate-800' : 'divide-slate-200'}`}>
               {marksEntries.map((m) => {
                 const total = Number(m.theory_marks || 0) + Number(m.practical_marks || 0);
                 const grade = m.grade_letter || computeGrade(m.theory_marks, m.practical_marks).letter;
                 const gp = m.grade_point !== undefined ? m.grade_point : computeGrade(m.theory_marks, m.practical_marks).gp;
 
                 return (
-                  <tr key={m.student_id} className="hover:bg-slate-900/40">
-                    <td className="py-3 px-4 font-mono font-bold text-slate-300">
+                  <tr key={m.student_id} className={`transition-colors ${isDark ? 'hover:bg-slate-900/40' : 'hover:bg-slate-50'}`}>
+                    <td className={`py-3 px-4 font-mono font-bold ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
                       {lang === 'ne' ? toNepaliNumerals(m.roll_no) : m.roll_no}
                     </td>
                     <td className="py-3 px-4">
-                      <div className="font-bold text-white">
+                      <div className={`font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
                         {m.first_name} {m.last_name}
                       </div>
-                      <div className="text-[10px] text-slate-400 font-mono">{m.admission_no}</div>
+                      <div className={`text-[10px] font-mono ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{m.admission_no}</div>
                     </td>
                     <td className="py-3 px-4">
                       <input
@@ -253,7 +261,9 @@ const CdcGradingTab = ({ isDark }) => {
                         max="75"
                         value={m.theory_marks || ''}
                         onChange={(e) => handleMarkChange(m.student_id, 'theory_marks', e.target.value)}
-                        className="w-16 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-xs text-white font-mono"
+                        className={`w-16 border rounded-lg px-2 py-1 text-xs font-mono ${
+                          isDark ? 'bg-slate-900 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'
+                        }`}
                       />
                     </td>
                     <td className="py-3 px-4">
@@ -263,31 +273,33 @@ const CdcGradingTab = ({ isDark }) => {
                         max="25"
                         value={m.practical_marks || ''}
                         onChange={(e) => handleMarkChange(m.student_id, 'practical_marks', e.target.value)}
-                        className="w-16 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-xs text-white font-mono"
+                        className={`w-16 border rounded-lg px-2 py-1 text-xs font-mono ${
+                          isDark ? 'bg-slate-900 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'
+                        }`}
                       />
                     </td>
-                    <td className="py-3 px-4 font-mono font-bold text-white">{total}</td>
+                    <td className={`py-3 px-4 font-mono font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{total}</td>
                     <td className="py-3 px-4">
                       <span
                         className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
                           grade.startsWith('A')
-                            ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                            ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border border-emerald-500/40'
                             : grade.startsWith('B')
-                            ? 'bg-blue-500/20 text-blue-300 border border-blue-500/40'
+                            ? 'bg-blue-500/20 text-blue-600 dark:text-blue-300 border border-blue-500/40'
                             : grade.startsWith('C')
-                            ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
-                            : 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
+                            ? 'bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/40'
+                            : 'bg-rose-500/20 text-rose-600 dark:text-rose-300 border border-rose-500/40'
                         }`}
                       >
                         {grade}
                       </span>
                     </td>
-                    <td className="py-3 px-4 font-mono font-semibold text-slate-300">{Number(gp).toFixed(2)}</td>
+                    <td className={`py-3 px-4 font-mono font-semibold ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>{Number(gp).toFixed(2)}</td>
                     <td className="py-3 px-4 text-right">
                       <button
                         type="button"
                         onClick={() => handleViewReportCard(m.student_id)}
-                        className="p-1.5 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 transition-colors cursor-pointer"
+                        className="p-1.5 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-500 transition-colors cursor-pointer"
                         title="Generate Official CDC Grade Sheet"
                       >
                         <Eye className="w-3.5 h-3.5" />
@@ -304,77 +316,85 @@ const CdcGradingTab = ({ isDark }) => {
       {/* OFFICIAL REPORT CARD PRINT PREVIEW MODAL */}
       {showReportCardModal && reportCardData && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-          <div className="bg-slate-900 border border-indigo-500/30 rounded-3xl p-6 sm:p-8 max-w-2xl w-full shadow-2xl relative max-h-[90vh] overflow-y-auto">
+          <div className={`border rounded-3xl p-6 sm:p-8 max-w-2xl w-full shadow-2xl relative max-h-[90vh] overflow-y-auto ${
+            isDark ? 'bg-slate-900 border-indigo-500/30 text-white' : 'bg-white border-indigo-200 text-slate-900'
+          }`}>
             <button
               onClick={() => setShowReportCardModal(false)}
-              className="absolute top-5 right-5 text-slate-400 hover:text-white cursor-pointer"
+              className={`absolute top-5 right-5 cursor-pointer ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-800'}`}
             >
               <X className="w-5 h-5" />
             </button>
 
             {/* Printable Grade Sheet Card */}
-            <div className="p-6 bg-slate-950 text-slate-100 rounded-2xl border-2 border-indigo-500/30 space-y-4">
+            <div className={`p-6 rounded-2xl border-2 space-y-4 ${
+              isDark ? 'bg-slate-950 text-slate-100 border-indigo-500/30' : 'bg-slate-50 text-slate-900 border-indigo-200'
+            }`}>
               {/* Institution Header */}
-              <div className="text-center border-b border-slate-800 pb-3">
-                <div className="text-[10px] uppercase font-bold tracking-widest text-emerald-400">
+              <div className={`text-center border-b pb-3 ${isDark ? 'border-slate-800' : 'border-slate-200'}`}>
+                <div className={`text-[10px] uppercase font-bold tracking-widest ${isDark ? 'text-emerald-400' : 'text-emerald-700'}`}>
                   Government of Nepal • Curriculum Development Centre (CDC)
                 </div>
-                <h3 className="text-xl font-bold font-serif-brand text-white mt-1">
+                <h3 className={`text-xl font-bold font-serif-brand mt-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>
                   {reportCardData.school?.name || 'Alchemist Academy'}
                 </h3>
-                <div className="text-xs text-slate-400">
+                <div className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
                   {reportCardData.school?.address || 'Bouddha, Kathmandu'} • Affiliated to NEB
                 </div>
-                <div className="mt-2 inline-block px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 font-bold text-xs uppercase tracking-wider">
+                <div className={`mt-2 inline-block px-3 py-1 rounded-full font-bold text-xs uppercase tracking-wider ${
+                  isDark ? 'bg-indigo-500/20 text-indigo-300' : 'bg-indigo-100 text-indigo-800'
+                }`}>
                   Terminal Grade-Sheet (Academic Session 2026 / 2083 BS)
                 </div>
               </div>
 
               {/* Student Metadata Dossier */}
-              <div className="grid grid-cols-2 gap-2 text-xs bg-slate-900 p-3 rounded-xl border border-slate-800">
+              <div className={`grid grid-cols-2 gap-2 text-xs p-3 rounded-xl border ${
+                isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
+              }`}>
                 <div>
-                  Student Name: <strong className="text-white">{reportCardData.student?.first_name} {reportCardData.student?.last_name}</strong>
+                  Student Name: <strong className={isDark ? 'text-white' : 'text-slate-900'}>{reportCardData.student?.first_name} {reportCardData.student?.last_name}</strong>
                 </div>
                 <div>
-                  Class: <strong className="text-emerald-400">{reportCardData.student?.class_name}</strong>
+                  Class: <strong className={isDark ? 'text-emerald-400' : 'text-emerald-700'}>{reportCardData.student?.class_name}</strong>
                 </div>
                 <div>
-                  Admission No: <strong className="font-mono text-slate-300">{reportCardData.student?.admission_no}</strong>
+                  Admission No: <strong className={`font-mono ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>{reportCardData.student?.admission_no}</strong>
                 </div>
                 <div>
-                  Roll No: <strong className="font-mono text-slate-300">{reportCardData.student?.roll_no}</strong>
+                  Roll No: <strong className={`font-mono ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>{reportCardData.student?.roll_no}</strong>
                 </div>
                 <div className="col-span-2">
-                  DOB: <strong className="text-slate-300">{formatDualDate(reportCardData.student?.dob_ad, lang)}</strong>
+                  DOB: <strong className={isDark ? 'text-slate-300' : 'text-slate-700'}>{formatDualDate(reportCardData.student?.dob_ad, lang)}</strong>
                 </div>
               </div>
 
               {/* Subject Breakdown Table */}
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs border border-slate-800">
-                  <thead className="bg-slate-900 text-slate-400 text-[10px] uppercase">
+                <table className={`w-full text-left text-xs border ${isDark ? 'border-slate-800' : 'border-slate-200'}`}>
+                  <thead className={`text-[10px] uppercase ${isDark ? 'bg-slate-900 text-slate-400' : 'bg-slate-100 text-slate-700 font-bold'}`}>
                     <tr>
-                      <th className="py-2 px-3 border-r border-slate-800">Subject</th>
-                      <th className="py-2 px-2 text-center border-r border-slate-800">Credit</th>
-                      <th className="py-2 px-2 text-center border-r border-slate-800">Theory</th>
-                      <th className="py-2 px-2 text-center border-r border-slate-800">Practical</th>
-                      <th className="py-2 px-2 text-center border-r border-slate-800">Total</th>
-                      <th className="py-2 px-2 text-center border-r border-slate-800">Grade</th>
+                      <th className={`py-2 px-3 border-r ${isDark ? 'border-slate-800' : 'border-slate-200'}`}>Subject</th>
+                      <th className={`py-2 px-2 text-center border-r ${isDark ? 'border-slate-800' : 'border-slate-200'}`}>Credit</th>
+                      <th className={`py-2 px-2 text-center border-r ${isDark ? 'border-slate-800' : 'border-slate-200'}`}>Theory</th>
+                      <th className={`py-2 px-2 text-center border-r ${isDark ? 'border-slate-800' : 'border-slate-200'}`}>Practical</th>
+                      <th className={`py-2 px-2 text-center border-r ${isDark ? 'border-slate-800' : 'border-slate-200'}`}>Total</th>
+                      <th className={`py-2 px-2 text-center border-r ${isDark ? 'border-slate-800' : 'border-slate-200'}`}>Grade</th>
                       <th className="py-2 px-2 text-center">Grade Point</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-800">
+                  <tbody className={`divide-y ${isDark ? 'divide-slate-800' : 'divide-slate-200'}`}>
                     {reportCardData.subjects?.map((sub, i) => (
-                      <tr key={i} className="hover:bg-slate-900/30">
-                        <td className="py-2 px-3 border-r border-slate-800 font-medium text-slate-200">
+                      <tr key={i} className={`transition-colors ${isDark ? 'hover:bg-slate-900/30' : 'hover:bg-slate-100/50'}`}>
+                        <td className={`py-2 px-3 border-r font-medium ${isDark ? 'border-slate-800 text-slate-200' : 'border-slate-200 text-slate-800'}`}>
                           {sub.subject_name}
                         </td>
-                        <td className="py-2 px-2 text-center border-r border-slate-800 font-mono">{sub.credit_hours || 4.0}</td>
-                        <td className="py-2 px-2 text-center border-r border-slate-800 font-mono">{sub.theory_marks || 0}</td>
-                        <td className="py-2 px-2 text-center border-r border-slate-800 font-mono">{sub.practical_marks || 0}</td>
-                        <td className="py-2 px-2 text-center border-r border-slate-800 font-mono font-bold text-white">{sub.total_marks || 0}</td>
-                        <td className="py-2 px-2 text-center border-r border-slate-800 font-bold text-emerald-400">{sub.grade_letter || 'A'}</td>
-                        <td className="py-2 px-2 text-center font-mono font-bold text-slate-300">{sub.grade_point || '3.6'}</td>
+                        <td className={`py-2 px-2 text-center border-r font-mono ${isDark ? 'border-slate-800' : 'border-slate-200'}`}>{sub.credit_hours || 4.0}</td>
+                        <td className={`py-2 px-2 text-center border-r font-mono ${isDark ? 'border-slate-800' : 'border-slate-200'}`}>{sub.theory_marks || 0}</td>
+                        <td className={`py-2 px-2 text-center border-r font-mono ${isDark ? 'border-slate-800' : 'border-slate-200'}`}>{sub.practical_marks || 0}</td>
+                        <td className={`py-2 px-2 text-center border-r font-mono font-bold ${isDark ? 'border-slate-800 text-white' : 'border-slate-200 text-slate-900'}`}>{sub.total_marks || 0}</td>
+                        <td className={`py-2 px-2 text-center border-r font-bold ${isDark ? 'border-slate-800 text-emerald-400' : 'border-slate-200 text-emerald-700'}`}>{sub.grade_letter || 'A'}</td>
+                        <td className={`py-2 px-2 text-center font-mono font-bold ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>{sub.grade_point || '3.6'}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -382,29 +402,35 @@ const CdcGradingTab = ({ isDark }) => {
               </div>
 
               {/* Summary Results */}
-              <div className="p-3 bg-slate-900 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+              <div className={`p-3 rounded-xl border flex items-center justify-between text-xs ${
+                isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
+              }`}>
                 <div>
-                  <div className="text-[10px] uppercase font-bold text-slate-400">Cumulative GPA</div>
-                  <div className="text-lg font-bold font-mono text-emerald-400">
+                  <div className={`text-[10px] uppercase font-bold ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Cumulative GPA</div>
+                  <div className={`text-lg font-bold font-mono ${isDark ? 'text-emerald-400' : 'text-emerald-700'}`}>
                     {reportCardData.summary?.gpa || '3.75'}
                   </div>
                 </div>
                 <div>
-                  <div className="text-[10px] uppercase font-bold text-slate-400">Overall Grade</div>
-                  <div className="text-lg font-bold font-mono text-teal-300">
+                  <div className={`text-[10px] uppercase font-bold ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Overall Grade</div>
+                  <div className={`text-lg font-bold font-mono ${isDark ? 'text-teal-300' : 'text-teal-700'}`}>
                     {reportCardData.summary?.overall_grade || 'A+'}
                   </div>
                 </div>
                 <div>
-                  <div className="text-[10px] uppercase font-bold text-slate-400">Result Status</div>
-                  <div className="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/30">
+                  <div className={`text-[10px] uppercase font-bold ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Result Status</div>
+                  <div className={`text-xs font-bold px-2.5 py-1 rounded-full border ${
+                    isDark ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30' : 'text-emerald-800 bg-emerald-50 border-emerald-300'
+                  }`}>
                     {reportCardData.summary?.result_status || 'Passed'}
                   </div>
                 </div>
               </div>
 
               {/* Signatures */}
-              <div className="pt-6 flex justify-between text-[11px] font-bold text-slate-400 border-t border-slate-800">
+              <div className={`pt-6 flex justify-between text-[11px] font-bold border-t ${
+                isDark ? 'border-slate-800 text-slate-400' : 'border-slate-200 text-slate-600'
+              }`}>
                 <div>Class Teacher Signature</div>
                 <div>Examination Controller</div>
                 <div>Principal / Headmaster Stamp</div>
