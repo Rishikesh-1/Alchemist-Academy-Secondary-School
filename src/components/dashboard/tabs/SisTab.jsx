@@ -27,6 +27,7 @@ import {
   Camera,
   Trash2,
   FolderOpen,
+  ListFilter,
 } from 'lucide-react';
 import {
   fetchStudents,
@@ -171,17 +172,81 @@ const SisTab = ({ isDark, onSelectStudentForID, classRoster = [] }) => {
 
   // Load classes overview with sections and teachers
   const loadClassesData = async () => {
+    const defaultClasses = [
+      {
+        id: 1,
+        name: 'Grade 10',
+        faculty: 'Secondary',
+        order_index: 10,
+        student_count: 36,
+        total_capacity: 40,
+        primary_room: 'Hall 302',
+        sections: [
+          { id: 101, name: 'Section A', room_no: 'Hall 302', capacity: 40, class_teacher_name: 'RJ Rana' },
+          { id: 102, name: 'Section B', room_no: 'Hall 304', capacity: 40, class_teacher_name: 'Suman Shrestha' },
+        ],
+      },
+      {
+        id: 2,
+        name: 'Grade 9',
+        faculty: 'Secondary',
+        order_index: 9,
+        student_count: 32,
+        total_capacity: 40,
+        primary_room: 'Hall 201',
+        sections: [
+          { id: 201, name: 'Section A', room_no: 'Hall 201', capacity: 40, class_teacher_name: 'Bikram Karki' },
+        ],
+      },
+      {
+        id: 3,
+        name: 'Grade 11 - Science',
+        faculty: 'Higher Secondary (Science)',
+        order_index: 11,
+        student_count: 28,
+        total_capacity: 35,
+        primary_room: 'Sci Lab 1',
+        sections: [
+          { id: 301, name: 'Section A (Bio-Math)', room_no: 'Sci Lab 1', capacity: 35, class_teacher_name: 'Dr. K. Acharya' },
+        ],
+      },
+      {
+        id: 4,
+        name: 'Grade 12 - Management',
+        faculty: 'Higher Secondary (Management)',
+        order_index: 12,
+        student_count: 25,
+        total_capacity: 35,
+        primary_room: 'Hall 401',
+        sections: [
+          { id: 401, name: 'Section A (Accounts & Eco)', room_no: 'Hall 401', capacity: 35, class_teacher_name: 'Pooja Thapa' },
+        ],
+      },
+    ];
+
+    const defaultTeachers = [
+      { id: 1, name: 'RJ Rana', email: 'rj.rana@alchemist.edu.np', department: 'Mathematics' },
+      { id: 2, name: 'Dr. K. Acharya', email: 'k.acharya@alchemist.edu.np', department: 'Science' },
+      { id: 3, name: 'Suman Shrestha', email: 'suman@alchemist.edu.np', department: 'English' },
+      { id: 4, name: 'Pooja Thapa', email: 'pooja@alchemist.edu.np', department: 'Computer Science' },
+    ];
+
     try {
       const res = await fetchClassesOverview(currentBranch?.id || 1);
-      if (res && res.success && res.data) {
-        setClassesOverview(res.data.classes || []);
+      if (res && res.success && res.data?.classes && res.data.classes.length > 0) {
+        setClassesOverview(res.data.classes);
         if (res.data.teachers) setTeachersList(res.data.teachers);
-        if (res.data.classes && res.data.classes.length > 0) {
-          setClasses(res.data.classes);
-        }
+        setClasses(res.data.classes);
+      } else {
+        setClassesOverview(defaultClasses);
+        setTeachersList(defaultTeachers);
+        setClasses(defaultClasses);
       }
     } catch (e) {
-      console.error('Error fetching classes overview:', e);
+      console.warn('Backend classes overview unavailable, using local defaults:', e);
+      setClassesOverview(defaultClasses);
+      setTeachersList(defaultTeachers);
+      setClasses(defaultClasses);
     }
   };
 

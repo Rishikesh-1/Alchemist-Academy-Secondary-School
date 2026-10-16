@@ -13,6 +13,7 @@ import {
   Lock,
   Unlock,
   AlertTriangle,
+  School,
 } from 'lucide-react';
 import { useSiteData } from '../context/SiteContext';
 import { useSchoolData } from '../context/SchoolDataContext';
@@ -151,10 +152,27 @@ const ExecutiveSwitcherDock = () => {
               title="Staff CMS & Cashier Counter"
             >
               <CreditCard className="w-3.5 h-3.5 text-teal-400" />
-              <span>Cashier/CMS</span>
+              <span>CMS</span>
             </button>
 
-            {/* 5. Vendor Hub */}
+            {/* 5. School Management System (SMS ERP) */}
+            <button
+              type="button"
+              onClick={() => navigateTo('sms')}
+              className={`px-2.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+                currentRoute === 'sms' || currentRoute === 'sms-dashboard'
+                  ? 'bg-emerald-600 text-white shadow-sm'
+                  : isDark
+                  ? 'text-emerald-300 hover:bg-slate-800'
+                  : 'text-emerald-700 hover:bg-slate-100'
+              }`}
+              title="Enterprise School Management System (SMS ERP)"
+            >
+              <School className="w-3.5 h-3.5 text-emerald-400" />
+              <span>SMS ERP</span>
+            </button>
+
+            {/* 6. Vendor Hub */}
             <button
               type="button"
               onClick={() => navigateTo('vendor-hub')}
@@ -168,7 +186,7 @@ const ExecutiveSwitcherDock = () => {
               title="Rishi's Vendor SaaS Fleet Command"
             >
               <Server className="w-3.5 h-3.5 text-purple-400" />
-              <span>Vendor Hub</span>
+              <span>Vendor</span>
             </button>
           </div>
         )}

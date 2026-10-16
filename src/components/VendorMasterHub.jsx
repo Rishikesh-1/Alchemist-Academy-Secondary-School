@@ -34,6 +34,7 @@ import {
   TrendingUp,
   Cpu,
   LogOut,
+  CreditCard,
 } from 'lucide-react';
 import { useSiteData } from '../context/SiteContext';
 import { useAuth } from '../context/AuthContext';

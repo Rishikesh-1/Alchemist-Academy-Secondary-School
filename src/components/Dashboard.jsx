@@ -22,6 +22,7 @@ import {
   Sliders,
   UserX,
   Lock,
+  Unlock,
   X,
   Key,
   FolderOpen,
